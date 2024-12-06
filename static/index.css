@@ -1,0 +1,135 @@
+
+html {
+    background-color: blanchedalmond;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 10px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    gap: 10px;
+}
+
+.filters label,
+.search input {
+    display: block;
+    margin: 5px 0;
+}
+
+.filters input[type="range"] {
+    width: 100px;
+    vertical-align: middle;
+}
+
+.search {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 200px;
+}
+
+#general_tag_suggestions, #character_tag_suggestions {
+    max-width: 200px;
+    height: 100px;
+    overflow-y: auto;
+    border: 1px solid orangered;
+}
+
+.tag_suggestion {
+    padding: 5px;
+    background: #00756c;
+    cursor: pointer;
+    color: #e7e7e7;
+}
+
+.tag_suggestion:hover {
+    background: #00534c;
+    color: #c5c5c5;
+}
+
+.pill {
+    display: inline-block;
+    background: #006f7e;
+    border-radius: 12px;
+    padding: 5px 10px;
+    margin: 1px;
+    font-size: 12px;
+    color: #e7e7e7;
+}
+
+.pill button {
+    background: transparent;
+    border: none;
+    color: #e7e7e7;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.pills {
+	max-height: 200px;
+	overflow: scroll;
+}
+
+.row {
+    display: flex;
+    margin: 1em;
+    max-width: 99%;
+}
+
+@media (max-width: 770px) {
+    .container {
+        flex-direction: column;
+        padding: 10px;
+    }
+
+    .filters,
+    .search {
+        width: 100%;
+    }
+
+    .filters label {
+        font-size: 14px;
+    }
+
+    .search input {
+        font-size: 14px;
+    }
+
+    #general_tag_suggestions,
+    #character_tag_suggestions {
+        width: 100%;
+    }
+
+    .row {
+        display: block;
+    }
+}
+
+.w100 {
+    width: 140px;
+    display: inline-block;
+}
+
+.rating {
+    background-color: #854700;
+}
+
+.general {
+    background-color: #14005e;
+}
+
+.character {
+    background-color: #047000;
+}
+
+img.result {
+    max-width: 300px;
+    max-height: 300px;
+    object-fit: contain;
+}
