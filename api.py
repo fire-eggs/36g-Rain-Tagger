@@ -1,5 +1,17 @@
-from flask import Blueprint, Flask, g, jsonify, render_template, request, abort, send_file
 import os
+
+from flask import (
+    Blueprint,
+    Flask,
+    abort,
+    g,
+    jsonify,
+    render_template,
+    request,
+    send_file
+)
+
+from api_conf import debug, exts, host, port, root_folder
 from db import ImageDb
 from utils import make_path
 
@@ -79,7 +91,7 @@ def serve(filename: str):
     if not file_path.split('.')[-1].lower().endswith(app.exts):
         abort(404)
 
-    if app.root_image_folder_web and file_path.startswith(app.root_image_folder_web):
+    if not file_path.startswith(app.root_image_folder_web):
         abort(404)
 
     if not os.path.isfile(file_path):
@@ -88,10 +100,9 @@ def serve(filename: str):
     return send_file(file_path)
 
 
-
 if __name__=='__main__':
     app = Flask('app')
     app.register_blueprint(bp)
-    app.root_image_folder_web = ''
-    app.exts = ('jpg', 'png', 'jpeg', 'gif')
-    app.run(debug=True)
+    app.root_image_folder_web = root_folder
+    app.exts = exts
+    app.run(host=host, port=port, debug=debug)

@@ -191,7 +191,8 @@ class ImageDb:
             FROM image_tag
             WHERE image_tag.tag_id IN ({phg}) {sql_prob}
             GROUP BY image_tag.image_id
-            HAVING COUNT(DISTINCT image_tag.tag_id) = {len(tag_ids)}""",
+            HAVING COUNT(DISTINCT image_tag.tag_id) = {len(tag_ids)}
+            ORDER BY prob DESC""",
             tag_ids
         ).fetchall()
         if not rows:

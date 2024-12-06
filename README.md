@@ -47,6 +47,12 @@ This script will automatically download the image tagging model and save it to `
 
 ## API
 
+```
+cp rename_to_api_conf.py api_conf.py
+# set variables in 'api_conf.py'
+python3.12 api.py
+```
+
 ![preview.png](preview.png)
 
 ## Structures

@@ -123,7 +123,7 @@ function render_results(results) {
     }
     results_div.innerHTML = results.map(result => `
         <div class="row">
-            <img class="result" src="/serve${result.image_path}"/>
+            <img class="result" src="/serve${result.image_path}" loading="lazy"/>
             <div class="pills">
                 ${render_tags_text(result.rating, 'rating')}
                 ${render_tags_text(result.general, 'general')}
