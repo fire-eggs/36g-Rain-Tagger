@@ -1,11 +1,12 @@
 import hashlib
 import os
+import shlex
+import subprocess
 from functools import cache
 from pathlib import Path
 from typing import Generator
+
 from torch import cuda, device
-import subprocess
-import shlex
 
 
 def is_valid_path(path: str) -> bool:

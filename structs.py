@@ -15,3 +15,10 @@ class TagType(Enum):
     general = 0
     character = 4
     rating = 9
+
+
+class Ratings(Enum):
+    general = 0
+    sensitive = 1
+    questionable = 2
+    explict = 3

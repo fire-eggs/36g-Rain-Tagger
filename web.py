@@ -1,30 +1,29 @@
 import os
+from datetime import datetime
+from time import perf_counter
 
 from flask import (
     Blueprint,
     Flask,
+    Request,
     abort,
     g,
     jsonify,
     render_template,
     request,
-    send_file,
-    Request
+    send_file
 )
 
-from api_conf import debug, exts, host, port, root_folders
+from api_conf import db_path, debug, exts, host, port, root_folders
 from db import ImageDb
-from utils import make_path
-from time import perf_counter
-from datetime import datetime
-
 
 bp = Blueprint('image_tagging_app', __name__)
+
 
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = ImageDb(make_path('image.db'))
+        db = g._database = ImageDb(db_path)
     return db
 
 def get_q(r: Request, q: str, default, minp, maxp, typ) -> int:
@@ -66,6 +65,10 @@ def get_all_tags():
 def search_images():
     try:
         f_tag = get_q(request, 'f_tag', 0.0, 0.0, 1.0, float)
+        f_general = get_q(request, 'f_general', 0.0, 0.0, 1.0, float)
+        f_sensitive = get_q(request, 'f_sensitive', 0.0, 0.0, 1.0, float)
+        f_explicit = get_q(request, 'f_explicit', 0.0, 0.0, 1.0, float)
+        f_questionable = get_q(request, 'f_questionable', 0.0, 0.0, 1.0, float)
         general_tag_ids = get_list(request, 'general_tag_ids', int)
         character_tag_ids = get_list(request, 'character_tag_ids', int)
         page = get_page(request)
@@ -78,7 +81,7 @@ def search_images():
         abort(400)
 
     s = perf_counter()
-    results = get_db().get_images_by_tag_ids(tags, f_tag, page, per_page)
+    results = get_db().get_images_by_tag_ids(tags, f_tag, f_general, f_sensitive, f_explicit, f_questionable, page, per_page)
     e = perf_counter()
 
     image_count = get_db().get_image_count(datetime.now().hour)

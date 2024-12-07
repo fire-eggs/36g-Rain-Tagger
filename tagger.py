@@ -1,20 +1,21 @@
 import argparse
+import os
 from itertools import batched
 from pathlib import Path
 from time import perf_counter
-import os
+
 from timm.data import create_transform, resolve_data_config
 
 from db import ImageDb
 from processor import load_model, make_tag_data, process_images
 from utils import (
+    get_image_file_count,
     get_image_paths,
     get_sha256,
     get_torch_device,
     get_valid_extensions,
     make_path,
-    printr,
-    get_image_file_count,
+    printr
 )
 
 
@@ -187,7 +188,7 @@ def main(
 
         if save:
             for image_path, (ratings, characters, generals) in zip(image_paths_i, info):
-                db.insert_image_tags(image_path, ratings | characters | generals)
+                db.insert_image_tags(image_path, ratings, characters | generals)
 
             if count > next_commit_count:
                 db.save()

@@ -1,7 +1,7 @@
 import sqlite3
 from functools import lru_cache
 
-from structs import TagData, TagType
+from structs import Ratings, TagData, TagType
 from utils import get_sha256
 
 
@@ -34,7 +34,11 @@ class ImageDb:
             CREATE TABLE IF NOT EXISTS image (
                 image_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 image_path TEXT NOT NULL UNIQUE,
-                sha256 TEXT NOT NULL UNIQUE
+                sha256 TEXT NOT NULL UNIQUE,
+                explicit REAL,
+                sensitive REAL,
+                questionable REAL,
+                general REAL
             )
         """)
         self.cursor.execute("""
@@ -87,34 +91,41 @@ class ImageDb:
             raise ValueError()
 
 
-    def insert_image_tags(self, image_path: str, tag_id_2_prob: dict):
+    def insert_image_tags(self, image_path: str, ratings: dict, tag_id_2_prob: dict):
         sha256 = get_sha256(image_path)
-        row = self.cursor.execute('INSERT OR IGNORE INTO image (image_path, sha256) VALUES (?, ?) RETURNING image_id', (image_path, sha256)).fetchone()
+        general, sensitive, questionable, explicit = ratings[Ratings.general.value], ratings[Ratings.sensitive.value], ratings[Ratings.questionable.value], ratings[Ratings.explict.value]
+        row = self.cursor.execute("""
+                INSERT OR IGNORE INTO
+                image (image_path, sha256, general, explicit, sensitive, questionable)
+                VALUES (?, ?, ?, ?, ?, ?)
+                RETURNING image_id"""
+                , (image_path, sha256, general, explicit, sensitive, questionable)
+        ).fetchone()
         if not row:
-            return
+            return []
         image_id = row[0]
         params = [(image_id, tag_id, prob) for tag_id, prob in tag_id_2_prob.items()]
         self.cursor.executemany('INSERT OR IGNORE INTO image_tag (image_id, tag_id, prob) VALUES (?, ?, ?)', params)
 
 
-    def _fetch_results(self, image_ids: list[int]) -> list[dict] | None:
+    def _fetch_results(self, image_ids: list[int]) -> list[dict]:
         if len(image_ids) < 1:
             return []
 
         phg = get_phg(image_ids)
-        self.cursor.execute(f'SELECT image_id, image_path FROM image WHERE image_id IN ({phg})', image_ids)
+        self.cursor.execute(f'SELECT image_id, image_path, general, explicit, sensitive, questionable FROM image WHERE image_id IN ({phg})', image_ids)
         rows = self.cursor.fetchall()
         if not rows:
             return []
 
-        image_id_2_path = {row[0]: row[1] for row in rows}
+        image_id_2_data = {row[0]: [row[1], row[2], row[3], row[4], row[5]] for row in rows}
 
         self.cursor.execute(f"""
             SELECT image_tag.image_id, tag.tag_name, tag.tag_type_id, image_tag.prob
             FROM image_tag
                 JOIN tag ON image_tag.tag_id = tag.tag_id
             WHERE image_tag.image_id IN ({phg})""",
-            [k for k in image_id_2_path]
+            [k for k in image_id_2_data]
         )
         tags = self.cursor.fetchall()
         if not tags:
@@ -122,11 +133,11 @@ class ImageDb:
 
         results = {}
         tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character'}
-        for image_id in image_id_2_path:
+        for image_id, (image_path, general, explicit, sensitive, questionable) in image_id_2_data.items():
             results[image_id] = {
                 'image_id': image_id,
-                'image_path': image_id_2_path[image_id],
-                'rating': {},
+                'image_path': image_path,
+                'rating': {'general': general, 'explicit': explicit, 'sensitive': sensitive, 'questionable': questionable},
                 'general': {},
                 'character': {},
             }
@@ -137,12 +148,12 @@ class ImageDb:
         return [results[image_id] for image_id in image_ids]
 
 
-    def _fetch_result(self, image_id: int) -> dict | None:
+    def _fetch_result(self, image_id: int) -> dict:
         results = self._fetch_results([image_id])
         return results[0] if len(results) and results else None
 
 
-    def get_tag_by_image_path(self, image_path: str) -> dict | None:
+    def get_tag_by_image_path(self, image_path: str) -> dict:
         row = self.cursor.execute('SELECT image_id FROM image WHERE image_path = ?', (image_path,)).fetchone()
         if not row:
             return []
@@ -150,7 +161,7 @@ class ImageDb:
         return result
 
 
-    def get_tag_by_sha256(self, sha256: str) -> dict | None:
+    def get_tag_by_sha256(self, sha256: str) -> dict:
         row = self.cursor.execute('SELECT image_id FROM image WHERE sha256 = ?', (sha256,)).fetchone()
         if not row:
             return []
@@ -158,7 +169,7 @@ class ImageDb:
         return result
 
 
-    def get_tags_by_tag_name(self, tag_name: str) -> list[dict] | None:
+    def get_tags_by_tag_name(self, tag_name: str) -> list[dict]:
         rows = self.cursor.execute("""
             SELECT DISTINCT image_tag.image_id
             FROM tag
@@ -174,7 +185,7 @@ class ImageDb:
 
 
     @lru_cache(maxsize=5)
-    def get_tags(self) -> list[tuple] | None:
+    def get_tags(self) -> list[tuple]:
         rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_name FROM tag JOIN tag_type USING(tag_type_id)').fetchall()
         if not rows:
             return []
@@ -186,27 +197,33 @@ class ImageDb:
         return int(self.cursor.execute('SELECT count() FROM image;').fetchone()[0])
 
 
-    def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, page: int, per_page: int) -> list[dict]:
-        phg = get_phg(tag_ids)
+    def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
         offset = max(page - 1, 0) * per_page
 
         rows = self.cursor.execute(f"""
             SELECT image_tag.image_id
-            FROM image_tag
-            WHERE image_tag.tag_id IN ({phg})
+            FROM image JOIN image_tag USING(image_id)
+            WHERE
+                image_tag.tag_id IN ({get_phg(tag_ids)})
                 AND image_tag.prob >= ?
+                AND general >= ?
+                AND sensitive >= ?
+                AND questionable >= ?
+                AND explicit >= ?
             GROUP BY image_tag.image_id
             HAVING COUNT(DISTINCT image_tag.tag_id) = ?
             ORDER BY MAX(image_tag.prob) DESC
             LIMIT ?
             OFFSET ?""",
-            tag_ids + [f_tag, len(tag_ids), per_page, offset]
+            tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids), per_page, offset]
         ).fetchall()
 
         if not rows:
             return []
 
         image_ids = [row[0] for row in rows]
+
+
         results = self._fetch_results(image_ids)
         return results
 

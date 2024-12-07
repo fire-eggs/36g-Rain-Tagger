@@ -1,9 +1,17 @@
 const f_inputs = {
     f_tag: document.getElementById('f_tag'),
+    f_general: document.getElementById('f_general'),
+    f_sensitive: document.getElementById('f_sensitive'),
+    f_explicit: document.getElementById('f_explicit'),
+    f_questionable: document.getElementById('f_questionable'),
 };
 
 const f_values = {
     f_tag: document.getElementById('f_tag_value'),
+    f_general: document.getElementById('f_general_value'),
+    f_sensitive: document.getElementById('f_sensitive_value'),
+    f_explicit: document.getElementById('f_explicit_value'),
+    f_questionable: document.getElementById('f_questionable_value'),
 };
 
 const general_tag_input = document.getElementById('general_tag_input');
@@ -121,8 +129,10 @@ clear_button.addEventListener('click', () => {
     general_tag_suggestions.innerHTML = '';
     character_tag_suggestions.innerHTML = '';
 
-    f_inputs.f_tag.value = 0.0;
-    f_values.f_tag.textContent = '0.0';
+    Object.keys(f_inputs).forEach(f => {
+        f_inputs[f].value = 0.0;
+        f_values[f].textContent = '0.0';
+    });
 });
 
 function render_results() {
@@ -174,7 +184,9 @@ display_button.addEventListener('click', async () => {
 async function fetch_results() {
     const params = new URLSearchParams();
 
-    params.append('f_tag', parseFloat(f_inputs.f_tag.value));
+    Object.keys(f_inputs).forEach(f => {
+        params.append(f, parseFloat(f_inputs[f].value));
+    });
 
     selected_general_tags.forEach(tag => params.append('general_tag_ids', tag.id));
     selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
