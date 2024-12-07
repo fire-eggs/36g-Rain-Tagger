@@ -99,13 +99,13 @@ class ImageDb:
 
     def _fetch_results(self, image_ids: list[int]) -> list[dict] | None:
         if len(image_ids) < 1:
-            return None
+            return []
 
         phg = get_phg(image_ids)
         self.cursor.execute(f'SELECT image_id, image_path FROM image WHERE image_id IN ({phg})', image_ids)
         rows = self.cursor.fetchall()
         if not rows:
-            return None
+            return []
 
         image_id_2_path = {row[0]: row[1] for row in rows}
 
@@ -118,7 +118,7 @@ class ImageDb:
         )
         tags = self.cursor.fetchall()
         if not tags:
-            return None
+            return []
 
         results = {}
         tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character'}
@@ -145,7 +145,7 @@ class ImageDb:
     def get_tag_by_image_path(self, image_path: str) -> dict | None:
         row = self.cursor.execute('SELECT image_id FROM image WHERE image_path = ?', (image_path,)).fetchone()
         if not row:
-            return None
+            return []
         result = self._fetch_result(row[0])
         return result
 
@@ -153,7 +153,7 @@ class ImageDb:
     def get_tag_by_sha256(self, sha256: str) -> dict | None:
         row = self.cursor.execute('SELECT image_id FROM image WHERE sha256 = ?', (sha256,)).fetchone()
         if not row:
-            return None
+            return []
         result = self._fetch_result(row[0])
         return result
 
@@ -167,7 +167,7 @@ class ImageDb:
             (tag_name,)
         ).fetchall()
         if not rows:
-            return None
+            return []
 
         results = self._fetch_results([row[0] for row in rows])
         return results
@@ -177,7 +177,7 @@ class ImageDb:
     def get_tags(self) -> list[tuple] | None:
         rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_name FROM tag JOIN tag_type USING(tag_type_id)').fetchall()
         if not rows:
-            return None
+            return []
         return rows
 
 
@@ -186,7 +186,7 @@ class ImageDb:
         return int(self.cursor.execute('SELECT count() FROM image;').fetchone()[0])
 
 
-    def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, page: int, per_page: int) -> list[dict] | None:
+    def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, page: int, per_page: int) -> list[dict]:
         phg = get_phg(tag_ids)
         offset = max(page - 1, 0) * per_page
 
@@ -204,14 +204,14 @@ class ImageDb:
         ).fetchall()
 
         if not rows:
-            return None
+            return []
 
         image_ids = [row[0] for row in rows]
         results = self._fetch_results(image_ids)
         return results
 
 
-    def get_tags_like_tag_name(self, tag_name: str, tag_type_name: str) -> list[dict] | None:
+    def get_tags_like_tag_name(self, tag_name: str, tag_type_name: str) -> list[dict]:
         params = [f'%{tag_name}%']
 
         sql_tag_type_name = ''
@@ -227,11 +227,11 @@ class ImageDb:
             params
         ).fetchall()
         if not rows:
-            return None
+            return []
         return rows
 
 
-    def get_images_like_tag_name(self, tag_name: str) -> list[dict] | None:
+    def get_images_like_tag_name(self, tag_name: str) -> list[dict]:
         tag_name = f'%{tag_name}%'
         rows = self.cursor.execute("""
             SELECT DISTINCT image_tag.image_id
@@ -241,7 +241,7 @@ class ImageDb:
             (tag_name,)
         ).fetchall()
         if not rows:
-            return None
+            return []
 
         results = self._fetch_results([row[0] for row in rows])
         return results
