@@ -32,27 +32,27 @@ def close_connection(exception):
 
 
 @bp.route('/tags', methods=['GET'])
-def get_tags():
+def get_all_tags():
     tags = get_db().get_tags()
     if not tags:
         return jsonify([]), 200
-    return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_id': tag[2]} for tag in tags])
+    return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
 @bp.route('/search_tags', methods=['GET'])
 def search_tags():
     query = request.args.get('q', '').strip()
-    tag_type = request.args.get('type', '').strip()
+    tag_type_name = request.args.get('tag_type_name', '').strip()
     if not query:
         return jsonify([]), 200
     tags = get_db().get_tags_like_tag_name(query)
 
-    if tag_type:
-        tags = [tag for tag in tags if tag[2] == tag_type]
+    if tag_type_name:
+        tags = [tag for tag in tags if tag[2] == tag_type_name]
 
     if not tags:
         return jsonify([]), 200
-    return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type': tag[2]} for tag in tags])
+    return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
 @bp.route('/search_images', methods=['POST'])

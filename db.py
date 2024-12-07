@@ -175,7 +175,7 @@ class ImageDb:
 
     @lru_cache
     def get_tags(self) -> list[tuple] | None:
-        rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_id FROM tag').fetchall()
+        rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_name FROM tag JOIN tag_type USING(tag_type_id)').fetchall()
         if not rows:
             return None
         return rows
