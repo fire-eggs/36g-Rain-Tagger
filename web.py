@@ -62,21 +62,6 @@ def get_all_tags():
     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
-# @bp.route('/search_tags', methods=['GET'])
-# def search_tags():
-#     tag_name = request.args.get('tag_name', '').strip()
-#     tag_type_name = request.args.get('tag_type_name', '').strip()
-
-#     if not tag_name:
-#         return jsonify([]), 200
-
-#     tags = get_db().get_tags_like_tag_name(tag_name, tag_type_name)
-
-#     if not tags:
-#         return jsonify([]), 200
-#     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
-
-
 @bp.route('/search_images', methods=['GET'])
 def search_images():
     try:
@@ -98,13 +83,10 @@ def search_images():
 
     image_count = get_db().get_image_count(datetime.now().hour)
 
-    if not results:
-        return jsonify([]), 200
-
     d = {}
     d['message'] = f'Searched {image_count} in {e-s:.3f}s and found {len(results)} results.'
     d['results'] = results
-    return jsonify(d)
+    return jsonify(d), 200
 
 
 @bp.route('/')
