@@ -25,10 +25,15 @@ html {
     transition: 0.3s all;
 }
 
-.filters label,
 .search input {
     display: block;
     margin: 5px 0;
+}
+
+.filters label {
+    display: block;
+    margin: 5px 0;
+    text-align: center;
 }
 
 .center {

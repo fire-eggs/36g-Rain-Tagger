@@ -78,6 +78,8 @@ General tags: {'outdoors': 0.69, 'sky': 0.755, 'day': 0.68, 'cloud': 0.628, 'wat
 
 ## Performance
 
+### Tagging
+
 Benchmarked using [https://github.com/sky-cake/image_data_set](https://github.com/sky-cake/image_data_set)
 
 From `tagger.py`,
@@ -104,3 +106,10 @@ main(
 | 4060 TI 16GB GPU    |     45     |          2.172 |              0.048 |
 | 5700X x 8 CPU      |     45     |         21.277 |              0.473 |
 | i7 8665U x 8 CPU    |     45     |         76.273 |              1.695 |
+
+
+### Searching
+
+0.1s - 0.4s results on hundreds of thousands of images.
+
+`Searched 238,302 in 0.313s and found 25 results.`

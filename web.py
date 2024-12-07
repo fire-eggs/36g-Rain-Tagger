@@ -87,7 +87,7 @@ def search_images():
     image_count = get_db().get_image_count(datetime.now().hour)
 
     d = {}
-    d['message'] = f'Searched {image_count} in {e-s:.3f}s and found {len(results)} results.'
+    d['message'] = f'Searched {image_count:,} in {e-s:.3f}s and found {len(results):,} results.'
     d['results'] = results
     return jsonify(d), 200
 
