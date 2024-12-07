@@ -3,8 +3,25 @@ import os
 from functools import cache
 from pathlib import Path
 from typing import Generator
-
 from torch import cuda, device
+import subprocess
+import shlex
+
+
+def is_valid_path(path: str) -> bool:
+    return all(char.isalnum() or char in ('-', '_', '.', '/') for char in os.path.basename(path))
+
+
+def get_image_file_count(directory: str, extensions: list[str]) -> int:
+    """Provide extensions like .ext"""
+    if not os.path.isdir(directory):
+        raise ValueError('Provided path is not a directory')
+    if not is_valid_path(directory):
+        raise ValueError('Directory includes bad characters.')
+    find_extensions = " -o ".join(f"-iname '*{ext}'" for ext in extensions)
+    command = f'find {shlex.quote(directory)} -type f \\( {find_extensions} \\) | wc -l'
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    return int(result.stdout.strip())
 
 
 @cache

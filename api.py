@@ -11,7 +11,7 @@ from flask import (
     send_file
 )
 
-from api_conf import debug, exts, host, port, root_folder
+from api_conf import debug, exts, host, port, root_folders
 from db import ImageDb
 from utils import make_path
 
@@ -91,7 +91,7 @@ def serve(filename: str):
     if not file_path.split('.')[-1].lower().endswith(app.exts):
         abort(404)
 
-    if not file_path.startswith(app.root_image_folder_web):
+    if not file_path.startswith(app.root_folders):
         abort(404)
 
     if not os.path.isfile(file_path):
@@ -103,6 +103,6 @@ def serve(filename: str):
 if __name__=='__main__':
     app = Flask('app')
     app.register_blueprint(bp)
-    app.root_image_folder_web = root_folder
+    app.root_folders = root_folders
     app.exts = exts
     app.run(host=host, port=port, debug=debug)

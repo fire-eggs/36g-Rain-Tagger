@@ -2,7 +2,7 @@ import argparse
 from itertools import batched
 from pathlib import Path
 from time import perf_counter
-
+import os
 from timm.data import create_transform, resolve_data_config
 
 from db import ImageDb
@@ -13,7 +13,8 @@ from utils import (
     get_torch_device,
     get_valid_extensions,
     make_path,
-    printr
+    printr,
+    get_image_file_count,
 )
 
 
@@ -134,6 +135,9 @@ def main(
 
     valid_extensions = get_valid_extensions(valid_extensions)
     image_paths = get_image_paths(path, valid_extensions)
+    if path.is_dir():
+        nfiles = get_image_file_count(str(path), valid_extensions)
+        print(f'Found ({nfiles}) {valid_extensions} files in {path}')
 
     printr('Setting up database')
     db = ImageDb(db_name, init=True)
@@ -174,7 +178,12 @@ def main(
         image_paths_i = p
 
         start = perf_counter()
-        info = process_images(image_paths_i, model, transform, torch_device, tag_data, gmin, cmin, by_idx=idx)
+
+        try:
+            info = process_images(image_paths_i, model, transform, torch_device, tag_data, gmin, cmin, by_idx=idx)
+        except Exception as e:
+            print(e)
+            continue
 
         if save:
             for image_path, (ratings, characters, generals) in zip(image_paths_i, info):
