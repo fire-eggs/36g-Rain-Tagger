@@ -38,30 +38,34 @@ async function fetch_all_tags() {
 
 fetch_all_tags();
 
-general_tag_input.addEventListener('input', () => {
-    const query = general_tag_input.value.trim().toLowerCase();
+
+function handle_tag_input(inputElement, suggestion_container, tagType) {
+    const query = inputElement.value.trim().toLowerCase();
     if (query.length === 0) {
-        general_tag_suggestions.innerHTML = '';
+        suggestion_container.innerHTML = '';
         return;
     }
-    const filtered_tags = all_tags.filter(tag => tag.tag_type_name === 'general' && tag.tag_name.toLowerCase().includes(query));
-    general_tag_suggestions.innerHTML = filtered_tags.map(tag => `
+    const filtered_tags = all_tags.filter(tag => tag.tag_type_name === tagType && tag.tag_name.toLowerCase().includes(query));
+    suggestion_container.innerHTML = filtered_tags.map(tag => `
         <div class="tag_suggestion" data-id="${tag.tag_id}">${tag.tag_name}</div>
     `).join('');
-    attach_suggestion_events(general_tag_suggestions, selected_general_tags, render_general_tags);
+    attach_suggestion_events(suggestion_container, selected_general_tags, render_general_tags);
+}
+
+general_tag_input.addEventListener('input', () => {
+    handle_tag_input(general_tag_input, general_tag_suggestions, 'general');
+});
+
+general_tag_input.addEventListener('focus', () => {
+    handle_tag_input(general_tag_input, general_tag_suggestions, 'general');
 });
 
 character_tag_input.addEventListener('input', () => {
-    const query = character_tag_input.value.trim().toLowerCase();
-    if (query.length === 0) {
-        character_tag_suggestions.innerHTML = '';
-        return;
-    }
-    const filtered_tags = all_tags.filter(tag => tag.tag_type_name === 'character' && tag.tag_name.toLowerCase().includes(query));
-    character_tag_suggestions.innerHTML = filtered_tags.map(tag => `
-        <div class="tag_suggestion" data-id="${tag.tag_id}">${tag.tag_name}</div>
-    `).join('');
-    attach_suggestion_events(character_tag_suggestions, selected_character_tags, render_character_tags);
+    handle_tag_input(character_tag_input, character_tag_suggestions, 'character');
+});
+
+character_tag_input.addEventListener('focus', () => {
+    handle_tag_input(character_tag_input, character_tag_suggestions, 'character');
 });
 
 function attach_suggestion_events(suggestions_div, selected_tags, render_fn) {
