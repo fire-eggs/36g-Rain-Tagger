@@ -15,6 +15,8 @@ from flask import (
 from api_conf import debug, exts, host, port, root_folders
 from db import ImageDb
 from utils import make_path
+from time import perf_counter
+from datetime import datetime
 
 
 bp = Blueprint('image_tagging_app', __name__)
@@ -60,19 +62,19 @@ def get_all_tags():
     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
-@bp.route('/search_tags', methods=['GET'])
-def search_tags():
-    tag_name = request.args.get('tag_name', '').strip()
-    tag_type_name = request.args.get('tag_type_name', '').strip()
+# @bp.route('/search_tags', methods=['GET'])
+# def search_tags():
+#     tag_name = request.args.get('tag_name', '').strip()
+#     tag_type_name = request.args.get('tag_type_name', '').strip()
 
-    if not tag_name:
-        return jsonify([]), 200
+#     if not tag_name:
+#         return jsonify([]), 200
 
-    tags = get_db().get_tags_like_tag_name(tag_name, tag_type_name)
+#     tags = get_db().get_tags_like_tag_name(tag_name, tag_type_name)
 
-    if not tags:
-        return jsonify([]), 200
-    return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
+#     if not tags:
+#         return jsonify([]), 200
+#     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
 @bp.route('/search_images', methods=['GET'])
@@ -90,12 +92,19 @@ def search_images():
     if not tags:
         abort(400)
 
+    s = perf_counter()
     results = get_db().get_images_by_tag_ids(tags, f_tag, page, per_page)
+    e = perf_counter()
+
+    image_count = get_db().get_image_count(datetime.now().hour)
 
     if not results:
         return jsonify([]), 200
 
-    return jsonify(results)
+    d = {}
+    d['message'] = f'Searched {image_count} in {e-s:.3f}s and found {len(results)} results.'
+    d['results'] = results
+    return jsonify(d)
 
 
 @bp.route('/')

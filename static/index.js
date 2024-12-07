@@ -14,11 +14,16 @@ const selected_general_tags_div = document.getElementById('selected_general_tags
 const selected_character_tags_div = document.getElementById('selected_character_tags');
 const search_button = document.getElementById('search_button');
 const clear_button = document.getElementById('clear_button');
+const display_button = document.getElementById('display_button');
 const results_div = document.getElementById('results');
 
 let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = [];
+let results = [];
+let current_display_mode = 'Gallery';
+let message = [];
+
 
 Object.keys(f_inputs).forEach(f => {
     f_inputs[f].addEventListener('input', () => {
@@ -68,7 +73,7 @@ function attach_suggestion_events(suggestions_div, selected_tags, render_fn) {
                 selected_tags.push({ id: tag_id, name: tag_name });
                 render_fn();
             }
-            suggestion.innerHTML = '';
+            suggestion.outerHTML = '';
         });
     });
 }
@@ -94,35 +99,72 @@ function render_tags(container, tags, selected_tags, render_fn) {
     });
 }
 
-function render_results(results) {
-    if (results.length === 0) {
-        results_div.innerHTML = '<p>No results found.</p>';
-        return;
-    }
-    results_div.innerHTML = results.map(result => `
-        <div class="row">
-            <img class="result" src="/serve${result.image_path}" loading="lazy"/>
-            <div class="pills">
-                ${render_tags_text(result.rating, 'rating')}
-                ${render_tags_text(result.general, 'general')}
-                ${render_tags_text(result.character, 'character')}
-            </div>
-        </div>
-    `).join('');
-}
-
 function render_tags_text(tags, color) {
     return Object.entries(tags).map(([tag, prob]) => `
-        <span class="pill ${color}">${tag}: ${prob.toFixed(2)}</span>
+    <span class="pill ${color}">${tag}: ${prob.toFixed(2)}</span>
     `).join(' ');
 }
 
 clear_button.addEventListener('click', () => {
-    window.location.reload();
+    selected_general_tags = [];
+    selected_character_tags = [];
+
+    selected_general_tags_div.innerHTML = '';
+    selected_character_tags_div.innerHTML = '';
+
+    general_tag_input.value = '';
+    character_tag_input.value = '';
+    general_tag_suggestions.innerHTML = '';
+    character_tag_suggestions.innerHTML = '';
+
+    f_inputs.f_tag.value = 0.0;
+    f_values.f_tag.textContent = '0.0';
 });
 
-search_button.addEventListener('click', () => {
-    fetch_results();
+function render_results() {
+    results_div.innerHTML = `<div class="row">${message}</div>`;
+
+    if (results.length === 0) {
+        return;
+    }
+
+    if (current_display_mode === 'Gallery') {
+        results_div.innerHTML += results.map(result => `
+            <div class="row">
+                <img class="result" src="/serve${result.image_path}" loading="lazy"/>
+                <div class="pills">
+                    ${render_tags_text(result.rating, 'rating')}
+                    ${render_tags_text(result.general, 'general')}
+                    ${render_tags_text(result.character, 'character')}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        results_div.innerHTML += results.map(result => `
+            <img class="result" src="/serve${result.image_path}" loading="lazy"/>
+        `).join('');
+    }
+}
+
+search_button.addEventListener('click', async () => {
+    await fetch_results();
+    render_results();
+});
+
+display_button.addEventListener('click', async () => {
+    if (results.length === 0) {
+        await fetch_results();
+    }
+
+    if (current_display_mode === 'Gallery') {
+        current_display_mode = 'Info';
+        display_button.textContent = 'Display: Info';
+    } else {
+        current_display_mode = 'Gallery';
+        display_button.textContent = 'Display: Gallery';
+    }
+
+    render_results();
 });
 
 async function fetch_results() {
@@ -134,7 +176,7 @@ async function fetch_results() {
     selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
 
     const response = await fetch(`/search_images?${params.toString()}`);
-    const results = await response.json();
-
-    render_results(results);
+    let d = await response.json();
+    results = d.results;
+    message = d.message;
 }

@@ -14,12 +14,12 @@ source venv/bin/activate
 python3.12 -m pip install -r requirements.txt
 ```
 
-## Usage
+## Usage, The Tagger
 
 An example,
 
 ```
-python3.12 main.py --bsize 1 --gmin 0.1 --cmin 0.2 --exts jpg,jpeg,png,gif --printt --path /path/to/image.png
+python3.12 tagger.py --bsize 1 --gmin 0.1 --cmin 0.2 --exts jpg,jpeg,png,gif --printt --path /path/to/image.png
 ```
 
 All the cli command options,
@@ -28,32 +28,43 @@ All the cli command options,
 Image tagging utility for extracting and saving tags from images.
 
 options:
-  -h, --help             show this help message and exit
-  --path PATH            Path to an image file or a directory containing images. Can also accept a list of paths.
-  --gmin GMIN            Minimum probability threshold for general tags. Range: [0.0, 1.0], where 1.0 means a very strong match. Default: 0.2
-  --cmin CMIN            Minimum probability threshold for character tags. Range: [0.0, 1.0], where 1.0 means a very strong match. Default: 0.2
-  --exts EXTS            Comma-separated list of valid image file extensions to process. Default: png,jpeg,jpg,gif
-  --nmax NMAX            Maximum number of images to tag. Set to 0 to process all images found in the specified path. Default: 0
-  --bsize BSIZE          Batch size for processing images. For faster processing, use a batch size of 1. Default: 1
-  --db_name DB_NAME      Name of the SQLite database file to save results. Default: ./image.db
-  --skip, --no-skip      Skip images that already have tags saved in the database. Use --no-skip to reprocess them. Default: False
-  --idx, --no-idx        Enable index-to-probability mappings. Required to save results. Use --no-idx to disable. Default: --skip
+  -h, --help             Show this help message and exit.
+  --path                 Path to an image file or a directory containing images. Can also accept a list of paths.
+  --gmin                 Minimum probability threshold for general tags. Range: [0.0, 1.0], where 1.0 means a very strong match. Default: 0.2
+  --cmin                 Minimum probability threshold for character tags. Range: [0.0, 1.0], where 1.0 means a very strong match. Default: 0.2
+  --exts                 Comma-separated list of valid image file extensions to process. Default: png,jpeg,jpg,gif
+  --nmax                 Maximum number of images to tag. Set to 0 to process all images found in the specified path. Default: 0
+  --bsize                Batch size for processing images. For faster processing, use a batch size of 1. Default: 1
+  --db_name              Name of the SQLite database file to save results. Default: ./image.db
+  --skip, --no-skip      Skip images that already have tags saved in the database. Use --no-skip to reprocess them. Default: --no-skip
+  --idx, --no-idx        Enable index-to-probability mappings. Required to save results. Use --no-idx to disable. Default: --idx
   --save, --no-save      Save results to the SQLite database. Use --no-save to skip saving. Default: --save
   --printt, --no-printt  Print results. Use --no-printt to disable printing. Default: --no-print
   --cpu, --no-cpu        Run on CPU instead of GPU. Use --no-cpu to use GPU. Default: --no-cpu
 ```
 
-This script will automatically download the image tagging model and save it to `~/.cache/huggingface/hub`.
+**Note:** This script will automatically download the image tagging model and save it to `~/.cache/huggingface/hub`.
 
-## API
+## Web UI
 
 ```
 cp rename_to_api_conf.py api_conf.py
 # set variables in 'api_conf.py'
-python3.12 api.py
+python3.12 web.py
 ```
 
-![preview.png](preview.png)
+#### Desktop, Info Mode
+
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview1.png" height="400">
+
+#### Desktop, Gallery Mode
+
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview3.png" height="400">
+
+#### Mobile, Gallery Mode
+
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview2.png" height="400">
+
 
 ## Structures
 
@@ -68,6 +79,8 @@ General tags: {'outdoors': 0.69, 'sky': 0.755, 'day': 0.68, 'cloud': 0.628, 'wat
 ## Performance
 
 Benchmarked using [https://github.com/sky-cake/image_data_set](https://github.com/sky-cake/image_data_set)
+
+From `tagger.py`,
 
 ```python
 main(

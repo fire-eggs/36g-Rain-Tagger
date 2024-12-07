@@ -173,12 +173,17 @@ class ImageDb:
         return results
 
 
-    @lru_cache
+    @lru_cache(maxsize=5)
     def get_tags(self) -> list[tuple] | None:
         rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_name FROM tag JOIN tag_type USING(tag_type_id)').fetchall()
         if not rows:
             return None
         return rows
+
+
+    @lru_cache(maxsize=5)
+    def get_image_count(self, hour: int) -> int:
+        return int(self.cursor.execute('SELECT count() FROM image;').fetchone()[0])
 
 
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, page: int, per_page: int) -> list[dict] | None:
