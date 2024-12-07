@@ -181,35 +181,45 @@ class ImageDb:
         return rows
 
 
-    def get_images_by_tag_ids(self, tag_ids: list[int], prob_min: float=0) -> list[dict] | None:
+    def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, page: int, per_page: int) -> list[dict] | None:
         phg = get_phg(tag_ids)
-
-        sql_prob = f'AND prob > {float(prob_min)}' if prob_min else ''
+        offset = max(page - 1, 0) * per_page
 
         rows = self.cursor.execute(f"""
             SELECT image_tag.image_id
             FROM image_tag
-            WHERE image_tag.tag_id IN ({phg}) {sql_prob}
+            WHERE image_tag.tag_id IN ({phg})
+                AND image_tag.prob >= ?
             GROUP BY image_tag.image_id
-            HAVING COUNT(DISTINCT image_tag.tag_id) = {len(tag_ids)}
-            ORDER BY prob DESC
-            LIMIT 1000""",
-            tag_ids
+            HAVING COUNT(DISTINCT image_tag.tag_id) = ?
+            ORDER BY MAX(image_tag.prob) DESC
+            LIMIT ?
+            OFFSET ?""",
+            tag_ids + [f_tag, len(tag_ids), per_page, offset]
         ).fetchall()
+
         if not rows:
             return None
 
-        results = self._fetch_results([row[0] for row in rows])
+        image_ids = [row[0] for row in rows]
+        results = self._fetch_results(image_ids)
         return results
 
 
-    def get_tags_like_tag_name(self, tag_name: str) -> list[dict] | None:
-        tag_name = f'%{tag_name}%'
-        rows = self.cursor.execute("""
+    def get_tags_like_tag_name(self, tag_name: str, tag_type_name: str) -> list[dict] | None:
+        params = [f'%{tag_name}%']
+
+        sql_tag_type_name = ''
+        if tag_type_name:
+            sql_tag_type_name = f'AND tag_type_name = ?'
+            params.append(tag_type_name)
+
+        rows = self.cursor.execute(f"""
             SELECT tag_id, tag_name, tag_type_name
-            FROM tag JOIN tag_type USING(tag_type_id)
-            WHERE tag.tag_name like ?""",
-            (tag_name,)
+            FROM tag
+                JOIN tag_type USING(tag_type_id)
+            WHERE tag.tag_name like ? {sql_tag_type_name}""",
+            params
         ).fetchall()
         if not rows:
             return None

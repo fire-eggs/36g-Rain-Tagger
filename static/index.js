@@ -1,15 +1,9 @@
-const rating_inputs = {
-    general: document.getElementById('rating_general'),
-    sensitive: document.getElementById('rating_sensitive'),
-    questionable: document.getElementById('rating_questionable'),
-    explicit: document.getElementById('rating_explicit')
+const f_inputs = {
+    f_tag: document.getElementById('f_tag'),
 };
 
-const rating_values = {
-    general: document.getElementById('general_value'),
-    sensitive: document.getElementById('sensitive_value'),
-    questionable: document.getElementById('questionable_value'),
-    explicit: document.getElementById('explicit_value')
+const f_values = {
+    f_tag: document.getElementById('f_tag_value'),
 };
 
 const general_tag_input = document.getElementById('general_tag_input');
@@ -19,15 +13,16 @@ const character_tag_suggestions = document.getElementById('character_tag_suggest
 const selected_general_tags_div = document.getElementById('selected_general_tags');
 const selected_character_tags_div = document.getElementById('selected_character_tags');
 const search_button = document.getElementById('search_button');
+const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 
 let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = [];
 
-Object.keys(rating_inputs).forEach(rating => {
-    rating_inputs[rating].addEventListener('input', () => {
-        rating_values[rating].textContent = rating_inputs[rating].value;
+Object.keys(f_inputs).forEach(f => {
+    f_inputs[f].addEventListener('input', () => {
+        f_values[f].textContent = parseFloat(f_inputs[f].value).toFixed(1);
     });
 });
 
@@ -36,7 +31,7 @@ async function fetch_all_tags() {
     all_tags = await response.json();
 }
 
-fetch_all_tags()
+fetch_all_tags();
 
 general_tag_input.addEventListener('input', () => {
     const query = general_tag_input.value.trim().toLowerCase();
@@ -67,7 +62,7 @@ character_tag_input.addEventListener('input', () => {
 function attach_suggestion_events(suggestions_div, selected_tags, render_fn) {
     suggestions_div.querySelectorAll('.tag_suggestion').forEach(suggestion => {
         suggestion.addEventListener('click', () => {
-            const tag_id = suggestion.getAttribute('data-id');
+            const tag_id = parseInt(suggestion.getAttribute('data-id'));
             const tag_name = suggestion.textContent.trim();
             if (!selected_tags.some(tag => tag.id === tag_id)) {
                 selected_tags.push({ id: tag_id, name: tag_name });
@@ -92,35 +87,12 @@ function render_tags(container, tags, selected_tags, render_fn) {
     `).join('');
     container.querySelectorAll('button[data-id]').forEach(button => {
         button.addEventListener('click', () => {
-            const tag_id = button.getAttribute('data-id');
+            const tag_id = parseInt(button.getAttribute('data-id'));
             selected_tags.splice(selected_tags.findIndex(tag => tag.id === tag_id), 1);
             render_fn();
         });
     });
 }
-
-search_button.addEventListener('click', async () => {
-    const ratings = {
-        general: parseFloat(rating_inputs.general.value),
-        sensitive: parseFloat(rating_inputs.sensitive.value),
-        questionable: parseFloat(rating_inputs.questionable.value),
-        explicit: parseFloat(rating_inputs.explicit.value)
-    };
-
-    const body = {
-        ratings,
-        general_tags: selected_general_tags.map(tag => parseInt(tag.id)),
-        character_tags: selected_character_tags.map(tag => parseInt(tag.id))
-    };
-
-    const response = await fetch('/search_images', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    const results = await response.json();
-    render_results(results);
-});
 
 function render_results(results) {
     if (results.length === 0) {
@@ -145,6 +117,24 @@ function render_tags_text(tags, color) {
     `).join(' ');
 }
 
-document.getElementById('clear_button').addEventListener('click', () => {
+clear_button.addEventListener('click', () => {
     window.location.reload();
 });
+
+search_button.addEventListener('click', () => {
+    fetch_results();
+});
+
+async function fetch_results() {
+    const params = new URLSearchParams();
+
+    params.append('f_tag', parseFloat(f_inputs.f_tag.value));
+
+    selected_general_tags.forEach(tag => params.append('general_tag_ids', tag.id));
+    selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
+
+    const response = await fetch(`/search_images?${params.toString()}`);
+    const results = await response.json();
+
+    render_results(results);
+}
