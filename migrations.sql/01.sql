@@ -35,3 +35,5 @@ explicit = (
 );
 
 DELETE FROM image_tag WHERE tag_id <=3;
+
+VACUUM;
