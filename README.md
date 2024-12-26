@@ -1,10 +1,24 @@
 # 36g Rain Tagger
 
-36g Rain Tagger provides image tagging with timm using the WD Tagger V3 models. It is named after [36g](https://vocaloid.fandom.com/wiki/36g).
+36g Rain Tagger is an automated image tagging software.
+
+With it, you can:
+
+- Run a tagging cli utility that crawls a file system, mapping a set of 10.8k tags to each image.
+- Host a web UI to search tagged images. Searching can be done via tags, or images.
+
+36g Rain Tagger uses [timm](https://huggingface.co/docs/timm/index) and leverages the model [SmilingWolf/wd-swinv2-tagger-v3](https://huggingface.co/SmilingWolf/wd-swinv2-tagger-v3).
+
+It is named after [36g](https://vocaloid.fandom.com/wiki/36g).
+
 
 ## Set Up
 
-Select your pytorch configuration by going through the menu at [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/). If you're using a CPU on Ubuntu, it should be something like `python3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cpu`. You don't need `torchvision` or `torchaudio`. If you're using a GPU on Ubuntu, `python3.12 -m pip install torch` will suffice.
+Select your pytorch configuration by going through the menu at [https://pytorch.org/get-started/locally/](https://pytorch.org/get-started/locally/).
+
+If you're using a CPU on Ubuntu, it should be something like `python3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cpu`. You don't need `torchvision` or `torchaudio`.
+
+If you're using a GPU on Ubuntu, `python3.12 -m pip install torch` will suffice.
 
 ```bash
 git clone https://github.com/skwzrd/36g-Rain-Tagger
@@ -15,12 +29,13 @@ python3.12 -m pip install -r requirements.txt
 cd src/
 ```
 
+
 ## Usage, The Tagger
 
 An example,
 
 ```
-python3.12 tagger.py --bsize 1 --gmin 0.1 --cmin 0.2 --exts jpg,jpeg,png,gif --printt --path /path/to/image.png
+python3.12 tagger.py --bsize 1 --gmin 0.2 --cmin 0.2 --exts jpg,jpeg,png,gif --printt --path /path/to/image.png
 ```
 
 All the cli command options,
@@ -44,7 +59,7 @@ options:
   --cpu, --no-cpu        Run on CPU instead of GPU. Use --no-cpu to use GPU. Default: --no-cpu
 ```
 
-**Note:** This script will automatically download the image tagging model and save it to `~/.cache/huggingface/hub`.
+**Note:** The tagger will automatically download the image tagging model and save it to `~/.cache/huggingface/hub`.
 
 ## Web UI
 
