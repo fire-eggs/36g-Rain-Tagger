@@ -1,13 +1,13 @@
 import argparse
-import os
 from itertools import batched
 from pathlib import Path
 from time import perf_counter
 
 from timm.data import create_transform, resolve_data_config
 
-from db import ImageDb
-from processor import load_model, make_tag_data, process_images
+from configs import tag_model_repo_id
+from db.db import ImageDb
+from processor import load_model, make_tag_data, process_images_from_paths
 from utils import (
     get_image_file_count,
     get_image_paths,
@@ -26,14 +26,13 @@ def main(
         valid_extensions: str='png,jpeg,jpg,gif',
         bsize: int=1,
         nmax: int=0,
-        db_name=make_path('image.db'),
+        db_name=make_path('..', 'image.db'),
         skip: bool=True,
         idx: bool=True,
         save: bool=True,
         printt: bool=False,
         cpu: bool=False,
     ):
-    repo_id = 'SmilingWolf/wd-swinv2-tagger-v3' # 'SmilingWolf/wd-convnext-tagger-v3' 'SmilingWolf/wd-vit-tagger-v3'
 
     parser = argparse.ArgumentParser(description='Image tagging utility for extracting and saving tags from images.')
     parser.add_argument(
@@ -142,7 +141,7 @@ def main(
 
     printr('Setting up database')
     db = ImageDb(db_name, init=True)
-    tag_data = make_tag_data(make_path('tags.csv'))
+    tag_data = make_tag_data(make_path('..', 'tags.csv'))
     db.insert_tags(tag_data)
     printr('Setting up database, complete')
     print()
@@ -155,7 +154,7 @@ def main(
 
     printr('Loading model')
     torch_device = get_torch_device(cpu)
-    model = load_model(repo_id).to(torch_device, non_blocking=True)
+    model = load_model(tag_model_repo_id).to(torch_device, non_blocking=True)
     transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
     printr('Loading model, complete')
     print()
@@ -181,7 +180,7 @@ def main(
         start = perf_counter()
 
         try:
-            info = process_images(image_paths_i, model, transform, torch_device, tag_data, gmin, cmin, by_idx=idx)
+            info = process_images_from_paths(image_paths_i, model, transform, torch_device, tag_data, gmin, cmin, by_idx=idx)
         except Exception as e:
             print(e)
             continue
@@ -225,7 +224,7 @@ if __name__ == '__main__':
         valid_extensions='png,jpeg,jpg,gif',
         bsize=1,
         nmax=0,
-        db_name=make_path('image.db'),
+        db_name=make_path('..', 'image.db'),
         skip=False,
         idx=True,
         save=True,

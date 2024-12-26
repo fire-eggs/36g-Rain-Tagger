@@ -12,6 +12,7 @@ cd 36g-Rain-Tagger
 python3.12 -m venv venv
 source venv/bin/activate
 python3.12 -m pip install -r requirements.txt
+cd src/
 ```
 
 ## Usage, The Tagger
@@ -48,22 +49,27 @@ options:
 ## Web UI
 
 ```
-cp rename_to_api_conf.py api_conf.py
-# set variables in 'api_conf.py'
+cd src/
+
+cp   rename_to_configs.py   configs.py
+# set variables in 'configs.py'
+
+celery -A web.celery_app worker --loglevel=info --pool solo
+
 python3.12 web.py
 ```
 
 #### Desktop, Info Mode
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview1.png" height="400">
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview1.png" height="400">
 
 #### Desktop, Gallery Mode
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview3.png" height="400">
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview3.png" height="400">
 
 #### Mobile, Gallery Mode
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview2.png" height="400">
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview2.png" height="400">
 
 
 ## Structures

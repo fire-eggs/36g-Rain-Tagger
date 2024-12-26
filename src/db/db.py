@@ -184,7 +184,7 @@ class ImageDb:
         return results
 
 
-    @lru_cache(maxsize=5)
+    @lru_cache(maxsize=2)
     def get_tags(self) -> list[tuple]:
         rows = self.cursor.execute('SELECT tag_id, tag_name, tag_type_name FROM tag JOIN tag_type USING(tag_type_id)').fetchall()
         if not rows:
@@ -192,8 +192,8 @@ class ImageDb:
         return rows
 
 
-    @lru_cache(maxsize=5)
-    def get_image_count(self, hour: int) -> int:
+    @lru_cache(maxsize=2)
+    def get_image_count(self, date: str) -> int:
         return int(self.cursor.execute('SELECT count() FROM image;').fetchone()[0])
 
 

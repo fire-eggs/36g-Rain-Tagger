@@ -16,6 +16,7 @@ const f_values = {
 
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
+const file_input = document.getElementById('img');
 const general_tag_suggestions = document.getElementById('general_tag_suggestions');
 const character_tag_suggestions = document.getElementById('character_tag_suggestions');
 const selected_general_tags_div = document.getElementById('selected_general_tags');
@@ -181,18 +182,50 @@ display_button.addEventListener('click', async () => {
     render_results();
 });
 
+
+async function fetch_task_result(id, max_attempts = 10, delay = 3000, attempts = 1) {
+    const response = await fetch(`/task_result/${id}`);
+    const task = await response.json();
+    if (task.ready) {
+        search_button.disabled = false;
+        return task.value;
+    } else if (attempts < max_attempts) {
+        return new Promise(resolve => setTimeout(resolve, delay)).then(() => fetch_task_result(id, max_attempts, delay * attempts, attempts + 1));
+    } else {
+        search_button.disabled = false;
+        throw new Error(`Task result not ready after ${max_attempts} attempts`);
+    }
+}
+
+
 async function fetch_results() {
-    const params = new URLSearchParams();
+    var d;
+    if (file_input.files && file_input.files.length > 0) {
+        search_button.disabled = true;
+        results_div.innerHTML = `<div class="row">Searching...</div>`;
+        const formData = new FormData();
+        formData.append("img", file_input.files[0]);
+        const response = await fetch("/search_w_file", {
+            method: "POST",
+            body: formData
+        });
+        d = await response.json();
+        d = await fetch_task_result(d.task_id);
+    }
+    else {
+        const params = new URLSearchParams();
 
-    Object.keys(f_inputs).forEach(f => {
-        params.append(f, parseFloat(f_inputs[f].value));
-    });
+        Object.keys(f_inputs).forEach(f => {
+            params.append(f, parseFloat(f_inputs[f].value));
+        });
 
-    selected_general_tags.forEach(tag => params.append('general_tag_ids', tag.id));
-    selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
+        selected_general_tags.forEach(tag => params.append('general_tag_ids', tag.id));
+        selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
 
-    const response = await fetch(`/search_images?${params.toString()}`);
-    let d = await response.json();
+        const response = await fetch(`/search_w_tags?${params.toString()}`);
+        d = await response.json();
+    }
+
     results = d.results;
     message = d.message;
 }

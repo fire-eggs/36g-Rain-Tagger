@@ -25,6 +25,10 @@ html {
     transition: 0.3s all;
 }
 
+button:disabled {
+    cursor: default;
+}
+
 .search input {
     display: block;
     margin: 5px 0;

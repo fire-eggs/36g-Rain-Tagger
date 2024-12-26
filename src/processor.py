@@ -53,7 +53,7 @@ def get_tags(probs: Tensor, tag_data: TagData, g_min: float, c_min: float, by_id
     return rating_tags, char_tags, gen_tags
 
 
-def process_images(image_paths: list[Path], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
+def process_images_from_paths(image_paths: list[Path], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
     img_tensors = []
     for image_path in image_paths:
         img = Image.open(image_path)
@@ -69,7 +69,22 @@ def process_images(image_paths: list[Path], model: nn.Module, transform: Compose
     return [get_tags(output.squeeze(0), tag_data, g_min, c_min, by_idx=by_idx) for output in outputs]
 
 
-def load_model(repo_id: str) -> nn.Module:
-    model = timm.create_model(f'hf-hub:{repo_id}', pretrained=True).eval()
-    model.load_state_dict(timm.models.load_state_dict_from_hf(repo_id))
+def process_images_from_imgs(imgs: list[Image.Image], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
+    img_tensors = []
+    for img in imgs:
+        img = pil_ensure_rgb(img)
+        img_tensor = transform(img).unsqueeze(0).to(torch_device, non_blocking=True)[:, [2, 1, 0]]  # RGB to BGR
+        img_tensors.append(img_tensor)
+
+    img_batch = torch.cat(img_tensors, dim=0)
+
+    with torch.inference_mode():
+        outputs = torch.sigmoid(model(img_batch))
+
+    return [get_tags(output.squeeze(0), tag_data, g_min, c_min, by_idx=by_idx) for output in outputs]
+
+
+def load_model(tag_model_repo_id: str) -> nn.Module:
+    model = timm.create_model(f'hf-hub:{tag_model_repo_id}', pretrained=True).eval()
+    model.load_state_dict(timm.models.load_state_dict_from_hf(tag_model_repo_id))
     return model
