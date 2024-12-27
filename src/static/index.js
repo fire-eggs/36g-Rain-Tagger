@@ -31,7 +31,7 @@ let selected_character_tags = [];
 let all_tags = [];
 let results = [];
 let current_display_mode = 'Gallery';
-let message = [];
+let message = '';
 
 
 Object.keys(f_inputs).forEach(f => {
@@ -137,7 +137,7 @@ clear_button.addEventListener('click', () => {
 });
 
 function render_results() {
-    results_div.innerHTML = `<div class="row">${message}</div>`;
+    results_div.innerHTML = `<div class="m message">${message}</div>`;
 
     if (results.length === 0) {
         return;
@@ -145,7 +145,7 @@ function render_results() {
 
     if (current_display_mode === 'Gallery') {
         results_div.innerHTML += results.map(result => `
-            <div class="row">
+            <div class="m row">
                 <img class="result" src="/serve${result.image_path}" loading="lazy"/>
                 <div class="pills">
                     ${render_tags_text(result.rating, 'rating')}
@@ -155,9 +155,10 @@ function render_results() {
             </div>
         `).join('');
     } else {
-        results_div.innerHTML += results.map(result => `
+        const r = results.map(result => `
             <img class="result" src="/serve${result.image_path}" loading="lazy"/>
         `).join('');
+        results_div.innerHTML += `<div class="m">${r}</div>`;
     }
 }
 
@@ -183,26 +184,25 @@ display_button.addEventListener('click', async () => {
 });
 
 
-async function fetch_task_result(id, max_attempts = 10, delay = 3000, attempts = 1) {
+async function fetch_task_result(id, max_attempts = 10, delay = 1000, attempts = 1) {
     const response = await fetch(`/task_result/${id}`);
     const task = await response.json();
     if (task.ready) {
-        search_button.disabled = false;
         return task.value;
     } else if (attempts < max_attempts) {
         return new Promise(resolve => setTimeout(resolve, delay)).then(() => fetch_task_result(id, max_attempts, delay * attempts, attempts + 1));
     } else {
-        search_button.disabled = false;
         throw new Error(`Task result not ready after ${max_attempts} attempts`);
     }
 }
 
 
 async function fetch_results() {
+    search_button.disabled = true;
+
     var d;
     if (file_input.files && file_input.files.length > 0) {
-        search_button.disabled = true;
-        results_div.innerHTML = `<div class="row">Searching...</div>`;
+        results_div.innerHTML = `<div class="m row">Searching...</div>`;
         const formData = new FormData();
         formData.append("img", file_input.files[0]);
         const response = await fetch("/search_w_file", {
@@ -211,6 +211,7 @@ async function fetch_results() {
         });
         d = await response.json();
         d = await fetch_task_result(d.task_id);
+        file_input.value = '';
     }
     else {
         const params = new URLSearchParams();
@@ -228,4 +229,6 @@ async function fetch_results() {
 
     results = d.results;
     message = d.message;
+
+    search_button.disabled = false;
 }

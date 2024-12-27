@@ -9,7 +9,7 @@ html {
     display: flex;
     flex-direction: column;
     max-width: 100%;
-    width: 202px;
+    width: 220px;
     gap: 10px;
     margin: 5px;
 }
@@ -37,7 +37,16 @@ button:disabled {
 .filters label {
     display: block;
     margin: 5px 0;
-    text-align: center;
+    text-align: right;
+}
+
+label span {
+    margin-right: 2px;
+    font-size: small;
+}
+
+div.message {
+    white-space: pre-wrap;
 }
 
 .center {
@@ -46,7 +55,7 @@ button:disabled {
 
 .filters input[type="range"] {
     vertical-align: middle;
-    width: 90px;
+    width: 80px;
 }
 
 input[type=text]{
@@ -57,7 +66,7 @@ input[type=text]{
     display: flex;
     flex-direction: column;
     gap: 5px;
-    width: 200px;
+    width: 220px;
 }
 
 #general_tag_suggestions,
@@ -107,8 +116,11 @@ input[type=text]{
 
 .row {
     display: flex;
-    margin: 1em;
     max-width: 99%;
+}
+
+.m {
+    margin: 1em;
 }
 
 img.result {
@@ -130,6 +142,23 @@ img.result {
     color: black;
 }
 
+.filters {
+    display: table;
+    margin: 0 auto;
+}
+
+.filters label {
+    display: table-row;
+    text-align: left;
+}
+
+.filters label span {
+    display: table-cell;
+    text-align: right;
+    padding-right: 10px;
+}
+
+
 @media (max-width: 770px) {
     .container {
         flex-direction: column;
@@ -143,13 +172,8 @@ img.result {
         margin: 5px auto;
     }
 
-    .filters,
     .search {
         width: 100%;
-    }
-
-    .filters label {
-        font-size: 14px;
     }
 
     .search input {

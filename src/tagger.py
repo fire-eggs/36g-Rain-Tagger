@@ -11,7 +11,7 @@ from processor import load_model, make_tag_data, process_images_from_paths
 from utils import (
     get_image_file_count,
     get_image_paths,
-    get_sha256,
+    get_sha256_from_path,
     get_torch_device,
     get_valid_extensions,
     make_path,
@@ -170,7 +170,7 @@ def main(
 
         p = []
         for image_path_i in image_paths_i:
-            if skip_existing and get_sha256(image_path_i) in sha256s:
+            if skip_existing and get_sha256_from_path(image_path_i) in sha256s:
                 continue
             p.append(image_path_i)
         if len(p) < 1:

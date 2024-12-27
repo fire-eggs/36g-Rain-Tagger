@@ -29,7 +29,7 @@ def create_flask_app() -> Flask:
         CELERY=dict(
             broker_url='redis://localhost:6379',
             result_backend='redis://localhost:6379',
-            task_ignore_result=True,
+            task_ignore_result=False,
             broker_connection_retry_on_startup=False,
         ),
     )

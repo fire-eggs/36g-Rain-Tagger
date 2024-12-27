@@ -82,6 +82,11 @@ python3.12 web.py
 
 <img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview3.png" height="400">
 
+#### Desktop, Uploaded Image Search
+
+<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview4.png" height="400">
+
+
 #### Mobile, Gallery Mode
 
 <img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview2.png" height="400">

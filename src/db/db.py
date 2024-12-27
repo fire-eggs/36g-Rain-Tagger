@@ -2,7 +2,7 @@ import sqlite3
 from functools import lru_cache
 
 from structs import Ratings, TagData, TagType
-from utils import get_sha256
+from utils import get_sha256_from_path
 
 
 def get_phg(l: list) -> str:
@@ -92,7 +92,7 @@ class ImageDb:
 
 
     def insert_image_tags(self, image_path: str, ratings: dict, tag_id_2_prob: dict):
-        sha256 = get_sha256(image_path)
+        sha256 = get_sha256_from_path(image_path)
         general, sensitive, questionable, explicit = ratings[Ratings.general.value], ratings[Ratings.sensitive.value], ratings[Ratings.questionable.value], ratings[Ratings.explict.value]
         row = self.cursor.execute("""
                 INSERT OR IGNORE INTO
@@ -223,7 +223,6 @@ class ImageDb:
 
         image_ids = [row[0] for row in rows]
 
-
         results = self._fetch_results(image_ids)
         return results
 
@@ -265,7 +264,7 @@ class ImageDb:
 
 
     def get_image_has_tags_by_image_path(self, image_path: str) -> bool:
-        sha256 = get_sha256(image_path)
+        sha256 = get_sha256_from_path(image_path)
         row = self.cursor.execute('SELECT image_id FROM image WHERE sha256 = ?', (sha256,)).fetchone()
         return bool(row)
 

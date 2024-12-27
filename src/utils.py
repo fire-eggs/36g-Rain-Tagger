@@ -3,6 +3,7 @@ import os
 import shlex
 import subprocess
 from functools import cache
+from io import BytesIO
 from pathlib import Path
 from typing import Generator
 
@@ -32,11 +33,18 @@ def get_torch_device(cpu: bool):
     return device('cuda' if cuda.is_available() else 'cpu')
 
 
-def get_sha256(file_path) -> str:
+def get_sha256_from_path(file_path: str) -> str:
     hasher = hashlib.sha256()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def get_sha256_from_bytesio(bytes_io: BytesIO) -> str:
+    hasher = hashlib.sha256()
+    for chunk in iter(lambda: bytes_io.read(4096), b""):
+        hasher.update(chunk)
     return hasher.hexdigest()
 
 
