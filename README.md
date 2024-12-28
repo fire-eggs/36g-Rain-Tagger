@@ -69,9 +69,11 @@ cd src/
 cp   rename_to_configs.py   configs.py
 # set variables in 'configs.py'
 
-celery -A web.celery_app worker --loglevel=info --pool solo
-
 python3.12 web.py
+
+# optional
+celery -A web.celery_app worker --loglevel=info --pool solo
+# ^ can be run in the background using --detach
 ```
 
 #### Desktop, Info Mode

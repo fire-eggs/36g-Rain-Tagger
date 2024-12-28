@@ -93,3 +93,11 @@ def get_valid_extensions(valid_extensions: str) -> list[str]:
 
 def printr(msg):
     print(f'\r{msg}', end='', flush=True)
+
+
+def clamp(val, default, min_, max_):
+    if not val:
+        return default
+    if isinstance(val, list):
+        return [max(min(v, max_), min_) for v in val]
+    return max(min(val, max_), min_)

@@ -136,8 +136,13 @@ clear_button.addEventListener('click', () => {
     });
 });
 
+
+function update_message(m) {
+    results_div.innerHTML = `<div class="m message">${m}</div>`;
+}
+
 function render_results() {
-    results_div.innerHTML = `<div class="m message">${message}</div>`;
+    update_message(message);
 
     if (results.length === 0) {
         return;
@@ -184,15 +189,19 @@ display_button.addEventListener('click', async () => {
 });
 
 
-async function fetch_task_result(id, max_attempts = 10, delay = 1000, attempts = 1) {
+async function fetch_task_result(id, attempts = 0) {
+    const delays = [2000, 2000, 4000, 4000];
     const response = await fetch(`/task_result/${id}`);
     const task = await response.json();
     if (task.ready) {
         return task.value;
-    } else if (attempts < max_attempts) {
-        return new Promise(resolve => setTimeout(resolve, delay)).then(() => fetch_task_result(id, max_attempts, delay * attempts, attempts + 1));
+    } else if (attempts < delays.length) {
+        await new Promise(resolve => setTimeout(resolve, delays[attempts]));
+        return fetch_task_result(id, attempts + 1);
     } else {
-        throw new Error(`Task result not ready after ${max_attempts} attempts`);
+        const t = delays.reduce((a, b) => a + b, 0) / 1000;
+        update_message(`Results not ready after ${delays.length} polling attempts (${t} seconds).`);
+        return null;
     }
 }
 
@@ -202,15 +211,17 @@ async function fetch_results() {
 
     var d;
     if (file_input.files && file_input.files.length > 0) {
-        results_div.innerHTML = `<div class="m row">Searching...</div>`;
+        update_message('Searching...')
         const formData = new FormData();
         formData.append("img", file_input.files[0]);
         const response = await fetch("/search_w_file", {
             method: "POST",
-            body: formData
+            body: formData,
         });
         d = await response.json();
-        d = await fetch_task_result(d.task_id);
+        if (d.task_id){
+            d = await fetch_task_result(d.task_id); // poll celery queue
+        }
         file_input.value = '';
     }
     else {
