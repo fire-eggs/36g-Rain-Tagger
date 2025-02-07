@@ -1,3 +1,4 @@
+import json
 import mimetypes
 import os
 from datetime import datetime
@@ -85,11 +86,34 @@ def search_w_tags():
     results = get_db().get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) if tags else []
     f1 = perf_counter() - i1
 
-    image_count = get_db().get_image_count(datetime.now().strftime('%Y%m%d'))
+    image_count = get_db().get_image_count()
     return jsonify({
         'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {len(results):,} results.',
         'results': results
     })
+
+
+@bp.route('/all_images', methods=['GET'])
+def all_images():
+    """An endpoint for testing demo.html only.
+
+    This will populate the file ~/demo/results.js.
+    """
+
+    if not current_app.debug:
+        raise ValueError('Not in debug mode.')
+
+    results = get_db()._get_all_images()
+
+    with open(make_path('..', 'demo', 'results.js'), mode='w') as f:
+        # I know.
+        s = 'const results = ' + json.dumps(results) + ';'
+        f.write(s)
+
+    # You can also use bash with this one liner...
+    # echo -n "const results = " > ~/Desktop/results.js && curl -s http://127.0.0.1:8000/all_images >> ~/Desktop/results.js && echo ";" >> ~/Desktop/results.js
+
+    return jsonify(results)
 
 
 @bp.route('/')

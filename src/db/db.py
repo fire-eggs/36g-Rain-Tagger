@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from functools import lru_cache
 
 from structs import Ratings, TagData, TagType
@@ -193,8 +194,26 @@ class ImageDb:
 
 
     @lru_cache(maxsize=2)
-    def get_image_count(self, date: str) -> int:
+    def _get_image_count(self, date: str) -> int:
         return int(self.cursor.execute('SELECT count() FROM image;').fetchone()[0])
+
+
+    def get_image_count(self) -> int:
+        """Utilizes a daily cache."""
+        return self._get_image_count(datetime.now().strftime('%Y%m%d'))
+
+
+    def _get_all_images(self) -> list[dict]:
+        """Used for testing on small data sets"""
+        rows = self.cursor.execute(f"""SELECT image_id FROM image ORDER BY image_id""").fetchall()
+
+        if not rows:
+            return []
+
+        image_ids = [row[0] for row in rows]
+
+        results = self._fetch_results(image_ids)
+        return results
 
 
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:

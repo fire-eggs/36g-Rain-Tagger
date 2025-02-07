@@ -21,9 +21,10 @@ print('flask_app, building')
 flask_app = create_flask_app()
 print('flask_app, created')
 
-print('celery_app, building')
-celery_app = flask_app.extensions['celery']
-print('celery_app, created')
+if use_celery:
+    print('celery_app, building')
+    celery_app = flask_app.extensions['celery']
+    print('celery_app, created')
 
 
 @flask_app.teardown_request

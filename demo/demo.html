@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="../src/static/index.css" />
+  <style>
+    .image-container {
+      display: inline-block;
+      margin: 2px;
+      text-align: center;
+    }
+    .image-container img {
+      max-width: 150px;
+      max-height: 200px;
+      display: block;
+      cursor: pointer;
+    }
+    .blur {
+      filter: blur(15px);
+      width: 100%;
+      height: 100%;
+    }
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      display: none;
+      z-index: 10;
+    }
+    .image-container:hover .tooltip {
+      display: block;
+    }
+    .info-box {
+      position: absolute;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background-color: #353535;
+      font-family: Arial, sans-serif;
+      display: none;
+      z-index: 1000;
+      width: 400px;
+      overflow-wrap: break-word;
+    }
+    a {
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <a href="http://127.0.0.1:8000/all_images" target="_blank">load new images</a><br>
+  <div class="info-box" id="info-box"></div>
+  <div>
+    <div class="filters">
+        <label for="f_blur"><span>Blur</span><input type="checkbox" id="f_blur" checked></label>
+        <label for="f_show_hidden"><span>Show Hidden Media Only</span><input type="checkbox" id="f_show_hidden"></label>
+        <label for="f_hide_blurred"><span>Hide Blurred</span><input type="checkbox" id="f_hide_blurred" checked></label>
+        <label for="f_general"><span>General</span><input type="range" id="f_general" value="0.0" min="0.0" max="1.0" step="0.02"><output id="f_general_value">0.0</output></label>
+        <label for="f_explicit"><span>Explicit (Safe Search: Off)</span><input type="range" id="f_explicit" value="0.0" min="0.0" max="1.0" step="0.02"><output id="f_explicit_value">0.0</output></label>
+        <label for="f_sensitive"><span>Sensitive (Safe Search: Strict)</span><input type="range" id="f_sensitive" value="0.0" min="0.0" max="1.0" step="0.02"><output id="f_sensitive_value">0.0</output></label>
+        <label for="f_questionable"><span>Questionable (Safe Search: Moderate)</span><input type="range" id="f_questionable" value="0.0" min="0.0" max="1.0" step="0.02"><output id="f_questionable_value">0.0</output></label>
+    </div>
+  </div>
+  <br>
+
+  <div id="safe_search">
+      Safe search:
+      <label><input type="radio" name="safe_search" value="s" checked> strict</label>
+      <label><input type="radio" name="safe_search" value="m"> moderate</label>
+      <label><input type="radio" name="safe_search" value="o"> off</label>
+  </div>
+  <br>
+
+  <div id="stats">
+  </div>
+  <br>
+
+  <div id="image-gallery">
+  </div>
+
+<script type="text/javascript" src="results.js"></script>
+<script>
+    const gallery = document.getElementById('image-gallery');
+    const infoBox = document.getElementById('info-box');
+    const total_images = results.length;
+
+    function reorder_by_rating(container) {
+        const children = Array.from(container.children);
+        const ordered_elements = children.sort((a, b) => {
+            const rating_a = JSON.parse(a.dataset.rating);
+            const rating_b = JSON.parse(b.dataset.rating);
+            return rating_b.explicit - rating_a.explicit ||
+                  rating_b.questionable - rating_a.questionable ||
+                  rating_b.sensitive - rating_a.sensitive;
+        });
+        container.innerHTML = '';
+        ordered_elements.forEach(element => container.appendChild(element));
+    }
+
+    results.forEach(data => {
+      const container = document.createElement('div');
+      container.classList.add('image-container');
+      container.dataset.rating = JSON.stringify(data.rating);
+      container.dataset.general = JSON.stringify(data.general);
+      container.innerHTML = `
+        <img
+          src="${data.image_path}"
+          alt="path: ${data.image_path}"
+          loading="lazy"
+          data-rating='${container.dataset.rating.replace(/"/g, '')}'
+          data-general='${container.dataset.general.replace(/"/g, '')}'
+        >
+        `;
+        gallery.appendChild(container);
+    });
+
+    function updateFilters() {
+      const generalThreshold = parseFloat(document.getElementById('f_general').value);
+      const explicitThreshold = parseFloat(document.getElementById('f_explicit').value);
+      const sensitiveThreshold = parseFloat(document.getElementById('f_sensitive').value);
+      const questionableThreshold = parseFloat(document.getElementById('f_questionable').value);
+      const blur_images = document.getElementById('f_blur').checked;
+      const show_hidden = document.getElementById('f_show_hidden').checked;
+      const hide_blurred = document.getElementById('f_hide_blurred').checked;
+      const safe_search = document.querySelector('input[name="safe_search"]:checked').value;
+
+      const stats = document.getElementById('stats');
+      var count = 0;
+
+      document.getElementById('f_general_value').textContent = generalThreshold;
+      document.getElementById('f_explicit_value').textContent = explicitThreshold;
+      document.getElementById('f_sensitive_value').textContent = sensitiveThreshold;
+      document.getElementById('f_questionable_value').textContent = questionableThreshold;
+
+      document.querySelectorAll('.image-container').forEach(container => {
+        const rating = JSON.parse(container.dataset.rating);
+        const general = JSON.parse(container.dataset.general);
+
+
+        let is_sfw = (rating.general >= 0.16 || rating.explicit <= 0.01) && rating.questionable < 0.92;
+        is_sfw = is_sfw || (rating.explicit < 0.02 && rating.questionable < 0.5);
+
+        const is_nsfw = rating.explicit >= 0.33 || rating.questionable >= 0.92
+            || general.nude >= 0.8
+            || general.penis >= 0.7
+            || general.nipples >= 0.75;
+
+
+        const MODERATE_THRESHOLD = 0.06; // Set this. The other variables should remain the same.
+        const strict_flag = is_nsfw || rating.questionable >= MODERATE_THRESHOLD || !is_sfw;
+
+        let is_hidden = false;
+        if (safe_search === 's') {
+            is_hidden = strict_flag;
+        }
+        else if (safe_search === 'm') {
+            is_hidden = is_nsfw || !is_sfw;
+        }
+        else if (safe_search === 'o') {
+            is_hidden = false;
+        }
+
+        if (blur_images && strict_flag) {
+            container.children[0].classList.add('blur');
+            if (hide_blurred) is_hidden = true;
+        }
+        else {
+            container.children[0].classList.remove('blur');
+        }
+
+        let is_filtered = !(rating.general >= generalThreshold &&
+                            rating.explicit >= explicitThreshold &&
+                            rating.sensitive >= sensitiveThreshold &&
+                            rating.questionable >= questionableThreshold);
+
+        const is_displayed = (is_hidden || is_filtered);
+        if (!show_hidden) {
+            container.style.display = is_displayed ? 'none' : 'inline-block';
+            is_displayed ? 1 : count+=1;
+        }
+        else {
+            container.style.display = !is_displayed ? 'none' : 'inline-block';
+            !is_displayed ? 1 : count+=1;
+        }
+
+      });
+
+      stats.innerHTML = `<b>Total:</b> ${total_images} <b>Filtered:</b> ${total_images-count} <b>Showing:</b> ${count}`;
+    }
+    reorder_by_rating(gallery);
+
+    document.getElementById('f_blur').addEventListener('change', updateFilters);
+    document.getElementById('f_show_hidden').addEventListener('change', updateFilters);
+    document.getElementById('f_hide_blurred').addEventListener('change', updateFilters);
+    document.getElementById('f_general').addEventListener('input', updateFilters);
+    document.getElementById('f_explicit').addEventListener('input', updateFilters);
+    document.getElementById('f_sensitive').addEventListener('input', updateFilters);
+    document.getElementById('f_questionable').addEventListener('input', updateFilters);
+
+    document.getElementById('safe_search').addEventListener('change', updateFilters);
+
+    updateFilters();
+
+    function wrap_substrings(str, substrings) {
+        const regex = new RegExp(`(${substrings.join('|')})`, 'gi');
+        return str.replace(regex, '<b>$1</b>');
+    }
+
+    gallery.addEventListener('click', (event) => {
+      const target = event.target;
+
+      if (target.tagName === 'IMG') {
+        const rating = target.getAttribute('data-rating');
+        const general = target.getAttribute('data-general');
+
+        infoBox.innerHTML = `
+          <p><strong>Rating:</strong> ${rating}</p>
+          <p><strong>General:</strong> ${general}</p>
+        `;
+        infoBox.style.display = 'block';
+
+        infoBox.style.left = `${event.pageX + 10}px`;
+        infoBox.style.top = `${event.pageY + 10}px`;
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        infoBox.style.display = 'none';
+      }
+      if (event.key === 'b') {
+        document.getElementById('f_blur').checked = !document.getElementById('f_blur').checked;
+        updateFilters();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!gallery.contains(event.target)) {
+        infoBox.style.display = 'none';
+      }
+    });
+
+  </script>
+</body>
+</html>
