@@ -1,6 +1,5 @@
 import os
 import sys
-from datetime import datetime
 from time import perf_counter
 
 from PIL import Image
@@ -38,7 +37,7 @@ def app_process_images_from_paths(img_path: str, page: int, per_page: int) -> di
     char_tags = {tag_data.names[k]: v for k, v in char_tags.items()}
     gen_tags = {tag_data.names[k]: v for k, v in gen_tags.items()}
 
-    image_count = get_db().get_image_count(datetime.now().strftime('%Y%m%d'))
+    image_count = get_db().get_image_count()
     message = '\n'.join([
         f'Processing your image took {f1:.3f}s.',
         f'We searched the tags of {image_count:,} images in {f2:.3f}s and found {len(results):,} results.',
