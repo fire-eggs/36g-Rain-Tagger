@@ -175,12 +175,11 @@ def tags():
     return _tags()
 
 
-@bp.route(f'/serve/<path:file_path>')
-def serve(file_path: str):
-    file_path = safe_join('/', file_path)
-
+@bp.route('/serve')
+def serve():
+    file_path = request.args.get('p')
     if not file_path:
-        abort(NotFound)
+        abort(404)
 
     if not file_path.split('.')[-1].lower().endswith(configs.valid_extensions):
         abort(UnsupportedMediaType)

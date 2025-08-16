@@ -167,7 +167,7 @@ function renderResults(data) {
         if (current_display_mode === 'Gallery') {
             html += data.results.map(result => `
                 <div class="m row">
-                    <img class="result" src="/serve/${result.image_path}" loading="lazy"/>
+                    <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
                     <div class="pills">
                         ${render_tags_text(result.rating, 'rating')}
                         ${render_tags_text(result.general, 'general')}
@@ -177,7 +177,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="/serve/${result.image_path}" loading="lazy"/>
+                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
