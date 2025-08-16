@@ -8,6 +8,7 @@ const selected_character_tags_div = document.getElementById('selected_character_
 const search_button = document.getElementById('search_button');
 const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
+const pagination_div = document.getElementById('pagination');
 
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
@@ -21,6 +22,10 @@ const f_sensitive_value = document.getElementById('f_sensitive_value');
 const f_explicit_value = document.getElementById('f_explicit_value');
 const f_questionable_value = document.getElementById('f_questionable_value');
 
+const per_page_input = document.getElementById('per_page_input');
+const page_input = document.getElementById('page_input');
+const go_input = document.getElementById('go_input');
+
 [f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach(input => {
     input.addEventListener('input', () => {
         document.getElementById(input.id + "_value").textContent = input.value;
@@ -30,6 +35,18 @@ const f_questionable_value = document.getElementById('f_questionable_value');
 let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = new Map();
+let current_page = 1;
+let per_page = 25;
+
+per_page_input.addEventListener('input', () => {
+    per_page = parseInt(per_page_input.value) || 25;
+});
+page_input.addEventListener('input', () => {
+    current_page = parseInt(page_input.value) || 1;
+});
+go_input.addEventListener('click', () => {
+    performSearch(true);
+});
 
 async function fetchAllTags() {
     const response = await fetch('/tags');
@@ -117,6 +134,7 @@ function clearAll() {
     document.getElementById('file_tags_character').value = '';
     document.getElementById('file_tags_general').value = '';
     results_div.innerHTML = '';
+    pagination_div.innerHTML = '';
 }
 
 let current_display_mode = "List";
@@ -165,9 +183,27 @@ function renderResults(data) {
         }
     }
     results_div.innerHTML = html;
+
+    pagination_div.innerHTML = `
+        <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
+        Page: ${current_page}, Per Page: ${per_page}
+        <button id="next_page" class="flat">Next</button>
+    `;
+
+    document.getElementById('prev_page').addEventListener('click', () => {
+        if (current_page > 1) {
+            current_page--;
+            performSearch(true);
+        }
+    });
+
+    document.getElementById('next_page').addEventListener('click', () => {
+        current_page++;
+        performSearch(true);
+    });
 }
 
-async function performSearch() {
+async function performSearch(isPagination = false) {
     const filters = {
         tag: f_tag.value,
         general: f_general.value,
@@ -175,6 +211,8 @@ async function performSearch() {
         explicit: f_explicit.value,
         questionable: f_questionable.value
     };
+
+    if (!isPagination) current_page = 1;
 
     let file = null;
     if (file_input) {
@@ -184,6 +222,8 @@ async function performSearch() {
         const formData = new FormData();
         formData.append('img', file);
         Object.entries(filters).forEach(([k, v]) => formData.append(`f_${k}`, v));
+        formData.append('page', current_page);
+        formData.append('per_page', per_page);
         try {
             const resp = await fetch('/search_w_file', { method: 'POST', body: formData });
             if (!resp.ok) throw new Error(`File search failed: ${resp.status}`);
@@ -197,8 +237,8 @@ async function performSearch() {
         generalIds.forEach(id => params.append('general_tag_ids', id));
         characterIds.forEach(id => params.append('character_tag_ids', id));
         Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
-        params.append('page', 0);
-        params.append('per_page', 25);
+        params.append('page', current_page);
+        params.append('per_page', per_page);
         try {
             const resp = await fetch(`/search_w_tags?${params.toString()}`);
             if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
@@ -212,6 +252,6 @@ general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_inp
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 clear_button.addEventListener('click', clearAll);
-search_button.addEventListener('click', performSearch);
+search_button.addEventListener('click', () => performSearch(false));
 
 fetchAllTags();

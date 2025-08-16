@@ -62,6 +62,11 @@ input[type=text]{
     background-color: #c1c1c1;
 }
 
+input[type=number]{
+    width: 4em;
+    background-color: #c1c1c1;
+}
+
 .search {
     display: flex;
     flex-direction: column;

@@ -10,7 +10,7 @@
 <body>
     <div class="row">
     <div class="container">
-        <h3 class="center">36g Rain Tagger</h3>
+        <h3 class="center"><a href="https://github.com/skwzrd/36g-Rain-Tagger" style="color: inherit;">36g Rain Tagger</a></h3>
         <div class="filters">
             <label for="f_tag"><span>Tags</span><input type="range" id="f_tag" value="0.0" min="0" max="1" step="0.1"><output id="f_tag_value">0.0</output></label>
             <label for="f_general"><span>General</span><input type="range" id="f_general" value="0.0" min="0" max="1" step="0.1"><output id="f_general_value">0.0</output></label>
@@ -23,12 +23,12 @@
         <input id="file_tags_character" maxlength="100" minlength="0" name="file_tags_character" style="display: none;" type="text" value="">
 
         <div class="search">
-            <input id="general_tag_input" type="text" placeholder="Search general tags">
+            <input id="general_tag_input" type="text" autocomplete="off" placeholder="Search general tags">
             <div id="general_tag_suggestions"></div>
             <div id="selected_general_tags"></div>
         </div>
         <div class="search">
-            <input id="character_tag_input" type="text" placeholder="Search character tags">
+            <input id="character_tag_input" type="text" autocomplete="off" placeholder="Search character tags">
             <div id="character_tag_suggestions"></div>
             <div id="selected_character_tags"></div>
         </div>
@@ -44,7 +44,15 @@
         <button id="display_button" class="flat">Display: Gallery</button>
 
     </div>
-    <div id="results"></div>
+    <div>
+        <div style="padding: 1px;">
+            <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
+            <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
+            <button id="go_input" class="flat">Go</button>
+        </div>
+        <div id="pagination"></div>
+        <div id="results"></div>
+    </div>
     </div>
 
     <script src="/static/index.js"></script>

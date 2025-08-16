@@ -52,9 +52,6 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 ### Tagging
 
-Benchmarked using [https://github.com/sky-cake/image_data_set](https://github.com/sky-cake/image_data_set)
-
-
 | Device         |   Images   | Total Time (s) | Time per Image (s) |
 |----------------|:----------:|---------------:|-------------------:|
 | 4060 TI 16GB GPU    |     45     |          2.172 |              0.048 |

@@ -109,8 +109,8 @@ def search_w_file():
 @bp.route('/search_w_tags', methods=['GET'])
 def search_w_tags():
     filters = {k: clamp(request.args.get(k, type=float), 0.0, 0.0, 1.0) for k in get_filters()}
-    page = clamp(request.args.get('page', type=int), 0, 0, 10)
-    per_page = clamp(request.args.get('per_page', type=int), 25, 0, 25)
+    page = clamp(request.args.get('page', type=int), 0, 0, 1_000)
+    per_page = clamp(request.args.get('per_page', type=int), 25, 0, 1_000)
 
     general_tag_ids = request.args.getlist('general_tag_ids', type=int)
     character_tag_ids = request.args.getlist('character_tag_ids', type=int)
