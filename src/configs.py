@@ -47,6 +47,8 @@ class TaggerConfigs:
         self.host = configs.get('host')
         self.port = configs.get('port')
         self.debug = configs.get('debug')
+        self.allow_file_upload_search = configs.get('allow_file_upload_search', False)
+        self.web_media_roots = tuple(configs.get('web_media_roots', []))
 
 
 configs = TaggerConfigs(user_configs)

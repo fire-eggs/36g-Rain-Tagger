@@ -9,6 +9,24 @@ const search_button = document.getElementById('search_button');
 const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 
+const f_tag = document.getElementById('f_tag');
+const f_general = document.getElementById('f_general');
+const f_sensitive = document.getElementById('f_sensitive');
+const f_explicit = document.getElementById('f_explicit');
+const f_questionable = document.getElementById('f_questionable');
+
+const f_tag_value = document.getElementById('f_tag_value');
+const f_general_value = document.getElementById('f_general_value');
+const f_sensitive_value = document.getElementById('f_sensitive_value');
+const f_explicit_value = document.getElementById('f_explicit_value');
+const f_questionable_value = document.getElementById('f_questionable_value');
+
+[f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach(input => {
+    input.addEventListener('input', () => {
+        document.getElementById(input.id + "_value").textContent = input.value;
+    });
+});
+
 let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = new Map();
@@ -40,14 +58,11 @@ function handleTagInput(inputEl, suggestionDiv, typeId) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
-
     const filtered = Array.from(all_tags.values())
         .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
-
     suggestionDiv.innerHTML = filtered.map(tag =>
         `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
     ).join('');
-
     attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
         typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
 }
@@ -70,7 +85,6 @@ function renderTags(container, selectedArray, className) {
     container.innerHTML = selectedArray.map(tag =>
         `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
     ).join('');
-
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
@@ -105,16 +119,31 @@ function clearAll() {
     results_div.innerHTML = '';
 }
 
-let current_display_mode = "Gallery";
+let current_display_mode = "List";
+const display_button = document.getElementById('display_button');
+
+display_button.addEventListener('click', () => {
+    if (current_display_mode === "List") {
+        current_display_mode = "Gallery";
+        display_button.textContent = "Display: List";
+    } else {
+        current_display_mode = "List";
+        display_button.textContent = "Display: Gallery";
+    }
+    if (window.lastSearchResults) {
+        renderResults(window.lastSearchResults);
+    }
+});
 
 function render_tags_text(tags, category) {
     return Object.entries(tags || {})
         .filter(([k, v]) => v > 0.2)
-        .map(([k, v]) => `<span class="tag-pill ${category}">${k} (${(v*100).toFixed(0)}%)</span>`)
+        .map(([k, v]) => `<span class="pill ${category}">${k} (${(v*100).toFixed(0)}%)</span>`)
         .join(' ');
 }
 
 function renderResults(data) {
+    window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
     if (data.results && data.results.length) {
         if (current_display_mode === 'Gallery') {
@@ -130,7 +159,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="${result.image_path}" loading="lazy"/>
+                <img class="result" src="/serve/${result.image_path}" loading="lazy"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
@@ -139,10 +168,22 @@ function renderResults(data) {
 }
 
 async function performSearch() {
-    const file = file_input.files[0];
+    const filters = {
+        tag: f_tag.value,
+        general: f_general.value,
+        sensitive: f_sensitive.value,
+        explicit: f_explicit.value,
+        questionable: f_questionable.value
+    };
+
+    let file = null;
+    if (file_input) {
+        file = file_input.files[0];
+    }
     if (file) {
         const formData = new FormData();
         formData.append('img', file);
+        Object.entries(filters).forEach(([k, v]) => formData.append(`f_${k}`, v));
         try {
             const resp = await fetch('/search_w_file', { method: 'POST', body: formData });
             if (!resp.ok) throw new Error(`File search failed: ${resp.status}`);
@@ -152,13 +193,12 @@ async function performSearch() {
         const generalIds = selected_general_tags.map(t => t.tag_id);
         const characterIds = selected_character_tags.map(t => t.tag_id);
         if (!generalIds.length && !characterIds.length) return;
-
         const params = new URLSearchParams();
         generalIds.forEach(id => params.append('general_tag_ids', id));
         characterIds.forEach(id => params.append('character_tag_ids', id));
+        Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
         params.append('page', 0);
         params.append('per_page', 25);
-
         try {
             const resp = await fetch(`/search_w_tags?${params.toString()}`);
             if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);

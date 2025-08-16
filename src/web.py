@@ -12,7 +12,7 @@ from flask import (
     jsonify,
     render_template,
     request,
-    send_file
+    send_file,
 )
 from PIL import Image
 from werkzeug.datastructures import FileStorage
@@ -26,9 +26,11 @@ from werkzeug.security import safe_join
 
 from configs import configs
 from db_flask import FlaskImageDb
-from processor import process_images_from_imgs
 from tagger import Tagger
 from utils import clamp, get_sha256_from_bytesio, make_path
+
+if configs.allow_file_upload_search:
+    from processor import process_images_from_imgs
 
 
 bp = Blueprint('36g', __name__)
@@ -84,6 +86,9 @@ def app_process_images_from_path(img_path: str, page: int, per_page: int) -> dic
 
 @bp.route('/search_w_file', methods=['POST'])
 def search_w_file():
+    if not configs.allow_file_upload_search:
+        abort(404)
+
     file_image: FileStorage = request.files.get('img')
     if not file_image:
         abort(BadRequest)
@@ -121,7 +126,7 @@ def search_w_tags():
     image_count = current_app.db.get_image_count()
     return jsonify({
         'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {len(results):,} results.',
-        'results': results
+        'results': results,
     })
 
 
@@ -151,7 +156,7 @@ def all_images():
 
 @bp.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', allow_file_upload_search=configs.allow_file_upload_search)
 
 
 @lru_cache(maxsize=1)
@@ -162,7 +167,7 @@ def get_all_tags():
     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
 
-@bp.get("/tags")
+@bp.get('/tags')
 def tags():
     @lru_cache
     def _tags():
@@ -180,7 +185,7 @@ def serve(file_path: str):
     if not file_path.split('.')[-1].lower().endswith(configs.valid_extensions):
         abort(UnsupportedMediaType)
 
-    if not file_path.startswith(configs.root_path):
+    if not file_path.startswith(configs.web_media_roots):
         abort(Forbidden)
 
     if not os.path.isfile(file_path):
@@ -192,9 +197,13 @@ def serve(file_path: str):
 print('flask_app, starting')
 
 flask_app = Flask(__name__)
+
 flask_app.tagger = Tagger(configs)
-flask_app.tagger.load_model()
+if configs.allow_file_upload_search:
+    flask_app.tagger.load_model()
+
 flask_app.db = FlaskImageDb(configs.db_path, sql_echo=configs.sql_echo)
+
 flask_app.register_blueprint(bp)
 
 @flask_app.teardown_appcontext

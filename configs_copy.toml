@@ -35,3 +35,14 @@ sql_insert_batch_size = 10000
 host = "127.0.0.1"
 port = 5005
 debug = false
+
+# 36g will tag an uploaded image, and search for its tags
+# if this is false, 36g does not load any tagging model
+# and you will not be able to serach with images
+allow_file_upload_search = false
+
+# paths can be anywhere on your computer, not just within the app's root path
+web_media_roots = [
+  # "/full/path/where/image/serving/is/permitted/1",
+  # "/full/path/where/image/serving/is/permitted/2",
+]
