@@ -11,6 +11,13 @@ class TagData:
     character: List[int]
 
 
+class Ext(Enum):
+    jpg = 1
+    jpeg = 2
+    png = 3
+    gif = 4
+
+
 class TagType(Enum):
     general = 0
     character = 4
@@ -22,3 +29,10 @@ class Ratings(Enum):
     sensitive = 1
     questionable = 2
     explict = 3
+
+
+class SafeSearch(Enum):
+    off = 0
+    moderate = 1
+    safe = 2
+    unsafe = 3

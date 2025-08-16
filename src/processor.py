@@ -1,13 +1,13 @@
-import csv
-from pathlib import Path
+from typing import Iterable
 
-import timm
 import torch
 from PIL import Image
+from timm import create_model
+from timm.models import load_state_dict_from_hf
 from torch import Tensor, device, nn
 from torchvision.transforms import Compose
 
-from structs import TagData, TagType
+from enums import TagData
 
 
 def pil_ensure_rgb(image: Image.Image) -> Image.Image:
@@ -18,23 +18,6 @@ def pil_ensure_rgb(image: Image.Image) -> Image.Image:
         background.alpha_composite(image)
         image = background.convert('RGB')
     return image
-
-
-def make_tag_data(path) -> TagData:
-    names = []
-    rating, general, character = [], [], []
-    with open(path, newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for idx, row in enumerate(reader):
-            names.append(row['tag_name'])
-            tag_type_id = int(row['tag_type_id'])
-            if tag_type_id == TagType.rating.value:
-                rating.append(idx)
-            elif tag_type_id == TagType.general.value:
-                general.append(idx)
-            elif tag_type_id == TagType.character.value:
-                character.append(idx)
-    return TagData(names=names, rating=rating, general=general, character=character)
 
 
 def get_tags(probs: Tensor, tag_data: TagData, g_min: float, c_min: float, by_idx=True):
@@ -53,7 +36,7 @@ def get_tags(probs: Tensor, tag_data: TagData, g_min: float, c_min: float, by_id
     return rating_tags, char_tags, gen_tags
 
 
-def process_images_from_paths(image_paths: list[Path], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
+def process_images_from_paths(image_paths: Iterable[str], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
     img_tensors = []
     for image_path in image_paths:
         img = Image.open(image_path)
@@ -85,6 +68,6 @@ def process_images_from_imgs(imgs: list[Image.Image], model: nn.Module, transfor
 
 
 def load_model(tag_model_repo_id: str) -> nn.Module:
-    model = timm.create_model(f'hf-hub:{tag_model_repo_id}', pretrained=True).eval()
-    model.load_state_dict(timm.models.load_state_dict_from_hf(tag_model_repo_id))
+    model = create_model(f'hf-hub:{tag_model_repo_id}', pretrained=True).eval()
+    model.load_state_dict(load_state_dict_from_hf(tag_model_repo_id))
     return model

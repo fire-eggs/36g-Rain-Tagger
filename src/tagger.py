@@ -1,233 +1,167 @@
-import argparse
+import os
 from itertools import batched
-from pathlib import Path
 from time import perf_counter
 
-from timm.data import create_transform, resolve_data_config
-
-from configs import tag_model_repo_id
-from db.db import ImageDb
-from processor import load_model, make_tag_data, process_images_from_paths
-from utils import (
-    get_image_file_count,
-    get_image_paths,
-    get_sha256_from_path,
-    get_torch_device,
-    get_valid_extensions,
-    make_path,
-    printr
-)
+from configs import TaggerConfigs, configs
+from db import ImageDb
+from enums import Ext
+from tag_data import get_tag_data
+from utils import get_sha256_from_path, get_torch_device, printr
 
 
-def main(
-        path: str|list[str]=None,
-        gmin: int=0.2,
-        cmin: int=0.2,
-        valid_extensions: str='png,jpeg,jpg,gif',
-        bsize: int=1,
-        nmax: int=0,
-        db_name=make_path('..', 'image.db'),
-        skip: bool=True,
-        idx: bool=True,
-        save: bool=True,
-        printt: bool=False,
-        cpu: bool=False,
-    ):
+class Tagger:
+    def __init__(self, configs: TaggerConfigs):
+        self.configs: TaggerConfigs = configs
 
-    parser = argparse.ArgumentParser(description='Image tagging utility for extracting and saving tags from images.')
-    parser.add_argument(
-        '--path',
-        type=Path,
-        default=path,
-        help=f'Path to an image file or a directory containing images. '
-             f'Can also accept a list of paths. Default: {path if path else "None"}'
-    )
-    parser.add_argument(
-        '--gmin',
-        type=float,
-        default=gmin,
-        help=f'Minimum probability threshold for general tags. '
-             f'Range: [0.0, 1.0], where 1.0 means a very strong match. Default: {gmin}'
-    )
-    parser.add_argument(
-        '--cmin',
-        type=float,
-        default=cmin,
-        help=f'Minimum probability threshold for character tags. '
-             f'Range: [0.0, 1.0], where 1.0 means a very strong match. Default: {cmin}'
-    )
-    parser.add_argument(
-        '--exts',
-        type=str,
-        default=valid_extensions,
-        help=f'Comma-separated list of valid image file extensions to process. '
-             f'Default: {valid_extensions}'
-    )
-    parser.add_argument(
-        '--nmax',
-        type=int,
-        default=nmax,
-        help='Maximum number of images to tag. Set to 0 to process all images found in the specified path. '
-            f'Default: {nmax}'
-    )
-    parser.add_argument(
-        '--bsize',
-        type=int,
-        default=bsize,
-        help='Batch size for processing images. For faster processing, use a batch size of 1. '
-            f'Default: {bsize}'
-    )
-    parser.add_argument(
-        '--db_name',
-        type=str,
-        default=db_name,
-        help=f'Name of the SQLite database file to save results. Default: {db_name}'
-    )
-    parser.add_argument(
-        '--skip',
-        type=bool,
-        default=skip,
-        help=f'Skip images that already have tags saved in the database. Use --no-skip to reprocess them. Default: {skip}',
-        action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument(
-        '--idx',
-        type=bool,
-        default=idx,
-        help=f'Enable index-to-probability mappings. Required to save results. Use --no-idx to disable. Default: {idx}',
-        action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument(
-        '--save',
-        type=bool,
-        default=save,
-        help=f'Save results to the SQLite database. Use --no-save to skip saving. Default: {save}',
-        action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument(
-        '--printt',
-        type=bool,
-        default=printt,
-        help=f'Print results. Use --no-printt to disable printing. Default: {printt}',
-        action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument(
-        '--cpu',
-        type=bool,
-        default=cpu,
-        help=f'Run on CPU instead of GPU. Use --no-cpu to use GPU. Default: {cpu}',
-        action=argparse.BooleanOptionalAction
-    )
+        self.db: ImageDb = ImageDb(self.configs.db_path, self.configs.sql_echo)
 
-    args = parser.parse_args()
-    db_name = args.db_name
-    nmax = args.nmax
-    bsize = args.bsize
-    skip_existing = args.skip
-    gmin = args.gmin
-    cmin = args.cmin
-    valid_extensions = args.exts
-    path = args.path
-    idx = args.idx
-    save = args.save and args.idx
-    printt = args.printt
-    cpu = args.cpu
+        printr('init tagging, started\n')
+        self.db.init_tagging()
+        printr('init tagging, completed\n')
+        printr('get_tag_data, started')
+        self.tag_data = get_tag_data()
+        printr('get_tag_data, completed\n')
 
-    valid_extensions = get_valid_extensions(valid_extensions)
-    image_paths = get_image_paths(path, valid_extensions)
-    if path.is_dir():
-        nfiles = get_image_file_count(str(path), valid_extensions)
-        print(f'Found ({nfiles}) {valid_extensions} files in {path}')
+        self.torch_device = None
+        self.model = None
+        self.transform = None
 
-    printr('Setting up database')
-    db = ImageDb(db_name, init=True)
-    tag_data = make_tag_data(make_path('..', 'tags.csv'))
-    db.insert_tags(tag_data)
-    printr('Setting up database, complete')
-    print()
 
-    sha256s = set()
-    if skip_existing:
-        sha256s = db.get_sha256s()
-        printr(f'Found {len(sha256s)} images in database')
+    def load_model(self):
+        # heavy imports
+        from timm.data import create_transform, resolve_data_config
+
+        from processor import load_model, process_images_from_paths
+
+        printr('Loading model, started')
+        self.torch_device = get_torch_device(self.configs.cpu)
+        self.model = load_model(self.configs.tag_model_repo_id).to(self.torch_device, non_blocking=True)
+        self.transform = create_transform(**resolve_data_config(self.model.pretrained_cfg, model=self.model))
+        printr('Loading model, completed\n')
+
+
+    def scan_and_store(self):
+        print(f'Scanning and storing images for {self.configs.root_path=}')
+
+        batch = []
+        count = 0
+
+        sql_string = '''insert or ignore into image (directory_id, filename, ext) values (?,?,?)'''
+
+        for directory, _, filenames in os.walk(self.configs.root_path):
+            for filename in filenames:
+                if not filename.endswith(self.configs.valid_extensions):
+                    continue
+
+                ext: int = Ext[filename.rsplit('.', 1)[1]].value
+
+                directory_id = self.db.get_directory_id(directory)
+                batch.append((directory_id, filename, ext))
+                count += 1
+
+                if len(batch) >= self.configs.sql_insert_batch_size:
+                    print(f'images: {count:,}')
+
+                    self.db.run_query_many(sql_string, params=batch, commit=True)
+                    batch.clear()
+
+        if batch:
+            self.db.run_query_many(sql_string, params=batch, commit=True)
+        print(f'Scanning and storing {self.configs.root_path=}, done')
+
+
+    def run_tagger(self):
+
+        img_path = None
+        image_tuple = (None, None, None)
+
+        self.scan_and_store()
+
+        # heavy imports
+        from processor import process_images_from_paths
+        self.load_model()
+
+        untagged_image_tuples = self.db.get_untagged_images()
+        print(f'Found {len(untagged_image_tuples)} non-tagged images in database for all directories')
+
+        timesum = 0
+        count = 0
+        count_errors = 0
+        count_completed = 0
+        next_commit_count = 100
+        next_commit_iter = 100
+
+        for untagged_image_tuples_batch in batched(untagged_image_tuples, self.configs.process_n_files_together):
+            count += len(untagged_image_tuples_batch)
+            if self.configs.process_n_files and count > self.configs.process_n_files:
+                break
+
+            path_2_image_tuples = dict()
+            for untagged_image_tuple in untagged_image_tuples_batch:
+
+                img_path = os.path.join(untagged_image_tuple[1], untagged_image_tuple[2])
+                if not os.path.isfile(img_path):
+                    print(f'Expected file at: {img_path}')
+                    continue
+
+                path_2_image_tuples[img_path] = untagged_image_tuple
+
+            if len(path_2_image_tuples) < 1:
+                continue
+
+            start = perf_counter()
+
+            try:
+                info = process_images_from_paths(
+                    path_2_image_tuples.keys(),
+                    self.model,
+                    self.transform,
+                    self.torch_device,
+                    self.tag_data,
+                    self.configs.min_general_tag_val,
+                    self.configs.min_character_tag_val,
+                    by_idx=True,
+                )
+                count_completed += 1
+            except Exception as e:
+                count_errors += 1
+                print('')
+                print(e)
+                continue
+
+            if self.configs.commit_tags:
+                for (path, image_tuple), (ratings, characters, generals) in zip(path_2_image_tuples.items(), info):
+
+                    sha256 = None
+                    if self.configs.commit_sha256:
+                        sha256 = get_sha256_from_path(path)
+
+                    # avoid new dict copy
+                    tag_id_2_prob = characters
+                    tag_id_2_prob.update(generals)
+
+                    self.db.insert_image_tags(image_tuple[0], image_tuple[2], ratings, tag_id_2_prob, sha256=sha256)
+
+                if count > next_commit_count:
+                    self.db.save()
+                    next_commit_count += next_commit_iter
+
+            timesum += perf_counter() - start
+            printr(f'Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}')
+        printr(f'Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}')
         print()
 
-    printr('Loading model')
-    torch_device = get_torch_device(cpu)
-    model = load_model(tag_model_repo_id).to(torch_device, non_blocking=True)
-    transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
-    printr('Loading model, complete')
-    print()
+        if self.configs.commit_tags and count:
+            self.db.save()
 
-    timesum = 0
-    count = 0
-    next_commit_count = max(1000, bsize * 20)
-    next_commit_iter = max(1000, bsize * 20)
-    for image_paths_i in batched(image_paths, bsize):
-        count += len(image_paths_i)
-        if nmax and count > nmax:
-            break
+        print('Done processing images!')
+        print(f'Total time: {timesum:.3f}s')
+        print(f'Time per image: {timesum/max(count, 1):.3f}s')
 
-        p = []
-        for image_path_i in image_paths_i:
-            if skip_existing and get_sha256_from_path(image_path_i) in sha256s:
-                continue
-            p.append(image_path_i)
-        if len(p) < 1:
-            continue
-        image_paths_i = p
-
-        start = perf_counter()
-
-        try:
-            info = process_images_from_paths(image_paths_i, model, transform, torch_device, tag_data, gmin, cmin, by_idx=idx)
-        except Exception as e:
-            print(e)
-            continue
-
-        if save:
-            for image_path, (ratings, characters, generals) in zip(image_paths_i, info):
-                db.insert_image_tags(image_path, ratings, characters | generals)
-
-            if count > next_commit_count:
-                db.save()
-                next_commit_count += next_commit_iter
-
-        if printt:
-            for image_path, (ratings, characters, generals) in zip(image_paths_i, info):
-                print(f'\n{image_path=}')
-                print(f'\t{ratings=}')
-                print(f'\t{characters=}')
-                print(f'\t{generals=}')
-
-        timesum += perf_counter() - start
-
-        printr(f'Images: {count}')
-
-    if save:
-        db.save_and_close()
-
-    print()
-    print(f'Total time: {timesum:.3f}s')
-    print(f'Time per image: {timesum/count:.3f}s')
+        if self.configs.commit_tags:
+            self.db.save_and_close()
 
 
 if __name__ == '__main__':
-    path = ['/path/to/image', '/path/to/image']
-    path = '/path/to/image'
-    path = '/path/to/dir'
-    path = '/home/dolphin/Documents/image_data_set'
-    main(
-        path=path,
-        gmin=0.2,
-        cmin=0.2,
-        valid_extensions='png,jpeg,jpg,gif',
-        bsize=1,
-        nmax=0,
-        db_name=make_path('..', 'image.db'),
-        skip=False,
-        idx=True,
-        save=True,
-        printt=False,
-        cpu=False,
-    )
+    tagger = Tagger(configs)
+    tagger.run_tagger()

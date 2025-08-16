@@ -1,0 +1,37 @@
+# path to directory you want to process
+# will go through all subdirectories automatically
+root_path = "/home/images"
+
+# /path/to/your/36g.db
+db_path = "36g.db"
+
+# cpu if true, gpu if false
+cpu = false
+
+# 1 is recommended, batching isn't faster on my gpu
+process_n_files_together = 1
+
+# 0 for all files in root_path
+process_n_files = 0
+
+min_general_tag_val = 0.2
+min_character_tag_val = 0.2
+
+# compute and save sha256 hashes?
+commit_sha256 = true
+
+# do not add periods
+valid_extensions = "png,jpeg,jpg,gif"
+
+# save tags to sqlite db?
+commit_tags = true
+
+# shouldn't have to touch these
+tag_model_repo_id = "SmilingWolf/wd-swinv2-tagger-v3"
+sql_echo = false
+sql_insert_batch_size = 10000
+
+# flask
+host = "127.0.0.1"
+port = 5005
+debug = false

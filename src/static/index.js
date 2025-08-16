@@ -1,19 +1,3 @@
-const f_inputs = {
-    f_tag: document.getElementById('f_tag'),
-    f_general: document.getElementById('f_general'),
-    f_sensitive: document.getElementById('f_sensitive'),
-    f_explicit: document.getElementById('f_explicit'),
-    f_questionable: document.getElementById('f_questionable'),
-};
-
-const f_values = {
-    f_tag: document.getElementById('f_tag_value'),
-    f_general: document.getElementById('f_general_value'),
-    f_sensitive: document.getElementById('f_sensitive_value'),
-    f_explicit: document.getElementById('f_explicit_value'),
-    f_questionable: document.getElementById('f_questionable_value'),
-};
-
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
 const file_input = document.getElementById('img');
@@ -23,223 +7,171 @@ const selected_general_tags_div = document.getElementById('selected_general_tags
 const selected_character_tags_div = document.getElementById('selected_character_tags');
 const search_button = document.getElementById('search_button');
 const clear_button = document.getElementById('clear_button');
-const display_button = document.getElementById('display_button');
 const results_div = document.getElementById('results');
 
 let selected_general_tags = [];
 let selected_character_tags = [];
-let all_tags = [];
-let results = [];
-let current_display_mode = 'Gallery';
-let message = '';
+let all_tags = new Map();
 
-
-Object.keys(f_inputs).forEach(f => {
-    f_inputs[f].addEventListener('input', () => {
-        f_values[f].textContent = parseFloat(f_inputs[f].value).toFixed(1);
-    });
-});
-
-async function fetch_all_tags() {
+async function fetchAllTags() {
     const response = await fetch('/tags');
-    all_tags = await response.json();
+    const tags = await response.json();
+    all_tags = new Map(tags.map(tag => [tag[0], { 0: tag[0], 1: tag[1], 2: tag[2] }]));
+    initializeTags();
 }
 
-fetch_all_tags();
-
-
-function handle_tag_input(inputElement, suggestion_container, tagType) {
-    const query = inputElement.value.trim().toLowerCase();
-    if (query.length === 0) {
-        suggestion_container.innerHTML = '';
-        return;
-    }
-    const filtered_tags = all_tags.filter(tag => tag.tag_type_name === tagType && tag.tag_name.toLowerCase().includes(query));
-    suggestion_container.innerHTML = filtered_tags.map(tag => `
-        <div class="tag_suggestion" data-id="${tag.tag_id}">${tag.tag_name}</div>
-    `).join('');
-    attach_suggestion_events(suggestion_container, selected_general_tags, render_general_tags);
+function initializeTags() {
+    selected_character_tags = parseTagField('file_tags_character', 4);
+    selected_general_tags = parseTagField('file_tags_general', 0);
+    renderTags(selected_general_tags_div, selected_general_tags, 'general');
+    renderTags(selected_character_tags_div, selected_character_tags, 'character');
 }
 
-general_tag_input.addEventListener('input', () => {
-    handle_tag_input(general_tag_input, general_tag_suggestions, 'general');
-});
+function parseTagField(fieldId, typeId) {
+    const val = document.getElementById(fieldId).value;
+    const ids = val ? val.split(',').map(Number) : [];
+    return ids.map(id => {
+        const t = all_tags.get(id);
+        return t ? { tag_id: t[0], tag_name: t[1] } : null;
+    }).filter(Boolean);
+}
 
-general_tag_input.addEventListener('focus', () => {
-    handle_tag_input(general_tag_input, general_tag_suggestions, 'general');
-});
+function handleTagInput(inputEl, suggestionDiv, typeId) {
+    const query = inputEl.value.trim().toLowerCase();
+    suggestionDiv.innerHTML = '';
+    if (!query) return;
 
-character_tag_input.addEventListener('input', () => {
-    handle_tag_input(character_tag_input, character_tag_suggestions, 'character');
-});
+    const filtered = Array.from(all_tags.values())
+        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
 
-character_tag_input.addEventListener('focus', () => {
-    handle_tag_input(character_tag_input, character_tag_suggestions, 'character');
-});
+    suggestionDiv.innerHTML = filtered.map(tag =>
+        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+    ).join('');
 
-function attach_suggestion_events(suggestions_div, selected_tags, render_fn) {
-    suggestions_div.querySelectorAll('.tag_suggestion').forEach(suggestion => {
-        suggestion.addEventListener('click', () => {
-            const tag_id = parseInt(suggestion.getAttribute('data-id'));
-            const tag_name = suggestion.textContent.trim();
-            if (!selected_tags.some(tag => tag.id === tag_id)) {
-                selected_tags.push({ id: tag_id, name: tag_name });
-                render_fn();
+    attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
+        typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
+}
+
+function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldId) {
+    container.querySelectorAll('.tag_suggestion').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = parseInt(el.dataset.id);
+            if (!selectedArray.some(tag => tag.tag_id === id)) {
+                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim() });
+                renderFn();
             }
-            suggestion.outerHTML = '';
+            el.remove();
+            document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
         });
     });
 }
 
-function render_general_tags() {
-    render_tags(selected_general_tags_div, selected_general_tags, selected_general_tags, render_general_tags);
-}
+function renderTags(container, selectedArray, className) {
+    container.innerHTML = selectedArray.map(tag =>
+        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
+    ).join('');
 
-function render_character_tags() {
-    render_tags(selected_character_tags_div, selected_character_tags, selected_character_tags, render_character_tags);
-}
-
-function render_tags(container, tags, selected_tags, render_fn) {
-    container.innerHTML = tags.map(tag => `
-        <span class="pill">${tag.name} <button data-id="${tag.id}">x</button></span>
-    `).join('');
-    container.querySelectorAll('button[data-id]').forEach(button => {
-        button.addEventListener('click', () => {
-            const tag_id = parseInt(button.getAttribute('data-id'));
-            selected_tags.splice(selected_tags.findIndex(tag => tag.id === tag_id), 1);
-            render_fn();
+    container.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const idx = selectedArray.findIndex(t => t.tag_id === id);
+            if (idx !== -1) selectedArray.splice(idx, 1);
+            const hiddenFieldId = className === 'general' ? 'file_tags_general' : 'file_tags_character';
+            document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
+            renderTags(container, selectedArray, className);
         });
     });
 }
 
-function render_tags_text(tags, color) {
-    return Object.entries(tags).map(([tag, prob]) => `
-    <span class="pill ${color}">${tag}: ${prob.toFixed(2)}</span>
-    `).join(' ');
+function renderGeneralTags() {
+    renderTags(selected_general_tags_div, selected_general_tags, 'general');
 }
 
-clear_button.addEventListener('click', () => {
+function renderCharacterTags() {
+    renderTags(selected_character_tags_div, selected_character_tags, 'character');
+}
+
+function clearAll() {
     selected_general_tags = [];
     selected_character_tags = [];
-
     selected_general_tags_div.innerHTML = '';
     selected_character_tags_div.innerHTML = '';
-
     general_tag_input.value = '';
     character_tag_input.value = '';
     general_tag_suggestions.innerHTML = '';
     character_tag_suggestions.innerHTML = '';
-
-    Object.keys(f_inputs).forEach(f => {
-        f_inputs[f].value = 0.0;
-        f_values[f].textContent = '0.0';
-    });
-});
-
-
-function update_message(m) {
-    results_div.innerHTML = `<div class="m message">${m}</div>`;
+    document.getElementById('file_tags_character').value = '';
+    document.getElementById('file_tags_general').value = '';
+    results_div.innerHTML = '';
 }
 
-function render_results() {
-    update_message(message);
+let current_display_mode = "Gallery";
 
-    if (results.length === 0) {
-        return;
-    }
+function render_tags_text(tags, category) {
+    return Object.entries(tags || {})
+        .filter(([k, v]) => v > 0.2)
+        .map(([k, v]) => `<span class="tag-pill ${category}">${k} (${(v*100).toFixed(0)}%)</span>`)
+        .join(' ');
+}
 
-    if (current_display_mode === 'Gallery') {
-        results_div.innerHTML += results.map(result => `
-            <div class="m row">
-                <img class="result" src="/serve${result.image_path}" loading="lazy"/>
-                <div class="pills">
-                    ${render_tags_text(result.rating, 'rating')}
-                    ${render_tags_text(result.general, 'general')}
-                    ${render_tags_text(result.character, 'character')}
+function renderResults(data) {
+    let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
+    if (data.results && data.results.length) {
+        if (current_display_mode === 'Gallery') {
+            html += data.results.map(result => `
+                <div class="m row">
+                    <img class="result" src="/serve/${result.image_path}" loading="lazy"/>
+                    <div class="pills">
+                        ${render_tags_text(result.rating, 'rating')}
+                        ${render_tags_text(result.general, 'general')}
+                        ${render_tags_text(result.character, 'character')}
+                    </div>
                 </div>
-            </div>
-        `).join('');
-    } else {
-        const r = results.map(result => `
-            <img class="result" src="/serve${result.image_path}" loading="lazy"/>
-        `).join('');
-        results_div.innerHTML += `<div class="m">${r}</div>`;
-    }
-}
-
-search_button.addEventListener('click', async () => {
-    await fetch_results();
-    render_results();
-});
-
-display_button.addEventListener('click', async () => {
-    if (results.length === 0) {
-        await fetch_results();
-    }
-
-    if (current_display_mode === 'Gallery') {
-        current_display_mode = 'Info';
-        display_button.textContent = 'Display: Info';
-    } else {
-        current_display_mode = 'Gallery';
-        display_button.textContent = 'Display: Gallery';
-    }
-
-    render_results();
-});
-
-
-async function fetch_task_result(id, attempts = 0) {
-    const delays = [2000, 2000, 4000, 4000];
-    const response = await fetch(`/task_result/${id}`);
-    const task = await response.json();
-    if (task.ready) {
-        return task.value;
-    } else if (attempts < delays.length) {
-        await new Promise(resolve => setTimeout(resolve, delays[attempts]));
-        return fetch_task_result(id, attempts + 1);
-    } else {
-        const t = delays.reduce((a, b) => a + b, 0) / 1000;
-        update_message(`Results not ready after ${delays.length} polling attempts (${t} seconds).`);
-        return null;
-    }
-}
-
-
-async function fetch_results() {
-    search_button.disabled = true;
-
-    var d;
-    if (file_input.files && file_input.files.length > 0) {
-        update_message('Searching...')
-        const formData = new FormData();
-        formData.append("img", file_input.files[0]);
-        const response = await fetch("/search_w_file", {
-            method: "POST",
-            body: formData,
-        });
-        d = await response.json();
-        if (d.task_id){
-            d = await fetch_task_result(d.task_id); // poll celery queue
+            `).join('');
+        } else {
+            const r = data.results.map(result => `
+                <img class="result" src="${result.image_path}" loading="lazy"/>
+            `).join('');
+            html += `<div class="m">${r}</div>`;
         }
-        file_input.value = '';
     }
-    else {
-        const params = new URLSearchParams();
-
-        Object.keys(f_inputs).forEach(f => {
-            params.append(f, parseFloat(f_inputs[f].value));
-        });
-
-        selected_general_tags.forEach(tag => params.append('general_tag_ids', tag.id));
-        selected_character_tags.forEach(tag => params.append('character_tag_ids', tag.id));
-
-        const response = await fetch(`/search_w_tags?${params.toString()}`);
-        d = await response.json();
-    }
-
-    results = d.results;
-    message = d.message;
-
-    search_button.disabled = false;
+    results_div.innerHTML = html;
 }
+
+async function performSearch() {
+    const file = file_input.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('img', file);
+        try {
+            const resp = await fetch('/search_w_file', { method: 'POST', body: formData });
+            if (!resp.ok) throw new Error(`File search failed: ${resp.status}`);
+            renderResults(await resp.json());
+        } catch (err) { console.error(err); }
+    } else {
+        const generalIds = selected_general_tags.map(t => t.tag_id);
+        const characterIds = selected_character_tags.map(t => t.tag_id);
+        if (!generalIds.length && !characterIds.length) return;
+
+        const params = new URLSearchParams();
+        generalIds.forEach(id => params.append('general_tag_ids', id));
+        characterIds.forEach(id => params.append('character_tag_ids', id));
+        params.append('page', 0);
+        params.append('per_page', 25);
+
+        try {
+            const resp = await fetch(`/search_w_tags?${params.toString()}`);
+            if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
+            renderResults(await resp.json());
+        } catch (err) { console.error(err); }
+    }
+}
+
+general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
+general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
+character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
+character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
+clear_button.addEventListener('click', clearAll);
+search_button.addEventListener('click', performSearch);
+
+fetchAllTags();

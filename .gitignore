@@ -3,5 +3,4 @@
 .vscode
 __pycache__/
 venv/
-configs.py
-results.js
+configs.toml
