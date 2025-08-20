@@ -57,6 +57,7 @@ class ImageDb(SqliteDb):
                 tag_id INTEGER NOT NULL UNIQUE, -- matches the csv row number
                 tag_name TEXT NOT NULL,
                 tag_type_id INTEGER NOT NULL,
+                tag_count INTEGER DEFAULT 0,
                 FOREIGN KEY (tag_type_id) REFERENCES tag_type(tag_type_id) ON DELETE CASCADE,
                 UNIQUE (tag_name, tag_type_id)
             )
@@ -344,3 +345,11 @@ class ImageDb(SqliteDb):
 
         results = self._fetch_results(image_ids)
         return results
+
+    def update_tag_counts(self):
+        sql_string = '''update tag set tag_count=
+                 (select count(image_id) from image_tag where image_tag.tag_id=tag.tag_id) 
+                  where exists 
+                  (select * from image_tag where image_tag.tag_id = tag.tag_id)'''
+
+        self.run_query_tuple(sql_string)

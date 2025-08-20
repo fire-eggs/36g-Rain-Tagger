@@ -159,6 +159,7 @@ class Tagger:
         print(f'Time per image: {timesum/max(count, 1):.3f}s')
 
         if self.configs.commit_tags:
+            self.db.update_tag_counts()
             self.db.save_and_close()
 
 
