@@ -318,6 +318,25 @@ class ImageDb(SqliteDb):
 
 
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
+      
+        total_rows = self.run_query_tuple(f"""
+            select image_tag.image_id
+            from image join image_tag using(image_id)
+            where
+                image_tag.tag_id in ({get_placeholders(tag_ids)})
+                and image_tag.prob >= ?
+                and general >= ?
+                and sensitive >= ?
+                and questionable >= ?
+                and explicit >= ?
+            group by image_tag.image_id
+            having count(distinct image_tag.tag_id) = ?
+            order by max(image_tag.prob) desc""",
+            params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)]
+        )
+        if not total_rows:
+          return [], 0
+        
         offset = max(page - 1, 0) * per_page
 
         rows = self.run_query_tuple(f"""
@@ -339,12 +358,12 @@ class ImageDb(SqliteDb):
         )
 
         if not rows:
-            return []
+            return [],0
 
         image_ids = [row[0] for row in rows]
 
         results = self._fetch_results(image_ids)
-        return results
+        return results,len(total_rows)
 
     def update_tag_counts(self):
         sql_string = '''update tag set tag_count=

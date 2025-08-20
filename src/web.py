@@ -61,7 +61,7 @@ def app_process_images_from_path(img_path: str, page: int, per_page: int) -> dic
 
     i2 = perf_counter()
     f1 = i2 - i1
-    results = current_app.db.get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) if tags else []
+    results,tot_count = current_app.db.get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) #if tags else [],0
     f2 = perf_counter() - i2
 
     rating_tags = {current_app.tagger.tag_data.names[k]: v for k, v in rating_tags.items()}
@@ -71,7 +71,7 @@ def app_process_images_from_path(img_path: str, page: int, per_page: int) -> dic
     image_count = current_app.db.get_image_count()
     message = '\n'.join([
         f'Processing your image took {f1:.3f}s.',
-        f'We searched the tags of {image_count:,} images in {f2:.3f}s and found {len(results):,} results.',
+        f'We searched the tags of {image_count:,} images in {f2:.3f}s and found {tot_count:,} results.',
         '',
         f'Here are the tags for your uploaded image:',
         '',
@@ -121,12 +121,12 @@ def search_w_tags():
         return jsonify({'message': 'Try changing your filters.', 'result': [{}]})
 
     i1 = perf_counter()
-    results = current_app.db.get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) if tags else []
+    results,tot_count = current_app.db.get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) #if tags else [],0
     f1 = perf_counter() - i1
 
     image_count = current_app.db.get_image_count()
     return jsonify({
-        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {len(results):,} results.',
+        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
         'results': results,
     })
 
