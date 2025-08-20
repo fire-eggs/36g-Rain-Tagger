@@ -50,10 +50,10 @@ class Tagger:
 
         for directory, _, filenames in os.walk(self.configs.root_path):
             for filename in filenames:
-                if not filename.endswith(self.configs.valid_extensions):
+                if not filename.lower().endswith(self.configs.valid_extensions):
                     continue
 
-                ext: int = Ext[filename.rsplit('.', 1)[1]].value
+                ext: int = Ext[filename.lower().rsplit('.', 1)[1]].value
 
                 directory_id = self.db.get_directory_id(directory)
                 batch.append((directory_id, filename, ext))
