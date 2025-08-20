@@ -115,8 +115,8 @@ input[type=number]{
 }
 
 .pills {
-    max-height: 200px;
-    overflow: scroll;
+    max-height: 250px;
+    overflow-y: auto;
 }
 
 .row {
