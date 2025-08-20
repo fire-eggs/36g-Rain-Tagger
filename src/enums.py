@@ -16,6 +16,8 @@ class Ext(Enum):
     jpeg = 2
     png = 3
     gif = 4
+    webp = 5
+    avif = 6
 
 
 class TagType(Enum):
