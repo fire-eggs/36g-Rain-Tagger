@@ -1,6 +1,7 @@
 import json
 import mimetypes
 import os
+import logging
 from functools import lru_cache
 from time import perf_counter
 
@@ -196,6 +197,7 @@ def serve():
 print('flask_app, starting')
 
 flask_app = Flask(__name__)
+logging.getLogger('werkzeug').disabled = True
 
 flask_app.tagger = Tagger(configs)
 if configs.allow_file_upload_search:
