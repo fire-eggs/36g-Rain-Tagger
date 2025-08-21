@@ -89,6 +89,9 @@ class ImageDb(SqliteDb):
 
         CREATE INDEX IF NOT EXISTS idx_directory_id         ON directory(directory_id);
         CREATE INDEX IF NOT EXISTS idx_directory_directory  ON directory(directory);
+        
+        CREATE INDEX IF NOT EXISTS idx_image_tag_image_id           ON image_tag (image_id);
+        CREATE INDEX IF NOT EXISTS idx_image_tag_tag_id             ON image_tag (tag_id);
         """
 
         sqls += [s.strip() for s in idxs.split('\n') if s.strip()]
