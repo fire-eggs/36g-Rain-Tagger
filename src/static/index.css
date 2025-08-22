@@ -119,6 +119,11 @@ input[type=number]{
     overflow-y: auto;
 }
 
+.outer_pills {
+    display: flex;
+    flex-direction: column;
+}
+    
 .row {
     display: flex;
     max-width: 99%;

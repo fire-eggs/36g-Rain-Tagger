@@ -168,10 +168,13 @@ function renderResults(data) {
             html += data.results.map(result => `
                 <div class="m row">
                     <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
-                    <div class="pills">
-                        ${render_tags_text(result.rating, 'rating')}
-                        ${render_tags_text(result.general, 'general')}
-                        ${render_tags_text(result.character, 'character')}
+                    <div class="outer_pills">
+                        <p>${result.image_path}</p>
+                        <div class="pills">
+                            ${render_tags_text(result.rating, 'rating')}
+                            ${render_tags_text(result.general, 'general')}
+                            ${render_tags_text(result.character, 'character')}
+                        </div>
                     </div>
                 </div>
             `).join('');
