@@ -175,6 +175,9 @@ def tags():
         return jsonify(current_app.db.get_tags())
     return _tags()
 
+@bp.errorhandler(NotFound)
+def file_not_found(e):
+  return jsonify(error=str(e)), 404
 
 @bp.route('/serve')
 def serve():
@@ -189,7 +192,8 @@ def serve():
         abort(Forbidden)
 
     if not os.path.isfile(file_path):
-        abort(NotFound)
+        print(f"Not found {file_path}")
+        abort(404, description=file_path)  # TODO was NotFound, results in LookupError exception
 
     return send_file(file_path)
 
