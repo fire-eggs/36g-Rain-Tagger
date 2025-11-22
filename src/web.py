@@ -128,6 +128,7 @@ def search_w_tags():
     return jsonify({
         'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
         'results': results,
+        'tot_found': tot_count,
     })
 
 

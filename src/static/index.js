@@ -161,6 +161,8 @@ function render_tags_text(tags, category) {
 }
 
 function renderResults(data) {
+	tot_pages = Math.ceil( data.tot_found / per_page );
+	
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
     if (data.results && data.results.length) {
@@ -189,7 +191,7 @@ function renderResults(data) {
 
     pagination_div.innerHTML = `
         <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
-        Page: ${current_page}, Per Page: ${per_page}
+        Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
         <button id="next_page" class="flat">Next</button>
     `;
 
