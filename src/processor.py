@@ -37,6 +37,9 @@ def get_tags(probs: Tensor, tag_data: TagData, g_min: float, c_min: float, by_id
 
 
 def process_images_from_paths(image_paths: Iterable[str], model: nn.Module, transform: Compose, torch_device: device, tag_data: TagData, g_min: float, c_min: float, by_idx: bool=True):
+
+    Image.MAX_IMAGE_PIXELS = None # support larger images
+
     img_tensors = []
     for image_path in image_paths:
         img = Image.open(image_path)
