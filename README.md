@@ -16,7 +16,7 @@ It is named after [36g](https://vocaloid.fandom.com/wiki/36g).
 ## Set Up
 
 ```bash
-git clone https://github.com/skwzrd/36g-Rain-Tagger
+git clone https://github.com/fire-eggs/36g-Rain-Tagger
 cd 36g-Rain-Tagger
 python3.12 -m venv venv
 source venv/bin/activate
@@ -32,21 +32,15 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 #### Desktop, Info Mode
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview1.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview1.png" height="400">
 
 #### Desktop, Gallery Mode
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview3.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview3.png" height="400">
 
 #### Desktop, Uploaded Image Search
 
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview4.png" height="400">
-
-
-#### Mobile, Gallery Mode
-
-<img src="https://github.com/skwzrd/36g-Rain-Tagger/blob/master/preview/preview2.png" height="400">
-
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview4.png" height="400">
 
 ## Performance
 
@@ -62,5 +56,9 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 ### Searching
 
 0.1s - 0.4s results on hundreds of thousands of images.
+
+### Acknowledgements
+
+This is my clone of skwzrd's original project. Cudos for a fun, educational project!
 
 `Searched 238,302 in 0.313s and found 25 results.`
