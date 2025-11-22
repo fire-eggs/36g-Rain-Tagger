@@ -147,8 +147,8 @@ class Tagger:
                     next_commit_count += next_commit_iter
 
             timesum += perf_counter() - start
-            printr(f'Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}')
-        printr(f'Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}')
+            printr(f"Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}")
+        printr(f"Completed: {count_completed}  Errors: {count_errors}  Directory: {image_tuple[1]}  Last: {img_path if img_path else 'n/a'}")
         print()
 
         if self.configs.commit_tags and count:
