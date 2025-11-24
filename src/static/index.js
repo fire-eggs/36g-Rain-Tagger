@@ -182,7 +182,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
+                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
