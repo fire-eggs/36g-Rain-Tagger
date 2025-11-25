@@ -169,6 +169,9 @@ img.result {
     padding-right: 10px;
 }
 
+.pgbtn {
+    margin-left: 5px;
+}
 
 @media (max-width: 770px) {
     .container {

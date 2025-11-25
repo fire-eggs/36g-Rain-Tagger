@@ -189,12 +189,33 @@ function renderResults(data) {
     }
     results_div.innerHTML = html;
 
-    pagination_div.innerHTML = `
+    html = `
         <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
         Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
         <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
     `;
+    
+    // pagination buttons. show a "go to first"; "go to last"; and five page buttons. current page button is disabled.
+    let start = current_page < 4 ? 1 : current_page - 2;
+    let fin = tot_pages < start+4 ? tot_pages : start+4;
+    start = fin - start < 4 ? fin-4 : start;
+    if (start != 1)
+        html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
+    for (let blah= start; blah <= fin; blah++) {
+		html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah == current_page ? 'disabled' : ''}> ${blah} </button>`;
+	}
+    if (fin != tot_pages)
+        html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
+    
+    pagination_div.innerHTML = html;
 
+    pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const target = parseInt(btn.dataset.id);
+			current_page = target;
+			performSearch(true);
+		}); });
+		
     document.getElementById('prev_page').addEventListener('click', () => {
         if (current_page > 1) {
             current_page--;
