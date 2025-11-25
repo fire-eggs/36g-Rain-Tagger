@@ -192,7 +192,7 @@ function renderResults(data) {
     pagination_div.innerHTML = `
         <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
         Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
-        <button id="next_page" class="flat">Next</button>
+        <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
     `;
 
     document.getElementById('prev_page').addEventListener('click', () => {
