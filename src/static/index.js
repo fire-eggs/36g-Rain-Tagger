@@ -198,7 +198,7 @@ function renderResults(data) {
     // pagination buttons. show a "go to first"; "go to last"; and five page buttons. current page button is disabled.
     let start = current_page < 4 ? 1 : current_page - 2;
     let fin = tot_pages < start+4 ? tot_pages : start+4;
-    start = fin - start < 4 ? fin-4 : start;
+    start = start < 5 ? start : (fin - start < 4 ? fin-4 : start);
     if (start != 1)
         html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
     for (let blah= start; blah <= fin; blah++) {
