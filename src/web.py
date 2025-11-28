@@ -131,6 +131,19 @@ def search_w_tags():
         'tot_found': tot_count,
     })
 
+@bp.route('/top_tags', methods=['GET'])
+def get_top_tags():
+	
+	""" Future params:
+	- general or character tags
+	- probability level
+	- count
+	"""
+	results = current_app.db.get_top_tags()
+	return jsonify({
+	'results': results,
+	})
+	
 
 @bp.route('/all_images', methods=['GET'])
 def all_images():

@@ -71,7 +71,14 @@ class ImageDb(SqliteDb):
                 FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE,
                 UNIQUE (image_id, tag_id)
             )
-        """
+        ""","""
+            create view IF NOT EXISTS tags_for_images_prob60_v2 AS
+            select tag.tag_id, tag.tag_name, image_tag.image_id, image_tag.prob, image.explicit, image.sensitive, image.questionable, image.general
+            from tag 
+            left join image_tag on tag.tag_id = image_tag.tag_id
+            left join image     on image.image_id=image_tag.image_id
+            where tag.tag_type_id=0 and image_tag.prob > 0.6;
+        """        
         ]
 
         # CREATE INDEX IF NOT EXISTS idx_image_explicit               ON image (explicit);
@@ -374,4 +381,26 @@ class ImageDb(SqliteDb):
                   where exists 
                   (select * from image_tag where image_tag.tag_id = tag.tag_id)'''
 
+# 90 percent probability
+#update tag set tag_count_90=
+#                 (select count(image_id) from image_tag where image_tag.tag_id=tag.tag_id and prob > 0.9) 
+#                  where exists 
+#                  (select * from image_tag where image_tag.tag_id = tag.tag_id)
+ 
+ 
+
+
+
         self.run_query_tuple(sql_string)
+
+    def get_top_tags(self):
+        sql_string = '''select tag_name, count(image_id) as imgcount 
+                        from tags_for_images_prob60_v2
+                        where explicit > 0.5
+                        group by 1
+                        order by imgcount desc
+                        limit 20'''
+        results = self._run_query(sql_string)
+        #print(f'gtt: {results}')
+        return results
+         

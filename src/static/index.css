@@ -173,6 +173,11 @@ img.result {
     margin-left: 5px;
 }
 
+.grid-contain {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+}
+
 @media (max-width: 770px) {
     .container {
         flex-direction: column;

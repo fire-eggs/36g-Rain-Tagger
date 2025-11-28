@@ -273,11 +273,40 @@ async function performSearch(isPagination = false) {
     }
 }
 
+function renderTopGrid(data) {
+	let res = "";
+    if (data.results && data.results.length) {
+		res += data.results.map( result => `<div>${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``)
+	}
+	return res;
+}
+
+async function performExplore() {
+	
+	clearAll();
+    let html = `<p>Top 20 General tags where probability is > 60% [Explicit images]</p>`;
+    html += `<div class="grid-contain">`;
+    
+    try {
+		const resp = await fetch(`/top_tags`);
+		if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
+		foo = renderTopGrid(await resp.json());
+		//console.log(foo);
+		html += foo;
+	} catch (err) { console.error(err); }
+    
+    html += `</div>`;
+    results_div.innerHTML = html;
+    //pagination_div.innerHTML = html;
+}
+
+
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 clear_button.addEventListener('click', clearAll);
 search_button.addEventListener('click', () => performSearch(false));
+dash_button.addEventListener('click', performExplore);
 
 fetchAllTags();
