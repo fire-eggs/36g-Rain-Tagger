@@ -139,7 +139,9 @@ def get_top_tags():
 	- probability level
 	- count
 	"""
-	results = current_app.db.get_top_tags()
+	choice = request.args.get('expOption') # general/sensitive/questionable/explicit
+	
+	results = current_app.db.get_top_tags(choice)
 	return jsonify({
 	'results': results,
 	})

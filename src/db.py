@@ -77,7 +77,7 @@ class ImageDb(SqliteDb):
             from tag 
             left join image_tag on tag.tag_id = image_tag.tag_id
             left join image     on image.image_id=image_tag.image_id
-            where tag.tag_type_id=0 and image_tag.prob > 0.6;
+            where tag.tag_type_id=0 and image_tag.prob >= 0.6;
         """        
         ]
 
@@ -393,10 +393,20 @@ class ImageDb(SqliteDb):
 
         self.run_query_tuple(sql_string)
 
-    def get_top_tags(self):
+    def get_top_tags(self, choice):
+        
+        target = "general";
+        match choice:
+            case "S":
+                target = "sensitive";
+            case "X":
+                target = "explicit";
+            case "Q":
+                target = "questionable"
+            
         sql_string = '''select tag_name, count(image_id) as imgcount 
                         from tags_for_images_prob60_v2
-                        where explicit > 0.5
+                        where ''' + target + ''' >= 0.5
                         group by 1
                         order by imgcount desc
                         limit 20'''

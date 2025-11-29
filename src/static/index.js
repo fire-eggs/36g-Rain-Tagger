@@ -275,20 +275,43 @@ async function performSearch(isPagination = false) {
 
 function renderTopGrid(data) {
 	let res = "";
+	res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>`;
     if (data.results && data.results.length) {
 		res += data.results.map( result => `<div>${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``)
 	}
 	return res;
 }
 
-async function performExplore() {
+function handleExploreRadioChange() {
+  var selectedOption = document.querySelector('input[name="expOptions"]:checked').value;
+
+  //console.log(selectedOption);
+  performExplore(selectedOption);  
+}
+
+async function performExplore(selExpOption="G") {
 	
 	clearAll();
-    let html = `<p>Top 20 General tags where probability is > 60% [Explicit images]</p>`;
+    
+    let html = `<form name="blah">`; // necessary for the radio buttons to actually 'check'
+    
+    html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()"}>General</input>
+    <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleExploreRadioChange()">Sensitive</input>
+    <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleExploreRadioChange()">Questionable</input>
+    <input type="radio" id="Rexpl" name="expOptions" value="X" onChange="handleExploreRadioChange()">Explicit</input>
+    `;
+
+    //console.log(html);
+    
+    html += `</form>`;
+
+    html += `<p>Top 20 [50%+] General tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
     html += `<div class="grid-contain">`;
+    const params = new URLSearchParams();
+    params.append('expOption', selExpOption)
     
     try {
-		const resp = await fetch(`/top_tags`);
+		const resp = await fetch(`/top_tags?${params.toString()}`);
 		if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
 		foo = renderTopGrid(await resp.json());
 		//console.log(foo);
@@ -297,7 +320,8 @@ async function performExplore() {
     
     html += `</div>`;
     results_div.innerHTML = html;
-    //pagination_div.innerHTML = html;
+    
+	document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
 }
 
 
@@ -307,6 +331,6 @@ character_tag_input.addEventListener('input', () => handleTagInput(character_tag
 character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 clear_button.addEventListener('click', clearAll);
 search_button.addEventListener('click', () => performSearch(false));
-dash_button.addEventListener('click', performExplore);
+dash_button.addEventListener('click', () => performExplore("G"));
 
 fetchAllTags();

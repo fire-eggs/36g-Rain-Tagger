@@ -176,6 +176,12 @@ img.result {
 .grid-contain {
     display:grid;
     grid-template-columns: 1fr 1fr;
+    padding:10px;
+}
+
+.grid-contain div {
+    border: 1px solid lightgray;
+    padding: 3px;
 }
 
 @media (max-width: 770px) {
