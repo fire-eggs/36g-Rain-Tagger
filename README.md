@@ -30,17 +30,17 @@ cd src/
 
 The web ui is run with `python3.12 web.py` and the tagger is run with `python3.12 tagger.py`.
 
-#### Desktop, Info Mode
+#### Info Mode
 
-<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview1.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview1.jpg" height="400">
 
-#### Desktop, Gallery Mode
+#### Gallery Mode
 
-<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview3.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview3.jpg" height="400">
 
-#### Desktop, Uploaded Image Search
+#### Work-in-Progress: 'Explore' View
 
-<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview4.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview5.png" height="400">
 
 ## Performance
 
@@ -56,9 +56,9 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 ### Searching
 
 0.1s - 0.4s results on hundreds of thousands of images.
+`Searched 238,302 in 0.313s and found 25 results.`
 
 ### Acknowledgements
 
 This is my clone of skwzrd's original project. Cudos for a fun, educational project!
 
-`Searched 238,302 in 0.313s and found 25 results.`
