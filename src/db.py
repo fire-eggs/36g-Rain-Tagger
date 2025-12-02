@@ -78,6 +78,13 @@ class ImageDb(SqliteDb):
             left join image_tag on tag.tag_id = image_tag.tag_id
             left join image     on image.image_id=image_tag.image_id
             where tag.tag_type_id=0 and image_tag.prob >= 0.6;
+        ""","""
+            create view IF NOT EXISTS char_tags_for_images_prob60_v2 AS
+            select tag.tag_id, tag.tag_name, image_tag.image_id, image_tag.prob, image.explicit, image.sensitive, image.questionable, image.general
+            from tag 
+            left join image_tag on tag.tag_id = image_tag.tag_id
+            left join image     on image.image_id=image_tag.image_id
+            where tag.tag_type_id=4 and image_tag.prob >= 0.6;
         """        
         ]
 
@@ -393,7 +400,7 @@ class ImageDb(SqliteDb):
 
         self.run_query_tuple(sql_string)
 
-    def get_top_tags(self, choice):
+    def get_top_tags(self, choice, tagtype):
         
         target = "general";
         match choice:
@@ -403,13 +410,20 @@ class ImageDb(SqliteDb):
                 target = "explicit";
             case "Q":
                 target = "questionable"
-            
-        sql_string = '''select tag_name, count(image_id) as imgcount 
-                        from tags_for_images_prob60_v2
-                        where ''' + target + ''' >= 0.5
+                
+        view = "tags_for_images_prob60_v2"
+        match tagtype:  # future support for other tagtype values, e.g. "artist"
+            case "C":
+                view = "char_tags_for_images_prob60_v2"
+        
+        sql_string = f"select tag_name, count(image_id) as imgcount from {view} where {target}"
+        sql_string += ''' >= 0.5
                         group by 1
                         order by imgcount desc
                         limit 20'''
+        #        '''select tag_name, count(image_id) as imgcount from ''' 
+        #             + view + ''' where ''' + target + 
+        
         results = self._run_query(sql_string)
         #print(f'gtt: {results}')
         return results

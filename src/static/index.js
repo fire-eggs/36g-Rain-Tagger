@@ -283,18 +283,26 @@ function renderTopGrid(data) {
 }
 
 function handleExploreRadioChange() {
-  var selectedOption = document.querySelector('input[name="expOptions"]:checked').value;
-
-  //console.log(selectedOption);
-  performExplore(selectedOption);  
+  var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+  var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+  performExplore(selectedOption1,selectedOption2);  
 }
 
-async function performExplore(selExpOption="G") {
+async function performExplore(selExpOption="G",selTypeOption="G") {
 	
 	clearAll();
     
     let html = `<form name="blah">`; // necessary for the radio buttons to actually 'check'
+
+    html += "<br>Tag Category: ";
+    // tag "type" selector: general/character, future "artist"
+    html += `<input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleExploreRadioChange()"}>General</input>
+    <input type="radio" id="TTchar" name="TTOptions" value="C" onChange="handleExploreRadioChange()"}>Character</input>
+    `;
     
+    html += "<br>";
+    
+    html += "Sexiness Level:";
     html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()"}>General</input>
     <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleExploreRadioChange()">Sensitive</input>
     <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleExploreRadioChange()">Questionable</input>
@@ -304,11 +312,22 @@ async function performExplore(selExpOption="G") {
     //console.log(html);
     
     html += `</form>`;
+    
+    let tagtype = "General";
+    switch (selTypeOption) {
+        case "G":
+            tagtype = "General";
+            break;
+        case "C":
+            tagtype = "Character";
+            break;
+        }
 
-    html += `<p>Top 20 [50%+] General tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
+    html += `<p>Top 20 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
     html += `<div class="grid-contain">`;
     const params = new URLSearchParams();
     params.append('expOption', selExpOption)
+    params.append('tagType', selTypeOption)
     
     try {
 		const resp = await fetch(`/top_tags?${params.toString()}`);
@@ -322,6 +341,7 @@ async function performExplore(selExpOption="G") {
     results_div.innerHTML = html;
     
 	document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
+	document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
 }
 
 
