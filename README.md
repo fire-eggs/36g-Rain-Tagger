@@ -60,5 +60,5 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 ### Acknowledgements
 
-This is my clone of skwzrd's original project. Cudos for a fun, educational project!
+This is my clone of skwzrd's original project. Kudos for a fun, educational project!
 
