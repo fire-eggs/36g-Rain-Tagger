@@ -40,7 +40,7 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 #### Work-in-Progress: 'Explore' View
 
-<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview5.png" height="400">
+<img src="https://github.com/fire-eggs/36g-Rain-Tagger/blob/master/preview/preview5.jpg" height="400">
 
 ## Performance
 
