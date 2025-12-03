@@ -277,7 +277,8 @@ function renderTopGrid(data) {
 	let res = "";
 	res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>`;
     if (data.results && data.results.length) {
-		res += data.results.map( result => `<div>${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``)
+		//res += data.results.map( result => `<div>${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``)
+		res += data.results.map( result => `<div><button class="expbtn" data-id="${result.tag_id}">${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``);
 	}
 	return res;
 }
@@ -323,7 +324,7 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
             break;
         }
 
-    html += `<p>Top 20 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
+    html += `<p>Top 25 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
     html += `<div class="grid-contain">`;
     const params = new URLSearchParams();
     params.append('expOption', selExpOption)

@@ -416,11 +416,11 @@ class ImageDb(SqliteDb):
             case "C":
                 view = "char_tags_for_images_prob60_v2"
         
-        sql_string = f"select tag_name, count(image_id) as imgcount from {view} where {target}"
+        sql_string = f"select tag_name, count(image_id) as imgcount, tag_id from {view} where {target}"
         sql_string += ''' >= 0.5
                         group by 1
                         order by imgcount desc
-                        limit 20'''
+                        limit 25'''
         #        '''select tag_name, count(image_id) as imgcount from ''' 
         #             + view + ''' where ''' + target + 
         
