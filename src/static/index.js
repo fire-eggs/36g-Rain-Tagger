@@ -202,20 +202,20 @@ function renderResults(data) {
     if (start != 1)
         html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
     for (let blah= start; blah <= fin; blah++) {
-		html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah == current_page ? 'disabled' : ''}> ${blah} </button>`;
-	}
+        html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah == current_page ? 'disabled' : ''}> ${blah} </button>`;
+    }
     if (fin != tot_pages)
         html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     
     pagination_div.innerHTML = html;
 
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
-		btn.addEventListener('click', () => {
-			const target = parseInt(btn.dataset.id);
-			current_page = target;
-			performSearch(true);
-		}); });
-		
+        btn.addEventListener('click', () => {
+            const target = parseInt(btn.dataset.id);
+            current_page = target;
+            performSearch(true);
+        }); });
+        
     document.getElementById('prev_page').addEventListener('click', () => {
         if (current_page > 1) {
             current_page--;
@@ -227,6 +227,71 @@ function renderResults(data) {
         current_page++;
         performSearch(true);
     });
+}
+
+function performExploreLink(tagId, tagname) {
+    /* User has selected a tag name in the explore grid. Set all the controls so that "search by
+     * tag" will work, especially pagination.
+     */
+    var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+    var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+
+    // Set the filters appropriately [currently hard-coded values, as per the database views]
+    f_tag.value = 0.6;
+    f_tag_value.textContent = 0.6;
+    
+    // TODO: clearAll() should have a 'clear the filters' option
+    f_general.value = (selectedOption1 == "G" ? 0.5 : 0.0);
+    f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
+	f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
+	f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
+	f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
+	f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
+	f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
+	f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
+
+    if (selectedOption2 == "C") {
+        selected_character_tags.push({ tag_id: tagId, tag_name: tagname });
+        renderCharacterTags();
+    }
+    else {
+        selected_general_tags.push({ tag_id: tagId, tag_name: tagname });
+        renderGeneralTags();
+    }
+        
+    performTagSearchGuts(false);
+}
+
+async function performTagSearchGuts(isPagination) {
+    /* Common functionality for "Search by Tags" and tag-links in the Explore grid
+     */
+    const filters = {
+        tag: f_tag.value,
+        general: f_general.value,
+        sensitive: f_sensitive.value,
+        explicit: f_explicit.value,
+        questionable: f_questionable.value
+    };
+    
+    if (!isPagination) current_page = 1;
+
+    const generalIds = selected_general_tags.map(t => t.tag_id);
+    console.log(generalIds);
+    const characterIds = selected_character_tags.map(t => t.tag_id);
+    if (!generalIds.length && !characterIds.length) return;
+
+    const params = new URLSearchParams();
+    generalIds.forEach(id => params.append('general_tag_ids', id));
+    characterIds.forEach(id => params.append('character_tag_ids', id));
+    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
+    params.append('page', current_page);
+    params.append('per_page', per_page);
+    try {
+        const resp = await fetch(`/search_w_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
+        renderResults(await resp.json());
+    } catch (err) { console.error(err); }
+    
 }
 
 async function performSearch(isPagination = false) {
@@ -256,31 +321,19 @@ async function performSearch(isPagination = false) {
             renderResults(await resp.json());
         } catch (err) { console.error(err); }
     } else {
-        const generalIds = selected_general_tags.map(t => t.tag_id);
-        const characterIds = selected_character_tags.map(t => t.tag_id);
-        if (!generalIds.length && !characterIds.length) return;
-        const params = new URLSearchParams();
-        generalIds.forEach(id => params.append('general_tag_ids', id));
-        characterIds.forEach(id => params.append('character_tag_ids', id));
-        Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
-        params.append('page', current_page);
-        params.append('per_page', per_page);
-        try {
-            const resp = await fetch(`/search_w_tags?${params.toString()}`);
-            if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
-            renderResults(await resp.json());
-        } catch (err) { console.error(err); }
+        performTagSearchGuts(isPagination);
     }
 }
 
 function renderTopGrid(data) {
-	let res = "";
-	res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>`;
+    /* Render the 'Explore' grid
+     */
+    let res = "";
+    res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>`;
     if (data.results && data.results.length) {
-		//res += data.results.map( result => `<div>${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``)
-		res += data.results.map( result => `<div><button class="expbtn" data-id="${result.tag_id}">${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``);
-	}
-	return res;
+        res += data.results.map( result => `<div><button class="expbtn" data-id="${result.tag_id}">${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``);
+    }
+    return res;
 }
 
 function handleExploreRadioChange() {
@@ -290,8 +343,8 @@ function handleExploreRadioChange() {
 }
 
 async function performExplore(selExpOption="G",selTypeOption="G") {
-	
-	clearAll();
+
+    clearAll();
     
     let html = `<form name="blah">`; // necessary for the radio buttons to actually 'check'
 
@@ -309,8 +362,6 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleExploreRadioChange()">Questionable</input>
     <input type="radio" id="Rexpl" name="expOptions" value="X" onChange="handleExploreRadioChange()">Explicit</input>
     `;
-
-    //console.log(html);
     
     html += `</form>`;
     
@@ -331,18 +382,26 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     params.append('tagType', selTypeOption)
     
     try {
-		const resp = await fetch(`/top_tags?${params.toString()}`);
-		if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
-		foo = renderTopGrid(await resp.json());
-		//console.log(foo);
-		html += foo;
-	} catch (err) { console.error(err); }
+        const resp = await fetch(`/top_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
+        foo = renderTopGrid(await resp.json());
+        //console.log(foo);
+        html += foo;
+    } catch (err) { console.error(err); }
     
     html += `</div>`;
     results_div.innerHTML = html;
-    
-	document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
-	document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
+
+    // for each button in grid [I would do this in renderTopGrid, except results_div doesn't have the contents yet]
+    results_div.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = parseInt(btn.dataset.id);
+            const tname  = btn.textContent.trim();
+            performExploreLink(target, tname);
+        }); });
+
+    document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
+    document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
 }
 
 
