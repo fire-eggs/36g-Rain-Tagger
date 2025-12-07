@@ -9,6 +9,7 @@ const search_button = document.getElementById('search_button');
 const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
+const pagination2_div = document.getElementById('pagination2');
 
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
@@ -208,8 +209,15 @@ function renderResults(data) {
         html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     
     pagination_div.innerHTML = html;
+    pagination2_div.innerHTML = html;
 
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = parseInt(btn.dataset.id);
+            current_page = target;
+            performSearch(true);
+        }); });
+    pagination2_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
             current_page = target;
