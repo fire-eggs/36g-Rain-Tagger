@@ -46,11 +46,12 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 ### Tagging
 
-| Device         |   Images   | Total Time (s) | Time per Image (s) |
-|----------------|:----------:|---------------:|-------------------:|
-| 4060 TI 16GB GPU    |     45     |          2.172 |              0.048 |
-| 5700X x 8 CPU      |     45     |         21.277 |              0.473 |
-| i7 8665U x 8 CPU    |     45     |         76.273 |              1.695 |
+| Device         |   Images   | Total Time (s) | Time per Image (s) | Model |
+|----------------|:----------:|---------------:|-------------------:|----:|
+| 4060 TI 16GB GPU    |     45     |          2.172 |              0.048 | |
+| 5700X x 8 CPU      |     45     |         21.277 |              0.473 | |
+| i7 8665U x 8 CPU    |     45     |         76.273 |              1.695 | |
+| i9-13900H x 20 CPU  | 36,838 | 65,817 | 1.786 | wd-eva02-large-tagger-v3 |
 
 
 ### Searching
