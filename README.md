@@ -46,18 +46,30 @@ The web ui is run with `python3.12 web.py` and the tagger is run with `python3.1
 
 ### Tagging
 
+Original numbers from skwzrd (wd-swinv2-tagger-v3 model):
+
 | Device         |   Images   | Total Time (s) | Time per Image (s) | Model |
 |----------------|:----------:|---------------:|-------------------:|----:|
 | 4060 TI 16GB GPU    |     45     |          2.172 |              0.048 | |
 | 5700X x 8 CPU      |     45     |         21.277 |              0.473 | |
 | i7 8665U x 8 CPU    |     45     |         76.273 |              1.695 | |
-| i9-13900H x 20 CPU  | 36,838 | 65,817 | 1.786 | wd-eva02-large-tagger-v3 |
+
+I don't have a GPU, but as any [timm](https://huggingface.co/docs/timm/index)-compatible model can be used, I've used different models. My system is an i9-13900H x 20 CPU.
+
+| Images | Total Time (s) | Time per Image (s) | Model | Tag-Image Pairs (1) | Found General Tags |
+|--|:--:|--:|:--|:--:|:--:|
+| 36,838 |        |       | wd-swinv2-tagger-v3 | | |
+| 36,838 | 36,842 | 0.503 | wd-vit-tagger-v3 | 863,254 | 6,209 |
+| 36,838 | 65,817 | 1.786 | wd-eva02-large-tagger-v3 | 1,314,034 | 7,221 |
+
+1. Tag-Image Pairs: the total number of image/tag pairings generated
+2. Found General Tags: the total number of "general" tags used by the tagger for at least one image
 
 
 ### Searching
 
 0.1s - 0.4s results on hundreds of thousands of images.
-`Searched 238,302 in 0.313s and found 25 results.`
+`Searched 238,302 images in 0.313s and found 25 results.`
 
 ### Acknowledgements
 
