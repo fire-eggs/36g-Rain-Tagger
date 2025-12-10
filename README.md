@@ -56,14 +56,14 @@ Original numbers from skwzrd (wd-swinv2-tagger-v3 model):
 
 I don't have a GPU, but as any [timm](https://huggingface.co/docs/timm/index)-compatible model can be used, I've used different models. My system is an i9-13900H x 20 CPU.
 
-| Images | Total Time (s) | Time per Image (s) | Model | Tag-Image Pairs (1) | Found General Tags |
+| Images | Total Time (s) | Time per Image (s) | Model | Tag-Image Pairs (1) | Found General Tags (2) |
 |--|:--:|--:|:--|:--:|:--:|
-| 36,838 |        |       | wd-swinv2-tagger-v3 | | |
+| 36,838 | 32,687 | 0.887 | wd-swinv2-tagger-v3 | 854,229 | 6,076 |
 | 36,838 | 36,842 | 0.503 | wd-vit-tagger-v3 | 863,254 | 6,209 |
 | 36,838 | 65,817 | 1.786 | wd-eva02-large-tagger-v3 | 1,314,034 | 7,221 |
 
 1. Tag-Image Pairs: the total number of image/tag pairings generated
-2. Found General Tags: the total number of "general" tags used by the tagger for at least one image
+2. Found General Tags: the total number of "general" tags applied by the tagger for at least one image
 
 
 ### Searching
