@@ -161,6 +161,17 @@ function render_tags_text(tags, category) {
         .join(' ');
 }
 
+function render_top_tags(tags) {
+
+let keys = Object.keys(tags);
+keys.sort((a, b) => tags[a] - tags[b]);
+
+    return Object.entries(tags || {})
+        .filter(([k, v]) => v >= 0.7)
+        .map(([k, v]) => `${k}`)
+        .join(',');
+}
+
 function renderResults(data) {
 	tot_pages = Math.ceil( data.tot_found / per_page );
 	
@@ -183,7 +194,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}"/>
+                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
