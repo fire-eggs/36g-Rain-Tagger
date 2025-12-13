@@ -8,8 +8,8 @@ html {
 .container {
     display: flex;
     flex-direction: column;
-    max-width: 100%;
-    width: 230px;
+    /* max-width: 100%; */
+    width: 240px;
     gap: 10px;
     margin: 5px;
 }
@@ -127,12 +127,15 @@ input[type=number]{
     
 .row {
     display: flex;
-    max-width: 99%;
-    overflow: auto;
+    max-width: 95%;
 }
 
 .m {
     margin: 1em;
+}
+
+.fn {
+    overflow-wrap: break-word;
 }
 
 img.result {

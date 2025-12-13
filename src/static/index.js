@@ -183,7 +183,7 @@ function renderResults(data) {
                 <div class="m row">
                     <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
                     <div class="outer_pills">
-                        <p>${result.image_path}</p>
+                        <p class="fn">${result.image_path}</p>
                         <div class="pills">
                             ${render_tags_text(result.rating, 'rating')}
                             ${render_tags_text(result.general, 'general')}
