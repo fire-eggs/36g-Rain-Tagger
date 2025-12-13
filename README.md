@@ -15,6 +15,11 @@ It is named after [36g](https://vocaloid.fandom.com/wiki/36g).
 
 ## Set Up
 
+On a fresh install of Linux, you'll need to make sure to have pip and venv installed:
+```bash
+sudo apt install python3-pip python3.12-venv
+```
+App install:
 ```bash
 git clone https://github.com/fire-eggs/36g-Rain-Tagger
 cd 36g-Rain-Tagger
