@@ -186,6 +186,29 @@ def current_selection():
     results = current_app.db.get_common_tags(selected_ids,0,0.0)
     return jsonify(results)
 
+@bp.route('/api/applyTagChanges', methods=["GET"])
+def applyTagChanges():
+    print('applyTagChanges')
+    image_ids = request.args.getlist('image_ids', type=int)
+    tag_ids = request.args.getlist('tag_ids', type=int)
+
+    blah = current_app.db.get_common_tags(image_ids,0,0.0)
+    old_tag_ids = [row["tag_id"] for row in blah]
+    
+    print(f"old_tag_ids: {old_tag_ids}")
+    print(f"new_tag_ids: {tag_ids}")
+    
+    tags_to_delete = list(set(old_tag_ids) - set(tag_ids))
+    print(f'tags to delete: {tags_to_delete}')
+    
+    current_app.db.delete_tags(image_ids, tags_to_delete)
+    
+#    if len(selected_ids) == 0:
+#        return jsonify([])
+#    results = current_app.db.get_common_tags(selected_ids,0,0.0)
+#    return jsonify(results)
+    return jsonify([])
+
 @lru_cache(maxsize=1)
 def get_all_tags():
     tags = current_app.db.get_tags()

@@ -448,3 +448,10 @@ class ImageDb(SqliteDb):
         
         #print(f"gct: {blah}")
         return results
+
+    def delete_tags(self, image_ids, tags_to_delete):
+        # remove the given tags from the given images
+        for tag_id in tags_to_delete:
+            sql = f"delete from image_tag where tag_id={tag_id} and image_id in (" + ','.join(map(str, image_ids)) + ")"
+            self._run_query(sql, commit=True)
+        

@@ -11,6 +11,7 @@ const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 const info_div = document.getElementById('info');
+const controls_div = document.getElementById('controls');
 
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
@@ -71,12 +72,10 @@ results_div.addEventListener('click', (e) => {
 
     const selection = [...selectedIds];
     
-    //console.log(selection);
-    
     sendSelection(selection); // list of common tags for these images
   });
 
-active_info_tags = [];
+active_info_tags = []; // tag_name and tag_id
 
 function renderInfoTags(container, selectedArray, className) {
     container.innerHTML = selectedArray.map(tag =>
@@ -87,25 +86,36 @@ function renderInfoTags(container, selectedArray, className) {
             const id = parseInt(btn.dataset.id);
             const idx = selectedArray.findIndex(t => t.tag_id === id);
             if (idx !== -1) selectedArray.splice(idx, 1);
-            //const hiddenFieldId = className === 'general' ? 'file_tags_general' : 'file_tags_character';
-            //document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
             renderInfoTags(container, selectedArray, className);
         });
     });
 }
 
+async function applyTagChanges() {
+
+    const params = new URLSearchParams();
+    selectedIds.forEach(id => params.append('image_ids', id));
+    active_info_tags.forEach(blah => params.append('tag_ids', blah["tag_id"]));
+    try {
+        const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
+        if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
+        //renderResults(await resp.json());
+    } catch (err) { console.error(err); }
+}
 
 function updateInfoPane() {
     
-    console.log(active_info_tags); 
+    //console.log(active_info_tags); 
 
     renderInfoTags(info_div, active_info_tags, 'general');
-/*    
-    let html = ``;
-    html += data.map(res => `${render_tags_text(res, 'general')} `).join('');
     
-    info_div.innerHTML = html;
-    */
+    controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
+    doit_button = document.getElementById('doit');
+    doit_button.addEventListener('click', () => {
+        applyTagChanges();
+        // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
+    });
+
 }
 
 async function sendSelection(selection) {
@@ -240,8 +250,8 @@ function render_tags_text(tags, category) {
 
 function render_top_tags(tags) {
 
-let keys = Object.keys(tags);
-keys.sort((a, b) => tags[a] - tags[b]);
+    let keys = Object.keys(tags);
+    keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
         .filter(([k, v]) => v >= 0.7)
