@@ -10,6 +10,7 @@ const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
+const info_div = document.getElementById('info');
 
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
@@ -48,6 +49,78 @@ page_input.addEventListener('input', () => {
 go_input.addEventListener('click', () => {
     performSearch(true);
 });
+
+
+/* CG change */
+const selectedIds = new Set();
+results_div.addEventListener('click', (e) => {
+    const item = e.target.closest('img.result');
+    if (!item) {
+        console.log("click fail");
+        return;
+    }
+    const id = item.dataset.id;
+
+    item.classList.toggle('selected');
+
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+
+    const selection = [...selectedIds];
+    
+    //console.log(selection);
+    
+    sendSelection(selection); // list of common tags for these images
+  });
+
+active_info_tags = [];
+
+function renderInfoTags(container, selectedArray, className) {
+    container.innerHTML = selectedArray.map(tag =>
+        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
+    ).join('');
+    container.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const idx = selectedArray.findIndex(t => t.tag_id === id);
+            if (idx !== -1) selectedArray.splice(idx, 1);
+            //const hiddenFieldId = className === 'general' ? 'file_tags_general' : 'file_tags_character';
+            //document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
+            renderInfoTags(container, selectedArray, className);
+        });
+    });
+}
+
+
+function updateInfoPane() {
+    
+    console.log(active_info_tags); 
+
+    renderInfoTags(info_div, active_info_tags, 'general');
+/*    
+    let html = ``;
+    html += data.map(res => `${render_tags_text(res, 'general')} `).join('');
+    
+    info_div.innerHTML = html;
+    */
+}
+
+async function sendSelection(selection) {
+    const params = new URLSearchParams();
+    selection.forEach(id => params.append('selected_ids', id));
+    results = [];
+    try {
+        const resp = await fetch(`/api/selection?${params.toString()}`);
+        if (!resp.ok) throw new Error(`API selection fail: ${resp.status}`);
+        active_info_tags = await resp.json();
+        updateInfoPane();
+    } catch (err) { console.error(err); }
+    return results;
+}
+
 
 async function fetchAllTags() {
     const response = await fetch('/tags');
@@ -136,6 +209,10 @@ function clearAll() {
     document.getElementById('file_tags_general').value = '';
     results_div.innerHTML = '';
     pagination_div.innerHTML = '';
+    
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
 }
 
 let current_display_mode = "List";
@@ -173,8 +250,8 @@ keys.sort((a, b) => tags[a] - tags[b]);
 }
 
 function renderResults(data) {
-	tot_pages = Math.ceil( data.tot_found / per_page );
-	
+    tot_pages = Math.ceil( data.tot_found / per_page );
+
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
     if (data.results && data.results.length) {
@@ -194,7 +271,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
+                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
@@ -262,12 +339,12 @@ function performExploreLink(tagId, tagname) {
     // TODO: clearAll() should have a 'clear the filters' option
     f_general.value = (selectedOption1 == "G" ? 0.5 : 0.0);
     f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
-	f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
-	f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
-	f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
-	f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
-	f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
-	f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
+    f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
+    f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
+    f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
+    f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
+    f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
+    f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
 
     if (selectedOption2 == "C") {
         selected_character_tags.push({ tag_id: tagId, tag_name: tagname });
@@ -342,6 +419,10 @@ async function performSearch(isPagination = false) {
     } else {
         performTagSearchGuts(isPagination);
     }
+    
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
 }
 
 function renderTopGrid(data) {
@@ -356,9 +437,9 @@ function renderTopGrid(data) {
 }
 
 function handleExploreRadioChange() {
-  var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
-  var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
-  performExplore(selectedOption1,selectedOption2);  
+    var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+    var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+    performExplore(selectedOption1,selectedOption2);  
 }
 
 async function performExplore(selExpOption="G",selTypeOption="G") {

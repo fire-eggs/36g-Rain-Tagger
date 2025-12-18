@@ -126,7 +126,8 @@ input[type=number]{
 }
     
 .row {
-    display: flex;
+    display: grid; /* CG change */
+    grid-template-columns: 1fr 4fr 1fr; /* CG change */
     max-width: 95%;
 }
 
@@ -143,6 +144,12 @@ img.result {
     max-height: 300px;
     object-fit: contain;
     vertical-align: top;
+    border: 3px solid transparent; /* CG change */
+}
+
+/* CG change */
+img.result.selected {
+    border-color: dodgerblue;
 }
 
 .rating {
@@ -187,6 +194,14 @@ img.result {
 .grid-contain div {
     border: 1px solid lightgray;
     padding: 3px;
+}
+
+/* CG change */
+.info-pane {
+    border-left: 1px solid #ccc;
+    padding: 16px;
+    overflow-y: auto;
+    background: #383838;
 }
 
 @media (max-width: 770px) {

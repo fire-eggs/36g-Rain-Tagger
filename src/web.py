@@ -133,20 +133,20 @@ def search_w_tags():
 
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
-	
-	""" Future params:
-	- general or character tags
-	- probability level
-	- count
-	"""
-	choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
-	choice2 = request.args.get('tagType') # general/character; future "artist"
-	
-	results = current_app.db.get_top_tags(choice1,choice2)
-	return jsonify({
-	'results': results,
-	})
-	
+
+    """ Future params:
+    - general or character tags
+    - probability level
+    - count
+    """
+    choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
+    choice2 = request.args.get('tagType') # general/character; future "artist"
+
+    results = current_app.db.get_top_tags(choice1,choice2)
+    return jsonify({
+    'results': results,
+    })
+
 
 @bp.route('/all_images', methods=['GET'])
 def all_images():
@@ -176,6 +176,15 @@ def all_images():
 def index():
     return render_template('index.html', allow_file_upload_search=configs.allow_file_upload_search)
 
+@bp.route('/api/selection', methods=["GET"])
+def current_selection():
+    print('current_selection')
+    selected_ids = request.args.getlist('selected_ids', type=int)
+    print(selected_ids)
+    if len(selected_ids) == 0:
+        return jsonify([])
+    results = current_app.db.get_common_tags(selected_ids,0,0.0)
+    return jsonify(results)
 
 @lru_cache(maxsize=1)
 def get_all_tags():

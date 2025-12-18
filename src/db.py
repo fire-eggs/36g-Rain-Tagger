@@ -428,3 +428,23 @@ class ImageDb(SqliteDb):
         #print(f'gtt: {results}')
         return results
          
+    def get_common_tags(self, image_ids, tagtype, prob):
+        # get all the tags in common amongst a set of images.
+        # filter by tag type and probability
+        
+        sql = "";
+        count = len(image_ids)
+        curr = 1
+        # A separate select clause for each tag, with intersect for tags 2+
+        for imgid in image_ids:
+            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
+            if curr != count: # no extra intersect
+                sql += " INTERSECT "
+            curr += 1
+        sql += " order by tag_name asc"
+        
+        results = self._run_query(sql)
+        #blah = [row["tag_name"] for row in results] # list of tag names
+        
+        #print(f"gct: {blah}")
+        return results
