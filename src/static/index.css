@@ -12,6 +12,7 @@ html {
     width: 240px;
     gap: 10px;
     margin: 5px;
+    overflow-y:hidden;
 }
 
 .flat {
@@ -127,8 +128,14 @@ input[type=number]{
     
 .row {
     display: grid; /* CG change */
-    grid-template-columns: 1fr 4fr 1fr; /* CG change */
+    grid-template-columns: 1fr 5fr 1fr; /* CG change */
     max-width: 95%;
+    overflow-y:hidden;
+}
+
+.gallery {
+    height: 100vh;
+    overflow-y:scroll;
 }
 
 .m {
