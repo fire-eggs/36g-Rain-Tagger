@@ -58,9 +58,18 @@
     </div>
     
     <div class="info-pane"> <!-- CG Change -->
-        <h3>Selected Images</h3>
-        <div id="info" style="border:1px solid blue;"></div>
-        <div id="controls" style="border:1px solid blue;"></div>
+        <div id="info" class="info-tags" style="border:1px solid blue;"></div>
+        <div class="info-rest">
+            <button id="doit">Apply Changes</button>
+            <!-- <div id="controls" style="border:1px solid blue;"></div> -->
+            <!-- <div id="addControls" style="border:1px solid blue;"></div> -->
+            <!-- <div class="search"> -->
+            <div>
+                <input id="addtag_input" type="text" autocomplete="off" placeholder="Select or enter tag to add"><button id="addTextTag">Add</button>
+                <div id="addtag_suggestions"></div>
+            </div>
+        </div>
+        
     </div>
     
     </div>

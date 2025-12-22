@@ -10,9 +10,17 @@ const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
+
+// Info pane
 const info_div = document.getElementById('info');
 const controls_div = document.getElementById('controls');
+const controls2_div = document.getElementById('addControls');
+const addTagInput = document.getElementById('addtag_input');
+const addTagSuggest = document.getElementById('addtag_suggestions');
+const selectAddTags = document.getElementById('selected_addtags');
+const addTagBtn = document.getElementById('addTextTag');
 
+// 'Filters'
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
 const f_sensitive = document.getElementById('f_sensitive');
@@ -55,9 +63,10 @@ go_input.addEventListener('click', () => {
 /* CG change */
 const selectedIds = new Set();
 results_div.addEventListener('click', (e) => {
+    /* User clicks on an image. Add or remove from the list of selected images. */
     const item = e.target.closest('img.result');
     if (!item) {
-        console.log("click fail");
+        //console.log("click fail");
         return;
     }
     const id = item.dataset.id;
@@ -72,30 +81,43 @@ results_div.addEventListener('click', (e) => {
 
     const selection = [...selectedIds];
     
-    sendSelection(selection); // list of common tags for these images
+    sendSelection(selection); // display a list of common tags for these images
   });
 
 active_info_tags = []; // tag_name and tag_id
+active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
 
 function renderInfoTags(container, selectedArray, className) {
     container.innerHTML = selectedArray.map(tag =>
         `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
     ).join('');
+    
+    container.innerHTML += active_text_tags.map(tag =>
+        `<span class="pill ${className}">${tag} <button data-id="0" type="button">x</button></span>`
+    ).join('');
+    
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
-            const idx = selectedArray.findIndex(t => t.tag_id === id);
-            if (idx !== -1) selectedArray.splice(idx, 1);
+            if (id == 0) {
+                const idx = active_text_tags.findIndex(t => t === btn.textContent);
+                if (idx !== -1) active_text_tags.splice(idx, 1);
+            }
+            else {
+                const idx = selectedArray.findIndex(t => t.tag_id === id);
+                if (idx !== -1) selectedArray.splice(idx, 1);
+            }
             renderInfoTags(container, selectedArray, className);
         });
     });
 }
 
 async function applyTagChanges() {
-
+    /* User clicks on apply button. Send the current tag set to the server to update the database. */
     const params = new URLSearchParams();
     selectedIds.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah["tag_id"]));
+    active_text_tags.forEach(blah => params.append('text_tags', blah));
     try {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
         if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
@@ -109,16 +131,41 @@ function updateInfoPane() {
 
     renderInfoTags(info_div, active_info_tags, 'general');
     
-    controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
+    //controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
     doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
         applyTagChanges();
         // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
-
 }
 
+function handleAddTagInput(inputEl, suggestionDiv, typeId) {
+    // TODO typeId from tag class dropdown
+    const query = inputEl.value.trim().toLowerCase();
+    suggestionDiv.innerHTML = '';
+    if (!query) return;
+    const filtered = Array.from(all_tags.values())
+        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+    suggestionDiv.innerHTML = filtered.map(tag =>
+        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+    ).join('');
+    
+    addTagSuggest.querySelectorAll('.tag_suggestion').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = parseInt(el.dataset.id);
+            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
+                renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
+            }
+            el.remove();
+            //document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
+        });
+    });
+}
+
+
 async function sendSelection(selection) {
+    active_text_tags = [];
     const params = new URLSearchParams();
     selection.forEach(id => params.append('selected_ids', id));
     results = [];
@@ -129,6 +176,17 @@ async function sendSelection(selection) {
         updateInfoPane();
     } catch (err) { console.error(err); }
     return results;
+}
+
+function addTagClick() {
+    // User has clicked on the 'Add' button to add a text tag
+    
+    newtag = addTagInput.value;
+    const idx = active_text_tags.findIndex(t => t == newtag);
+    if (idx == -1)
+        active_text_tags.push(newtag);
+
+    renderInfoTags(info_div, active_info_tags, 'general');
 }
 
 
@@ -164,6 +222,7 @@ function handleTagInput(inputEl, suggestionDiv, typeId) {
     suggestionDiv.innerHTML = filtered.map(tag =>
         `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
     ).join('');
+    
     attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
         typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
 }
@@ -223,6 +282,7 @@ function clearAll() {
     selectedIds.clear();
     info_div.innerHTML = '';
     active_info_tags = [];
+    active_text_tags = [];
 }
 
 let current_display_mode = "List";
@@ -382,7 +442,7 @@ async function performTagSearchGuts(isPagination) {
     if (!isPagination) current_page = 1;
 
     const generalIds = selected_general_tags.map(t => t.tag_id);
-    console.log(generalIds);
+    //console.log(generalIds);
     const characterIds = selected_character_tags.map(t => t.tag_id);
     if (!generalIds.length && !characterIds.length) return;
 
@@ -433,6 +493,7 @@ async function performSearch(isPagination = false) {
     selectedIds.clear();
     info_div.innerHTML = '';
     active_info_tags = [];
+    active_text_tags = [];
 }
 
 function renderTopGrid(data) {
@@ -522,5 +583,9 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 clear_button.addEventListener('click', clearAll);
 search_button.addEventListener('click', () => performSearch(false));
 dash_button.addEventListener('click', () => performExplore("G"));
+
+addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
+addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
+addTagBtn.addEventListener('click', () => addTagClick());
 
 fetchAllTags();

@@ -170,7 +170,10 @@ class ImageDb(SqliteDb):
             self.run_query_many(s, params)
 
         tag_count = (self.run_query_tuple('select count(*) from tag'))[0][0]
-        if tag_count != self.total_csv_tag_count:
+        
+        # TODO verify impact on tagger?
+        #if tag_count != self.total_csv_tag_count: # TODO KBR allow adding new tags
+        if tag_count < self.total_csv_tag_count:
             raise ValueError()
 
         self.save()
@@ -455,3 +458,43 @@ class ImageDb(SqliteDb):
             sql = f"delete from image_tag where tag_id={tag_id} and image_id in (" + ','.join(map(str, image_ids)) + ")"
             self._run_query(sql, commit=True)
         
+    def add_tags(self, image_ids, tags_to_add):
+        # add the given tags for the given images
+        
+        for image_id in image_ids:
+            for tag_id in tags_to_add:
+                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)"
+                self._run_query(sql, commit=True)
+                
+            # params = [(image_id, tag_id, 1.0) for tag_id in tags_to_add]
+            # try:
+                # self.run_query_many('insert or ignore into image_tag (image_id, tag_id, prob) values (?, ?, ?)', params)
+            # except sqlite3.IntegrityError as e:
+                # error_msg = str(e).join('\n')[:256]
+                # print(f'Unique constraint failed: {image_id=} {tags_to_add=} {params=} {error_msg=}')
+        # self.save()
+        
+    def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
+        # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
+        
+        self.sql_echo = True
+        
+        for tagText in tags_to_add:
+            sql = f"select tag_id from tag where tag_name = '{tagText}'"
+            results = self._run_query(sql)
+            if len(results) == 0:
+                sql = f"select max(tag_id) as new_id from tag"
+                results = self._run_query(sql)
+                new_id = int(results[0]["new_id"]) + 1
+                sql = f"insert or ignore into tag (tag_id, tag_name, tag_type_id, tag_count) values ({new_id}, '{tagText}', {tagTypeId}, 1)"
+                self._run_query(sql, commit=True)
+            else:
+                new_id = int(results[0]["tag_id"])
+                
+            # add to images with new_id
+            for image_id in image_ids:
+                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{new_id},1.0)"
+                self._run_query(sql, commit=True)
+
+        self.sql_echo = False
+            
