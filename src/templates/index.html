@@ -58,6 +58,17 @@
     </div>
     
     <div class="info-pane"> <!-- CG Change -->
+        <button id="clearSelect">Clear Selection</button>
+        
+        <label for="tagClassChoice">Choose Tag Class:</label>
+        <select id="tagClassChoice" name="tagClassChooser">
+            <option value="">**Please choose an option**</option>
+            <option value="general">General</option>
+            <option value="character">Character</option>
+            <option value="copyright">Copyright</option>
+            <option value="artist">Artist</option>
+        </select>
+        
         <div id="info" class="info-tags" style="border:1px solid blue;"></div>
         <div class="info-rest">
             <button id="doit">Apply Changes</button>

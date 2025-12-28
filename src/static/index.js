@@ -12,6 +12,7 @@ const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 
 // Info pane
+const clearSelectBtn = document.getElementById('clearSelect');
 const info_div = document.getElementById('info');
 const controls_div = document.getElementById('controls');
 const controls2_div = document.getElementById('addControls');
@@ -60,6 +61,7 @@ go_input.addEventListener('click', () => {
 });
 
 
+
 /* CG change */
 const selectedIds = new Set();
 results_div.addEventListener('click', (e) => {
@@ -83,6 +85,26 @@ results_div.addEventListener('click', (e) => {
     
     sendSelection(selection); // display a list of common tags for these images
   });
+
+function deselectAll() {
+    /* Clear selection state for all images */
+    
+    if (selectedIds.length < 1)
+        return;
+    
+    // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
+    results_div.querySelectorAll('img').forEach( img => {
+        iid = img.dataset.id;
+        if (selectedIds.has(iid))
+            img.classList.toggle('selected');
+    });
+    
+    // TODO: replace with deselectAll call?
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
+    active_text_tags = [];
+}
 
 active_info_tags = []; // tag_name and tag_id
 active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
@@ -189,7 +211,6 @@ function addTagClick() {
     renderInfoTags(info_div, active_info_tags, 'general');
 }
 
-
 async function fetchAllTags() {
     const response = await fetch('/tags');
     const tags = await response.json();
@@ -279,6 +300,7 @@ function clearAll() {
     results_div.innerHTML = '';
     pagination_div.innerHTML = '';
     
+    // TODO: replace with deselectAll call?
     selectedIds.clear();
     info_div.innerHTML = '';
     active_info_tags = [];
@@ -490,6 +512,7 @@ async function performSearch(isPagination = false) {
         performTagSearchGuts(isPagination);
     }
     
+    // TODO: replace with deselectAll call?
     selectedIds.clear();
     info_div.innerHTML = '';
     active_info_tags = [];
@@ -587,5 +610,7 @@ dash_button.addEventListener('click', () => performExplore("G"));
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addTagBtn.addEventListener('click', () => addTagClick());
+
+clearSelectBtn.addEventListener('click', () => deselectAll());
 
 fetchAllTags();
