@@ -459,19 +459,9 @@ class ImageDb(SqliteDb):
             for tag_id in tags_to_add:
                 sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)"
                 self._run_query(sql, commit=True)
-                
-            # params = [(image_id, tag_id, 1.0) for tag_id in tags_to_add]
-            # try:
-                # self.run_query_many('insert or ignore into image_tag (image_id, tag_id, prob) values (?, ?, ?)', params)
-            # except sqlite3.IntegrityError as e:
-                # error_msg = str(e).join('\n')[:256]
-                # print(f'Unique constraint failed: {image_id=} {tags_to_add=} {params=} {error_msg=}')
-        # self.save()
         
     def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
         # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
-        
-        self.sql_echo = True
         
         for tagText in tags_to_add:
             sql = f"select tag_id from tag where tag_name = '{tagText}'"
@@ -489,6 +479,3 @@ class ImageDb(SqliteDb):
             for image_id in image_ids:
                 sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{new_id},1.0)"
                 self._run_query(sql, commit=True)
-
-        self.sql_echo = False
-            
