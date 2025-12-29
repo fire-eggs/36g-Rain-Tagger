@@ -20,7 +20,8 @@ class ImageDb(SqliteDb):
     def is_tags_exist(self) -> bool:
         tag_count = self.run_query_tuple('select count(*) from tag')[0][0]
         print(f'Found {tag_count}/{self.total_csv_tag_count} tags already in database.')
-        return tag_count == self.total_csv_tag_count
+        # KBR tag count may exceed CSV count
+        return tag_count >= self.total_csv_tag_count
 
 
     def init_tagging(self):
@@ -148,13 +149,6 @@ class ImageDb(SqliteDb):
         directory_id = int(rows[0][0])
         self.directory_2_id[directory] = directory_id
         return directory_id
-
-
-    def is_tags_exist(self) -> bool:
-        tag_count = (self.run_query_tuple('select count(*) from tag'))[0][0]
-        print(f'Found {tag_count}/{self.total_csv_tag_count} tags already in database.')
-        return tag_count == self.total_csv_tag_count
-
 
     def insert_tags(self, tag_data: TagData=None):
         if not tag_data:
