@@ -343,6 +343,8 @@ function render_top_tags(tags) {
 
 function renderResults(data) {
     tot_pages = Math.ceil( data.tot_found / per_page );
+    if (current_page > tot_pages)
+        current_page = tot_pages;
 
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;

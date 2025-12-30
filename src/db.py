@@ -333,6 +333,7 @@ class ImageDb(SqliteDb):
 
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
       
+        # TODO should this be COUNT(image_tag.image_id)?
         total_rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
@@ -352,6 +353,8 @@ class ImageDb(SqliteDb):
           return [], 0
         
         offset = max(page - 1, 0) * per_page
+        if (offset >= len(total_rows)):
+            offset = (int)(len(total_rows) / per_page) * per_page
 
         rows = self.run_query_tuple(f"""
             select image_tag.image_id
