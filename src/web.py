@@ -215,7 +215,7 @@ def applyTagChanges():
 
     #print(f'ATC text tags: {text_tags}')
     if len(text_tags) > 0:
-        current_app.db.add_possibly_new_tags(image_ids, text_tags, 4) # TODO last parameter is hardcoded as FUTURE
+        current_app.db.add_possibly_new_tags(image_ids, text_tags, 32) # TODO last parameter is hardcoded as FUTURE
         
 #    if len(selected_ids) == 0:
 #        return jsonify([])
