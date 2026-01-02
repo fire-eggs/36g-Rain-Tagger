@@ -249,7 +249,7 @@ class ImageDb(SqliteDb):
             return []
 
         results = {}
-        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character'}
+        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future'}
         for image_id, (directory, filename, general, explicit, sensitive, questionable) in image_id_2_data.items():
             results[image_id] = {
                 'image_id': image_id,
@@ -257,6 +257,7 @@ class ImageDb(SqliteDb):
                 'rating': {'general': general, 'explicit': explicit, 'sensitive': sensitive, 'questionable': questionable},
                 'general': {},
                 'character': {},
+                'future': {},
             }
 
         for image_id, tag_name, tag_type_id, prob in tags:
