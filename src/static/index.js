@@ -166,8 +166,11 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
+// ignoring tag class
+//    const filtered = Array.from(all_tags.values())
+//        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
     const filtered = Array.from(all_tags.values())
-        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+        .filter(tag => tag[1].toLowerCase().includes(query));
     suggestionDiv.innerHTML = filtered.map(tag =>
         `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
     ).join('');
