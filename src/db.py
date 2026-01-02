@@ -437,7 +437,9 @@ class ImageDb(SqliteDb):
         curr = 1
         # A separate select clause for each tag, with intersect for tags 2+
         for imgid in image_ids:
-            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
+            # ignoring tag class
+            #sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
+            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
             if curr != count: # no extra intersect
                 sql += " INTERSECT "
             curr += 1
@@ -460,7 +462,7 @@ class ImageDb(SqliteDb):
         
         for image_id in image_ids:
             for tag_id in tags_to_add:
-                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)"
+                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)" # NOTE probability set to 1.0 / absolute
                 self._run_query(sql, commit=True)
         
     def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
