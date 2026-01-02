@@ -237,16 +237,24 @@ function parseTagField(fieldId, typeId) {
     }).filter(Boolean);
 }
 
-function handleTagInput(inputEl, suggestionDiv, typeId) {
+function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
-    const filtered = Array.from(all_tags.values())
-        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
-    suggestionDiv.innerHTML = filtered.map(tag =>
-        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
-    ).join('');
-    
+    if (ignoreTypeId) {
+        const filtered = Array.from(all_tags.values())
+            .filter(tag => tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered.map(tag =>
+            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        ).join('');
+    }
+    else {
+        const filtered = Array.from(all_tags.values())
+            .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered.map(tag =>
+            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        ).join('');
+    }
     attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
         typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
 }
@@ -604,8 +612,8 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
 }
 
 
-general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
-general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
+general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
+general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 clear_button.addEventListener('click', clearAll);
