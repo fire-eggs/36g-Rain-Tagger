@@ -404,7 +404,11 @@ function renderResults(data) {
         html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     
     pagination_div.innerHTML = html;
-    pagination2_div.innerHTML = html;
+    
+    // Issue 25: bottom next/prev buttons not working
+    html2 = html.replace("prev_page", "prev_page2");
+    html3 = html2.replace("next_page", "next_page2");
+    pagination2_div.innerHTML = html3;
 
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -427,6 +431,18 @@ function renderResults(data) {
     });
 
     document.getElementById('next_page').addEventListener('click', () => {
+        current_page++;
+        performSearch(true);
+    });
+
+    // Issue 25: bottom next/prev buttons not working
+    document.getElementById('prev_page2').addEventListener('click', () => {
+        if (current_page > 1) {
+            current_page--;
+            performSearch(true);
+        }
+    });
+    document.getElementById('next_page2').addEventListener('click', () => {
         current_page++;
         performSearch(true);
     });
