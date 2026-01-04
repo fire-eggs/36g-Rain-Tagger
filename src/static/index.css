@@ -219,13 +219,13 @@ img.result.selected {
     flex: 0 1 auto;
     max-height: 60vh;
     overflow-y: auto;
-    background-color: lightblue;
+    /*background-color: lightblue; */
     padding: 5px;
 }
 
 .info-rest {
     flex: 1;
-    background-color: lightgreen;
+    /*background-color: lightgreen;*/
     padding: 5px;
 }
         
