@@ -169,6 +169,7 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
 // ignoring tag class
 //    const filtered = Array.from(all_tags.values())
 //        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+
     const filtered = Array.from(all_tags.values())
         .filter(tag => tag[1].toLowerCase().includes(query));
     suggestionDiv.innerHTML = filtered.map(tag =>
@@ -182,7 +183,8 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
             }
-            el.remove();
+            // issue 27: don't remove the selected tag from the suggestion list
+            // el.remove();
             //document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
         });
     });
