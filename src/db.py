@@ -73,6 +73,13 @@ class ImageDb(SqliteDb):
                 UNIQUE (image_id, tag_id)
             )
         ""","""
+            CREATE TABLE IF NOT EXISTS mra_tags (
+                tag_name TEXT NOT NULL,
+                tag_id INTEGER NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(tag_name, tag_id)
+            )
+        ""","""
             create view IF NOT EXISTS tags_for_images_prob60_v2 AS
             select tag.tag_id, tag.tag_name, image_tag.image_id, image_tag.prob, image.explicit, image.sensitive, image.questionable, image.general
             from tag 
@@ -452,6 +459,11 @@ class ImageDb(SqliteDb):
         #print(f"gct: {blah}")
         return results
 
+    def get_mra_tags(self):
+        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 10"
+        results = self._run_query(sql)
+        return results
+
     def delete_tags(self, image_ids, tags_to_delete):
         # remove the given tags from the given images
         for tag_id in tags_to_delete:
@@ -464,6 +476,8 @@ class ImageDb(SqliteDb):
         for image_id in image_ids:
             for tag_id in tags_to_add:
                 sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)" # NOTE probability set to 1.0 / absolute
+                self._run_query(sql, commit=True)
+                sql = f"insert or replace into mra_tags (tag_name, tag_id, updated_at) SELECT tag_name, tag_id, CURRENT_TIMESTAMP from tag where tag_id={tag_id}"
                 self._run_query(sql, commit=True)
         
     def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
@@ -485,3 +499,6 @@ class ImageDb(SqliteDb):
             for image_id in image_ids:
                 sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{new_id},1.0)"
                 self._run_query(sql, commit=True)
+                
+            sql = f"insert or replace into mra_tags (tag_name, tag_id, updated_at) SELECT tag_name, tag_id, CURRENT_TIMESTAMP from tag where tag_id={new_id}"
+            self._run_query(sql, commit=True)

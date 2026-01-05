@@ -216,12 +216,14 @@ def applyTagChanges():
     #print(f'ATC text tags: {text_tags}')
     if len(text_tags) > 0:
         current_app.db.add_possibly_new_tags(image_ids, text_tags, 32) # TODO last parameter is hardcoded as FUTURE
-        
+
+    results = current_app.db.get_mra_tags()
+    return jsonify(results)        
 #    if len(selected_ids) == 0:
 #        return jsonify([])
 #    results = current_app.db.get_common_tags(selected_ids,0,0.0)
 #    return jsonify(results)
-    return jsonify([])
+#    return jsonify([])
 
 @lru_cache(maxsize=1)
 def get_all_tags():

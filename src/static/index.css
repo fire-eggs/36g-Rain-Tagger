@@ -216,19 +216,26 @@ img.result.selected {
 }
 
 .info-tags {
-    flex: 0 1 auto;
-    max-height: 60vh;
+    flex: 1 0 auto;
+    max-height: 50vh;
     overflow-y: auto;
     /*background-color: lightblue; */
     padding: 5px;
 }
 
 .info-rest {
-    flex: 1;
+    flex: 0 0;
     /*background-color: lightgreen;*/
     padding: 5px;
 }
-        
+
+.info-MRU {
+    flex: 1 0;
+    overflow-y: auto;
+    padding: 5px;
+    min-height: 20vh;
+}
+      
 @media (max-width: 770px) {
     .container {
         flex-direction: column;

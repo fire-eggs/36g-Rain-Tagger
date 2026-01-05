@@ -20,6 +20,7 @@ const addTagInput = document.getElementById('addtag_input');
 const addTagSuggest = document.getElementById('addtag_suggestions');
 const selectAddTags = document.getElementById('selected_addtags');
 const addTagBtn = document.getElementById('addTextTag');
+const MRU_div = document.getElementById('MRUTags');
 
 // 'Filters'
 const f_tag = document.getElementById('f_tag');
@@ -143,7 +144,7 @@ async function applyTagChanges() {
     try {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
         if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
-        //renderResults(await resp.json());
+        updateMRAtags(await resp.json()); // database returns the list of most-recently-added tags
     } catch (err) { console.error(err); }
 }
 
@@ -159,6 +160,26 @@ function updateInfoPane() {
         applyTagChanges();
         // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
+}
+
+function updateMRAtags(curr) {
+    // Update the most-recently-added tags list
+    MRU_div.innerHTML = curr.map(tag =>
+        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
+    ).join('');
+    
+    MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const txt= btn.dataset.text;
+            
+            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+                active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
+                renderInfoTags(info_div, active_info_tags, 'general');
+            }
+        });
+    });
+    
 }
 
 function handleAddTagInput(inputEl, suggestionDiv, typeId) {
