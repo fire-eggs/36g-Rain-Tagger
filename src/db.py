@@ -460,7 +460,7 @@ class ImageDb(SqliteDb):
         return results
 
     def get_mra_tags(self):
-        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 10"
+        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" # TODO hard-coded limit
         results = self._run_query(sql)
         return results
 
