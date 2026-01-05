@@ -9,10 +9,11 @@ html {
     display: flex;
     flex-direction: column;
     /* max-width: 100%; */
-    width: 240px;
-    gap: 10px;
+    width: 225px;
+    padding: 10px;
     margin: 5px;
     overflow-y:hidden;
+    gap: 3px;
 }
 
 .flat {
@@ -129,9 +130,10 @@ input[type=number]{
     
 .row {
     display: grid; /* CG change */
-    grid-template-columns: 1fr 5fr 1fr; /* CG change */
-    max-width: 95%;
+    grid-template-columns: auto 5fr 17%; /* CG change */
+    max-width: 99%;
     overflow-y:hidden;
+    /*background-color: red;*/
 }
 
 .gallery {
@@ -196,7 +198,7 @@ img.result.selected {
 .grid-contain {
     display:grid;
     grid-template-columns: 1fr 1fr;
-    padding:10px;
+    padding:7px;
 }
 
 .grid-contain div {
@@ -207,9 +209,9 @@ img.result.selected {
 /* CG change */
 .info-pane {
     border-left: 1px solid #ccc;
-    padding: 16px;
+    padding: 7px;
     /*overflow-y: auto; */
-    /* background: #383838; */
+    background: #383838;
     display: flex;
     flex-direction: column;
     height: 95vh;
@@ -220,21 +222,22 @@ img.result.selected {
     max-height: 50vh;
     overflow-y: auto;
     /*background-color: lightblue; */
-    padding: 5px;
+    padding: 2px;
 }
 
 .info-rest {
     flex: 0 0;
     /*background-color: lightgreen;*/
-    padding: 5px;
+    padding: 2px;
 }
 
 .info-MRU {
     flex: 1 0;
     overflow-y: auto;
-    padding: 5px;
+    padding: 2px;
     min-height: 20vh;
 }
+
       
 @media (max-width: 770px) {
     .container {
@@ -271,3 +274,4 @@ img.result.selected {
         object-fit: contain;
     }
 }
+
