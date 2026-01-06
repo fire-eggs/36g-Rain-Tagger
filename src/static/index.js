@@ -85,12 +85,13 @@ results_div.addEventListener('click', (e) => {
     const selection = [...selectedIds];
     
     sendSelection(selection); // display a list of common tags for these images
+    updateSelCount();
   });
 
 function deselectAll() {
     /* Clear selection state for all images */
     
-    if (selectedIds.length < 1)
+    if (selectedIds.size < 1)
         return;
     
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
@@ -108,6 +109,8 @@ function deselectAll() {
     
     warning = document.getElementById('warn'); // TODO function
     warning.style.display = "none";
+    
+    updateSelCount();
 }
 
 active_info_tags = []; // tag_name and tag_id
@@ -357,6 +360,7 @@ function clearAll() {
     info_div.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
+    updateSelCount();
 }
 
 let current_display_mode = "List";
@@ -587,6 +591,7 @@ async function performSearch(isPagination = false) {
     info_div.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
+    updateSelCount();
 }
 
 function renderTopGrid(data) {
@@ -668,6 +673,11 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
 }
 
+function updateSelCount() {
+    let count = selectedIds.size;
+    selmsg = document.getElementById("selectMsg");
+    selmsg.textContent = `${count} image${count != 1 ? 's' : ''} selected`;
+}
 
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
