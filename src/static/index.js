@@ -105,6 +105,9 @@ function deselectAll() {
     info_div.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
+    
+    warning = document.getElementById('warn'); // TODO function
+    warning.style.display = "none";
 }
 
 active_info_tags = []; // tag_name and tag_id
@@ -137,6 +140,10 @@ function renderInfoTags(container, selectedArray, className) {
 
 async function applyTagChanges() {
     /* User clicks on apply button. Send the current tag set to the server to update the database. */
+    
+    warning = document.getElementById('warn');
+    warning.style.display = "none";
+    
     const params = new URLSearchParams();
     selectedIds.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah["tag_id"]));
@@ -175,6 +182,10 @@ function updateMRAtags(curr) {
             
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
+                
+                warning = document.getElementById('warn'); // TODO function
+                warning.style.display = "block";
+                
                 renderInfoTags(info_div, active_info_tags, 'general');
             }
         });
@@ -202,6 +213,10 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
             const id = parseInt(el.dataset.id);
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
+                
+                warning = document.getElementById('warn'); // TODO function
+                warning.style.display = "block";
+                
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
             }
             // issue 27: don't remove the selected tag from the suggestion list
@@ -231,9 +246,12 @@ function addTagClick() {
     
     newtag = addTagInput.value;
     const idx = active_text_tags.findIndex(t => t == newtag);
-    if (idx == -1)
+    if (idx == -1) {
         active_text_tags.push(newtag);
-
+        warning = document.getElementById('warn'); // TODO function
+        warning.style.display = "block";
+    }
+    
     renderInfoTags(info_div, active_info_tags, 'general');
 }
 
