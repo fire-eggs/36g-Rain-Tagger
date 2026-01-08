@@ -130,11 +130,19 @@ function renderInfoTags(container, selectedArray, className) {
             const id = parseInt(btn.dataset.id);
             if (id == 0) {
                 const idx = active_text_tags.findIndex(t => t === btn.textContent);
-                if (idx !== -1) active_text_tags.splice(idx, 1);
+                if (idx !== -1) {
+                    active_text_tags.splice(idx, 1);
+                    warning = document.getElementById('warn');  // TODO refactor
+                    warning.style.display = "block";
+                }
             }
             else {
                 const idx = selectedArray.findIndex(t => t.tag_id === id);
-                if (idx !== -1) selectedArray.splice(idx, 1);
+                if (idx !== -1) {
+                    selectedArray.splice(idx, 1);
+                    warning = document.getElementById('warn');  // TODO refactor
+                    warning.style.display = "block";
+                }
             }
             renderInfoTags(container, selectedArray, className);
         });
