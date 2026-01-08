@@ -182,6 +182,9 @@ function updateInfoPane() {
 
 function updateMRAtags(curr) {
     // Update the most-recently-added tags list
+    
+    curr.sort((a,b) => a.tag_name.localeCompare(b.tag_name)); // easier to find tags if alphabetized
+
     MRU_div.innerHTML = curr.map(tag =>
         `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
     ).join('');
