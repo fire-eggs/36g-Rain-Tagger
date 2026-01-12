@@ -365,6 +365,7 @@ function clearAll() {
     document.getElementById('file_tags_general').value = '';
     results_div.innerHTML = '';
     pagination_div.innerHTML = '';
+    pagination2_div.innerHTML = '';
     
     // TODO: replace with deselectAll call?
     selectedIds.clear();
