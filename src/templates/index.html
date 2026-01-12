@@ -23,12 +23,12 @@
         <input id="file_tags_character" maxlength="100" minlength="0" name="file_tags_character" style="display: none;" type="text" value="">
 
         <div class="search">
-            <input id="general_tag_input" type="text" autocomplete="off" placeholder="Search general tags">
+            <input id="general_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
             <div id="general_tag_suggestions"></div>
             <div id="selected_general_tags"></div>
         </div>
         <div class="search">
-            <input id="character_tag_input" type="text" autocomplete="off" placeholder="Search character tags">
+            <input id="character_tag_input" type="text" autocomplete="off" placeholder="Search only character tags">
             <div id="character_tag_suggestions"></div>
             <div id="selected_character_tags"></div>
         </div>
@@ -46,7 +46,7 @@
         <button id="dash_button">Explore</button>
 
     </div>
-    <div>
+    <div class="gallery">
         <div style="padding: 1px;">
             <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
             <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
@@ -56,6 +56,30 @@
         <div id="results"></div>
         <div id="pagination2"></div>
     </div>
+    
+    <div class="info-pane"> <!-- CG Change -->
+        <button id="clearSelect">Clear Selection</button>
+        <h4 id="selectMsg">0 Images Selected</h4>
+                
+        <h3>Common Tags for Selected Images</h3>
+        <div id="info" class="info-tags" style="border:1px solid blue;"></div>
+        <div class="info-rest">
+            <div style="display:flex;">
+                <img id="warn" src="/static/small-warning-icon.png" width="32" height="32" style="display:none;">
+                <button id="doit">Apply Changes</button>
+            </div>
+            <!-- <div id="controls" style="border:1px solid blue;"></div> -->
+            <!-- <div id="addControls" style="border:1px solid blue;"></div> -->
+            <!-- <div class="search"> -->
+            <div>
+                <input id="addtag_input" type="text" autocomplete="off" placeholder="Select or enter tag to add"><button id="addTextTag">Add</button>
+                <div id="addtag_suggestions"></div>
+            </div>
+        </div>
+        <div id="MRUTags" class="info-MRU" style="border:1px solid green;"></div>
+        
+    </div>
+    
     </div>
 
     <script src="/static/index.js"></script>

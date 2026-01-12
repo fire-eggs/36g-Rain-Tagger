@@ -133,20 +133,20 @@ def search_w_tags():
 
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
-	
-	""" Future params:
-	- general or character tags
-	- probability level
-	- count
-	"""
-	choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
-	choice2 = request.args.get('tagType') # general/character; future "artist"
-	
-	results = current_app.db.get_top_tags(choice1,choice2)
-	return jsonify({
-	'results': results,
-	})
-	
+
+    """ Future params:
+    - general or character tags
+    - probability level
+    - count
+    """
+    choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
+    choice2 = request.args.get('tagType') # general/character; future "artist"
+
+    results = current_app.db.get_top_tags(choice1,choice2)
+    return jsonify({
+    'results': results,
+    })
+
 
 @bp.route('/all_images', methods=['GET'])
 def all_images():
@@ -176,6 +176,54 @@ def all_images():
 def index():
     return render_template('index.html', allow_file_upload_search=configs.allow_file_upload_search)
 
+@bp.route('/api/selection', methods=["GET"])
+def current_selection():
+    #print('current_selection')
+    selected_ids = request.args.getlist('selected_ids', type=int)
+    #print(selected_ids)
+    if len(selected_ids) == 0:
+        return jsonify([])
+    results = current_app.db.get_common_tags(selected_ids,0,0.0)
+    return jsonify(results)
+
+@bp.route('/api/applyTagChanges', methods=["GET"])
+def applyTagChanges():
+    #print('applyTagChanges')
+    image_ids = request.args.getlist('image_ids', type=int)
+    tag_ids = request.args.getlist('tag_ids', type=int)
+    text_tags = request.args.getlist('text_tags')
+
+    blah = current_app.db.get_common_tags(image_ids,0,0.0)
+    old_tag_ids = [row["tag_id"] for row in blah]
+    
+    #print(f"ATC old_tag_ids: {old_tag_ids}")
+    #print(f"ATC new_tag_ids: {tag_ids}")
+    
+    tags_to_delete = list(set(old_tag_ids) - set(tag_ids))
+    #print(f'ATC tags to delete: {tags_to_delete}')
+    
+    if len(tags_to_delete) > 0:
+        current_app.db.delete_tags(image_ids, tags_to_delete)
+
+    tags_to_add = list(set(tag_ids) - set(old_tag_ids))
+    #print(f'ATC tags to add: {tags_to_add}')
+
+    if len(tags_to_add) > 0:
+        #newdb = FlaskImageDb(configs.db_path, sql_echo=configs.sql_echo)        
+        current_app.db.add_tags(image_ids, tags_to_add)
+        #newdb.close()
+
+    #print(f'ATC text tags: {text_tags}')
+    if len(text_tags) > 0:
+        current_app.db.add_possibly_new_tags(image_ids, text_tags, 32) # TODO last parameter is hardcoded as FUTURE
+
+    results = current_app.db.get_mra_tags()
+    return jsonify(results)        
+#    if len(selected_ids) == 0:
+#        return jsonify([])
+#    results = current_app.db.get_common_tags(selected_ids,0,0.0)
+#    return jsonify(results)
+#    return jsonify([])
 
 @lru_cache(maxsize=1)
 def get_all_tags():

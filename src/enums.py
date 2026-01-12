@@ -24,6 +24,7 @@ class TagType(Enum):
     general = 0
     character = 4
     rating = 9
+    future = 32
 
 
 class Ratings(Enum):

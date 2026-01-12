@@ -11,6 +11,18 @@ const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 
+// Info pane
+const clearSelectBtn = document.getElementById('clearSelect');
+const info_div = document.getElementById('info');
+const controls_div = document.getElementById('controls');
+const controls2_div = document.getElementById('addControls');
+const addTagInput = document.getElementById('addtag_input');
+const addTagSuggest = document.getElementById('addtag_suggestions');
+const selectAddTags = document.getElementById('selected_addtags');
+const addTagBtn = document.getElementById('addTextTag');
+const MRU_div = document.getElementById('MRUTags');
+
+// 'Filters'
 const f_tag = document.getElementById('f_tag');
 const f_general = document.getElementById('f_general');
 const f_sensitive = document.getElementById('f_sensitive');
@@ -49,6 +61,214 @@ go_input.addEventListener('click', () => {
     performSearch(true);
 });
 
+
+
+/* CG change */
+const selectedIds = new Set();
+results_div.addEventListener('click', (e) => {
+    /* User clicks on an image. Add or remove from the list of selected images. */
+    const item = e.target.closest('img.result');
+    if (!item) {
+        //console.log("click fail");
+        return;
+    }
+    const id = item.dataset.id;
+
+    item.classList.toggle('selected');
+
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+
+    const selection = [...selectedIds];
+    
+    sendSelection(selection); // display a list of common tags for these images
+    updateSelCount();
+  });
+
+function deselectAll() {
+    /* Clear selection state for all images */
+    
+    if (selectedIds.size < 1)
+        return;
+    
+    // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
+    results_div.querySelectorAll('img').forEach( img => {
+        iid = img.dataset.id;
+        if (selectedIds.has(iid))
+            img.classList.toggle('selected');
+    });
+    
+    // TODO: replace with deselectAll call?
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
+    active_text_tags = [];
+    
+    warning = document.getElementById('warn'); // TODO function
+    warning.style.display = "none";
+    
+    updateSelCount();
+}
+
+active_info_tags = []; // tag_name and tag_id
+active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
+
+function renderInfoTags(container, selectedArray, className) {
+    container.innerHTML = selectedArray.map(tag =>
+        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
+    ).join('');
+    
+    container.innerHTML += active_text_tags.map(tag =>
+        `<span class="pill ${className}">${tag} <button data-id="0" type="button">x</button></span>`
+    ).join('');
+    
+    container.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            if (id == 0) {
+                const idx = active_text_tags.findIndex(t => t === btn.textContent);
+                if (idx !== -1) {
+                    active_text_tags.splice(idx, 1);
+                    warning = document.getElementById('warn');  // TODO refactor
+                    warning.style.display = "block";
+                }
+            }
+            else {
+                const idx = selectedArray.findIndex(t => t.tag_id === id);
+                if (idx !== -1) {
+                    selectedArray.splice(idx, 1);
+                    warning = document.getElementById('warn');  // TODO refactor
+                    warning.style.display = "block";
+                }
+            }
+            renderInfoTags(container, selectedArray, className);
+        });
+    });
+}
+
+async function applyTagChanges() {
+    /* User clicks on apply button. Send the current tag set to the server to update the database. */
+    
+    warning = document.getElementById('warn');
+    warning.style.display = "none";
+    
+    const params = new URLSearchParams();
+    selectedIds.forEach(id => params.append('image_ids', id));
+    active_info_tags.forEach(blah => params.append('tag_ids', blah["tag_id"]));
+    active_text_tags.forEach(blah => params.append('text_tags', blah));
+    try {
+        const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
+        if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
+        updateMRAtags(await resp.json()); // database returns the list of most-recently-added tags
+    } catch (err) { console.error(err); }
+}
+
+function updateInfoPane() {
+    
+    //console.log(active_info_tags); 
+
+    renderInfoTags(info_div, active_info_tags, 'general');
+    
+    //controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
+    doit_button = document.getElementById('doit');
+    doit_button.addEventListener('click', () => {
+        applyTagChanges();
+        // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
+    });
+}
+
+function updateMRAtags(curr) {
+    // Update the most-recently-added tags list
+    
+    curr.sort((a,b) => a.tag_name.localeCompare(b.tag_name)); // easier to find tags if alphabetized
+
+    MRU_div.innerHTML = curr.map(tag =>
+        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
+    ).join('');
+    
+    MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const txt= btn.dataset.text;
+            
+            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+                active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
+                
+                warning = document.getElementById('warn'); // TODO function
+                warning.style.display = "block";
+                
+                renderInfoTags(info_div, active_info_tags, 'general');
+            }
+        });
+    });
+    
+}
+
+function handleAddTagInput(inputEl, suggestionDiv, typeId) {
+    // TODO typeId from tag class dropdown
+    const query = inputEl.value.trim().toLowerCase();
+    suggestionDiv.innerHTML = '';
+    if (!query) return;
+// ignoring tag class
+//    const filtered = Array.from(all_tags.values())
+//        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+
+    const filtered = Array.from(all_tags.values())
+        .filter(tag => tag[1].toLowerCase().includes(query));
+    suggestionDiv.innerHTML = filtered.map(tag =>
+        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+    ).join('');
+    
+    addTagSuggest.querySelectorAll('.tag_suggestion').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = parseInt(el.dataset.id);
+            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
+                
+                warning = document.getElementById('warn'); // TODO function
+                warning.style.display = "block";
+                
+                renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
+            }
+            // issue 27: don't remove the selected tag from the suggestion list
+            // el.remove();
+            //document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
+        });
+    });
+}
+
+
+async function sendSelection(selection) {
+    active_text_tags = [];
+    const params = new URLSearchParams();
+    selection.forEach(id => params.append('selected_ids', id));
+    results = [];
+    try {
+        const resp = await fetch(`/api/selection?${params.toString()}`);
+        if (!resp.ok) throw new Error(`API selection fail: ${resp.status}`);
+        active_info_tags = await resp.json();
+        updateInfoPane();
+    } catch (err) { console.error(err); }
+    return results;
+}
+
+function addTagClick() {
+    // User has clicked on the 'Add' button to add a text tag
+    
+    newtag = addTagInput.value;
+    const idx = active_text_tags.findIndex(t => t == newtag);
+    if (idx == -1) {
+        active_text_tags.push(newtag);
+        warning = document.getElementById('warn'); // TODO function
+        warning.style.display = "block";
+    }
+    
+    renderInfoTags(info_div, active_info_tags, 'general');
+}
+
 async function fetchAllTags() {
     const response = await fetch('/tags');
     const tags = await response.json();
@@ -72,15 +292,24 @@ function parseTagField(fieldId, typeId) {
     }).filter(Boolean);
 }
 
-function handleTagInput(inputEl, suggestionDiv, typeId) {
+function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
-    const filtered = Array.from(all_tags.values())
-        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
-    suggestionDiv.innerHTML = filtered.map(tag =>
-        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
-    ).join('');
+    if (ignoreTypeId) {
+        const filtered = Array.from(all_tags.values())
+            .filter(tag => tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered.map(tag =>
+            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        ).join('');
+    }
+    else {
+        const filtered = Array.from(all_tags.values())
+            .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered.map(tag =>
+            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        ).join('');
+    }
     attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
         typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
 }
@@ -136,6 +365,13 @@ function clearAll() {
     document.getElementById('file_tags_general').value = '';
     results_div.innerHTML = '';
     pagination_div.innerHTML = '';
+    
+    // TODO: replace with deselectAll call?
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
+    active_text_tags = [];
+    updateSelCount();
 }
 
 let current_display_mode = "List";
@@ -163,8 +399,8 @@ function render_tags_text(tags, category) {
 
 function render_top_tags(tags) {
 
-let keys = Object.keys(tags);
-keys.sort((a, b) => tags[a] - tags[b]);
+    let keys = Object.keys(tags);
+    keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
         .filter(([k, v]) => v >= 0.7)
@@ -173,8 +409,10 @@ keys.sort((a, b) => tags[a] - tags[b]);
 }
 
 function renderResults(data) {
-	tot_pages = Math.ceil( data.tot_found / per_page );
-	
+    tot_pages = Math.ceil( data.tot_found / per_page );
+    if (current_page > tot_pages)
+        current_page = tot_pages;
+
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
     if (data.results && data.results.length) {
@@ -194,7 +432,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
+                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
@@ -220,7 +458,11 @@ function renderResults(data) {
         html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     
     pagination_div.innerHTML = html;
-    pagination2_div.innerHTML = html;
+    
+    // Issue 25: bottom next/prev buttons not working
+    html2 = html.replace("prev_page", "prev_page2");
+    html3 = html2.replace("next_page", "next_page2");
+    pagination2_div.innerHTML = html3;
 
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -246,6 +488,18 @@ function renderResults(data) {
         current_page++;
         performSearch(true);
     });
+
+    // Issue 25: bottom next/prev buttons not working
+    document.getElementById('prev_page2').addEventListener('click', () => {
+        if (current_page > 1) {
+            current_page--;
+            performSearch(true);
+        }
+    });
+    document.getElementById('next_page2').addEventListener('click', () => {
+        current_page++;
+        performSearch(true);
+    });
 }
 
 function performExploreLink(tagId, tagname) {
@@ -262,12 +516,12 @@ function performExploreLink(tagId, tagname) {
     // TODO: clearAll() should have a 'clear the filters' option
     f_general.value = (selectedOption1 == "G" ? 0.5 : 0.0);
     f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
-	f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
-	f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
-	f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
-	f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
-	f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
-	f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
+    f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
+    f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
+    f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
+    f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
+    f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
+    f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
 
     if (selectedOption2 == "C") {
         selected_character_tags.push({ tag_id: tagId, tag_name: tagname });
@@ -295,7 +549,7 @@ async function performTagSearchGuts(isPagination) {
     if (!isPagination) current_page = 1;
 
     const generalIds = selected_general_tags.map(t => t.tag_id);
-    console.log(generalIds);
+    //console.log(generalIds);
     const characterIds = selected_character_tags.map(t => t.tag_id);
     if (!generalIds.length && !characterIds.length) return;
 
@@ -342,6 +596,13 @@ async function performSearch(isPagination = false) {
     } else {
         performTagSearchGuts(isPagination);
     }
+    
+    // TODO: replace with deselectAll call?
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
+    active_text_tags = [];
+    updateSelCount();
 }
 
 function renderTopGrid(data) {
@@ -356,9 +617,9 @@ function renderTopGrid(data) {
 }
 
 function handleExploreRadioChange() {
-  var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
-  var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
-  performExplore(selectedOption1,selectedOption2);  
+    var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+    var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+    performExplore(selectedOption1,selectedOption2);  
 }
 
 async function performExplore(selExpOption="G",selTypeOption="G") {
@@ -423,13 +684,24 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
 }
 
+function updateSelCount() {
+    let count = selectedIds.size;
+    selmsg = document.getElementById("selectMsg");
+    selmsg.textContent = `${count} image${count != 1 ? 's' : ''} selected`;
+}
 
-general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
-general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0));
+general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
+general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
 clear_button.addEventListener('click', clearAll);
 search_button.addEventListener('click', () => performSearch(false));
 dash_button.addEventListener('click', () => performExplore("G"));
+
+addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
+addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
+addTagBtn.addEventListener('click', () => addTagClick());
+
+clearSelectBtn.addEventListener('click', () => deselectAll());
 
 fetchAllTags();

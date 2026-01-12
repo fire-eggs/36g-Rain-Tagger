@@ -20,7 +20,8 @@ class ImageDb(SqliteDb):
     def is_tags_exist(self) -> bool:
         tag_count = self.run_query_tuple('select count(*) from tag')[0][0]
         print(f'Found {tag_count}/{self.total_csv_tag_count} tags already in database.')
-        return tag_count == self.total_csv_tag_count
+        # KBR tag count may exceed CSV count
+        return tag_count >= self.total_csv_tag_count
 
 
     def init_tagging(self):
@@ -70,6 +71,13 @@ class ImageDb(SqliteDb):
                 FOREIGN KEY (image_id) REFERENCES image(image_id) ON DELETE CASCADE,
                 FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE,
                 UNIQUE (image_id, tag_id)
+            )
+        ""","""
+            CREATE TABLE IF NOT EXISTS mra_tags (
+                tag_name TEXT NOT NULL,
+                tag_id INTEGER NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(tag_name, tag_id)
             )
         ""","""
             create view IF NOT EXISTS tags_for_images_prob60_v2 AS
@@ -149,13 +157,6 @@ class ImageDb(SqliteDb):
         self.directory_2_id[directory] = directory_id
         return directory_id
 
-
-    def is_tags_exist(self) -> bool:
-        tag_count = (self.run_query_tuple('select count(*) from tag'))[0][0]
-        print(f'Found {tag_count}/{self.total_csv_tag_count} tags already in database.')
-        return tag_count == self.total_csv_tag_count
-
-
     def insert_tags(self, tag_data: TagData=None):
         if not tag_data:
             tag_data = get_tag_data()
@@ -170,7 +171,10 @@ class ImageDb(SqliteDb):
             self.run_query_many(s, params)
 
         tag_count = (self.run_query_tuple('select count(*) from tag'))[0][0]
-        if tag_count != self.total_csv_tag_count:
+        
+        # TODO verify impact on tagger?
+        #if tag_count != self.total_csv_tag_count: # TODO KBR allow adding new tags
+        if tag_count < self.total_csv_tag_count:
             raise ValueError()
 
         self.save()
@@ -252,7 +256,7 @@ class ImageDb(SqliteDb):
             return []
 
         results = {}
-        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character'}
+        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future'}
         for image_id, (directory, filename, general, explicit, sensitive, questionable) in image_id_2_data.items():
             results[image_id] = {
                 'image_id': image_id,
@@ -260,6 +264,7 @@ class ImageDb(SqliteDb):
                 'rating': {'general': general, 'explicit': explicit, 'sensitive': sensitive, 'questionable': questionable},
                 'general': {},
                 'character': {},
+                'future': {},
             }
 
         for image_id, tag_name, tag_type_id, prob in tags:
@@ -336,6 +341,7 @@ class ImageDb(SqliteDb):
 
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
       
+        # TODO should this be COUNT(image_tag.image_id)?
         total_rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
@@ -355,6 +361,8 @@ class ImageDb(SqliteDb):
           return [], 0
         
         offset = max(page - 1, 0) * per_page
+        if (offset >= len(total_rows)):
+            offset = (int)(len(total_rows) / per_page) * per_page
 
         rows = self.run_query_tuple(f"""
             select image_tag.image_id
@@ -428,3 +436,69 @@ class ImageDb(SqliteDb):
         #print(f'gtt: {results}')
         return results
          
+    def get_common_tags(self, image_ids, tagtype, prob):
+        # get all the tags in common amongst a set of images.
+        # filter by tag type and probability
+        
+        sql = "";
+        count = len(image_ids)
+        curr = 1
+        # A separate select clause for each tag, with intersect for tags 2+
+        for imgid in image_ids:
+            # ignoring tag class
+            #sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
+            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
+            if curr != count: # no extra intersect
+                sql += " INTERSECT "
+            curr += 1
+        sql += " order by tag_name asc"
+        
+        results = self._run_query(sql)
+        #blah = [row["tag_name"] for row in results] # list of tag names
+        
+        #print(f"gct: {blah}")
+        return results
+
+    def get_mra_tags(self):
+        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" # TODO hard-coded limit
+        results = self._run_query(sql)
+        return results
+
+    def delete_tags(self, image_ids, tags_to_delete):
+        # remove the given tags from the given images
+        for tag_id in tags_to_delete:
+            sql = f"delete from image_tag where tag_id={tag_id} and image_id in (" + ','.join(map(str, image_ids)) + ")"
+            self._run_query(sql, commit=True)
+        
+    def add_tags(self, image_ids, tags_to_add):
+        # add the given tags for the given images
+        
+        for image_id in image_ids:
+            for tag_id in tags_to_add:
+                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{tag_id},1.0)" # NOTE probability set to 1.0 / absolute
+                self._run_query(sql, commit=True)
+                sql = f"insert or replace into mra_tags (tag_name, tag_id, updated_at) SELECT tag_name, tag_id, CURRENT_TIMESTAMP from tag where tag_id={tag_id}"
+                self._run_query(sql, commit=True)
+        
+    def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
+        # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
+        
+        for tagText in tags_to_add:
+            sql = f"select tag_id from tag where tag_name = '{tagText}'"
+            results = self._run_query(sql)
+            if len(results) == 0:
+                sql = f"select max(tag_id) as new_id from tag"
+                results = self._run_query(sql)
+                new_id = int(results[0]["new_id"]) + 1
+                sql = f"insert or ignore into tag (tag_id, tag_name, tag_type_id, tag_count) values ({new_id}, '{tagText}', {tagTypeId}, 1)"
+                self._run_query(sql, commit=True)
+            else:
+                new_id = int(results[0]["tag_id"])
+                
+            # add to images with new_id
+            for image_id in image_ids:
+                sql = f"insert or ignore into image_tag (image_id, tag_id, prob) values ({image_id},{new_id},1.0)"
+                self._run_query(sql, commit=True)
+                
+            sql = f"insert or replace into mra_tags (tag_name, tag_id, updated_at) SELECT tag_name, tag_id, CURRENT_TIMESTAMP from tag where tag_id={new_id}"
+            self._run_query(sql, commit=True)
