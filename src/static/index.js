@@ -260,7 +260,8 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    newtag = addTagInput.value;
+    newtag0 = addTagInput.value;
+    newtag = newtag0.replaceAll(" ", "_"); // no spaces
     const idx = active_text_tags.findIndex(t => t == newtag);
     if (idx == -1) {
         active_text_tags.push(newtag);
