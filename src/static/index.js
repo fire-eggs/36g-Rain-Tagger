@@ -167,9 +167,11 @@ async function applyTagChanges() {
 }
 
 function updateInfoPane() {
-    
-    //console.log(active_info_tags); 
 
+    // updateInfoPane is invoked specifically because selection has changed; clear warning
+    warning = document.getElementById('warn'); // TODO function
+    warning.style.display = "none";
+    
     renderInfoTags(info_div, active_info_tags, 'general');
     
     //controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
