@@ -219,11 +219,13 @@ def applyTagChanges():
 
     results = current_app.db.get_mra_tags()
     return jsonify(results)        
-#    if len(selected_ids) == 0:
-#        return jsonify([])
-#    results = current_app.db.get_common_tags(selected_ids,0,0.0)
-#    return jsonify(results)
-#    return jsonify([])
+
+@bp.route('/api/removeImage', methods=["GET"])
+def removeImage():
+    image_ids = request.args.get('image_ids')
+    current_app.db.remove_image(image_ids)
+    return jsonify("")
+
 
 @lru_cache(maxsize=1)
 def get_all_tags():
@@ -248,7 +250,7 @@ def file_not_found(e):
 def serve():
     file_path = request.args.get('p')
     if not file_path:
-        abort(404)
+        abort(400)
 
     if not file_path.split('.')[-1].lower().endswith(configs.valid_extensions):
         abort(UnsupportedMediaType)
@@ -257,12 +259,42 @@ def serve():
         abort(Forbidden)
 
     if not os.path.isfile(file_path):
-        print(f"Not found {file_path}")
+        #print(f"Not found {file_path}")
         abort(404, description=file_path)  # TODO was NotFound, results in LookupError exception
 
     return send_file(file_path)
 
+@bp.route('/dupl_images')
+def dupl_images():
+    return current_app.db.get_sha_dupls()
 
+@bp.route('/dupl_images_auto_del')
+def dupl_images_auto_delete():
+    dupls = current_app.db.get_sha_dupls()
+    
+    newdupls = []
+    
+    #print(dupls[0])
+    index = 0
+    while index < len(dupls):
+        
+        file1ok = os.path.isfile(dupls[index]["image_path"])
+        file2ok = os.path.isfile(dupls[index+1]["image_path"])
+        if dupls[index]["tags"] == dupls[index+1]["tags"]:
+            todelete = dupls[index]["image_id"] if file2ok else dupls[index+1]["image_id"]
+            #print(f"deleting {index} {todelete} {file1ok} {file2ok}")
+            current_app.db.remove_image(todelete)
+        else:
+            newdupls.append(dupls[index])
+            newdupls.append(dupls[index+1])
+            
+        index += 2
+        if index < len(dupls) and dupls[index]["sha256"] == dupls[index-1]["sha256"]:
+            print("dupl_images_auto_delete: More than two duplications encountered, punting")
+            return newdupls
+
+    return newdupls
+    
 print('flask_app, starting')
 
 flask_app = Flask(__name__)
