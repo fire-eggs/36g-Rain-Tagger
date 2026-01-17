@@ -265,10 +265,23 @@ def serve():
 
 @bp.route('/dupl_images')
 def dupl_images():
+    # Identify moved images: "duplicates" based on sha256 values.
+    # NOTE: essentially requires sha256 values to have been calculated by the tagger.
+    # TODO: currently assumes only pairs of duplicates, will behave badly if more than 2 matches occur
     return current_app.db.get_sha_dupls()
 
 @bp.route('/dupl_images_auto_del')
 def dupl_images_auto_delete():
+    # Reconcile moved images. 
+    # Find all "duplicate" images [based on equal sha256 values]. Go through those duplicates,
+    # determine which ones have been deleted from the file system, and if the tags for each
+    # image in the pair match completely, remove missing files from the database.
+    
+    # NOTE: essentially requires sha256 values to have been calculated by the tagger.
+    
+    # TODO: because this queries the file system, can take a while, needs progress bar
+    # TODO: currently assumes only pairs of duplicates, will behave badly if more than 2 matches occur
+    
     dupls = current_app.db.get_sha_dupls()
     
     newdupls = []
