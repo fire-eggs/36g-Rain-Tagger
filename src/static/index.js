@@ -704,19 +704,16 @@ async function removeFromDatabase(imageid) {
         if (!resp.ok) throw new Error(`removeImage failed: ${resp.status}`);
     } catch (err) { console.error(err); }
 }
-/*
-const findSubstringDifferences = (str1: string, str2: string): string[] => {  
-    const diff: string[] = [];  
-    const str1Parts = str1.split(' ');  
-    const str2Parts = str2.split(' ');  
-    str1Parts.forEach((part, index) => {    
-        if (part !== str2Parts[index]) {      
-            diff.push(`'${part}' vs '${str2Parts[index] || ''}'`);    
-            }  
-        });  
-    return diff;
-};
-*/
+
+async function keepTagsInDb(srcimage, dstimage) {
+    const params = new URLSearchParams();
+    params.append('from', srcimage);
+    params.append('to', dstimage);
+    try {
+        const resp = await fetch(`/keep_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`keep tags failed: ${resp.status}`);
+    } catch (err) { console.error(err); }
+}
 
 function highlightStringDiff(str1, str2) { //( str1: string, str2: string ) {
 
@@ -809,6 +806,17 @@ function reconcileOneDupe() {
     nukeRbtn.addEventListener('click', () => {
         removeFromDatabase(img2.image_id);
     });
+    
+    // keep buttons
+    keepLbtn = document.getElementById("tagsLeft");
+    keepLbtn.addEventListener('click', () => {
+        keepTagsInDb(img1.image_id, img2.image_id);
+    });
+    keepRbtn = document.getElementById("tagsRight");
+    keepRbtn.addEventListener('click', () => {
+        keepTagsInDb(img2.image_id, img1.image_id);
+    });
+    
 }
 
 async function performReconcileDupes(autoDel) {

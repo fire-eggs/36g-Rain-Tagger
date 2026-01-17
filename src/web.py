@@ -234,7 +234,6 @@ def get_all_tags():
         return jsonify([])
     return jsonify([{'tag_id': tag[0], 'tag_name': tag[1], 'tag_type_name': tag[2]} for tag in tags])
 
-
 @bp.get('/tags')
 def tags():
     @lru_cache
@@ -294,6 +293,13 @@ def dupl_images_auto_delete():
             return newdupls
 
     return newdupls
+
+@bp.route('/keep_tags')
+def keep_tags():
+    src = request.args.get('from')
+    dst = request.args.get('to')
+    current_app.db.keep_tags(src, dst)    
+    return jsonify("")
     
 print('flask_app, starting')
 

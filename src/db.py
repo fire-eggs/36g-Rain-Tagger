@@ -543,6 +543,15 @@ class ImageDb(SqliteDb):
         
         # TODO list of image ids
         sql = f"delete from image_tag where image_id in ({imageid})"
-        self._run_query(sql, commit=True)
+        self._run_query(sql) # no commit, next query will do it for automicity
         sql = f"delete from image where image_id in ({imageid})"
         self._run_query(sql, commit=True)
+
+    def keep_tags(self, srcimage, dstimage):
+        # replace the tags of the dstimage with the tags of the srcimage
+        
+        sql = f"delete from image_tag where image_id = {dstimage}"
+        self._run_query(sql) # no commit, next query will do it for automicity
+        sql = f"insert into image_tag (image_id, tag_id, prob) select {dstimage}, tag_id, prob from image_tag where image_id={srcimage}"
+        self._run_query(sql, commit=True)
+        
