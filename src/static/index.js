@@ -694,6 +694,159 @@ function updateSelCount() {
     selmsg.textContent = `${count} image${count != 1 ? 's' : ''} selected`;
 }
 
+async function removeFromDatabase(imageid) {
+    
+    const params = new URLSearchParams();
+    params.append('image_ids', imageid); // TODO list of image ids
+    
+    try {
+        const resp = await fetch(`/api/removeImage?${params.toString()}`);
+        if (!resp.ok) throw new Error(`removeImage failed: ${resp.status}`);
+    } catch (err) { console.error(err); }
+}
+
+async function keepTagsInDb(srcimage, dstimage) {
+    const params = new URLSearchParams();
+    params.append('from', srcimage);
+    params.append('to', dstimage);
+    try {
+        const resp = await fetch(`/keep_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`keep tags failed: ${resp.status}`);
+    } catch (err) { console.error(err); }
+}
+
+function highlightStringDiff(str1, str2) { //( str1: string, str2: string ) {
+
+    tags1 = str1.split(",").sort((a,b) => a.localeCompare(b))
+    tags2 = str2.split(",").sort((a,b) => a.localeCompare(b))
+    outtags = []
+    index1 = 0
+    index2 = 0
+    while (index1 < tags1.length) {
+        if (tags1[index1] == tags2[index2]) {
+            outtags.push(tags1[index1])
+            index1 += 1
+            index2 += 1
+        } else {
+            if (tags1[index1] == tags2[index2+1]) {
+                // missing from tags1, do nothing
+                index2 += 1
+            } else if (tags1[index1+1] == tags2[index2]) {
+                outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ")
+                index1 += 1
+            } else {
+                index1 += 1
+                index2 += 1
+            }
+        }
+    }
+    return outtags.join(" ")
+}
+
+let dupes_list = [];
+let dupe_index = 0;
+
+function reconcileOneDupe() {
+    // using dupes_list[dupes_index]
+    
+    num = 1 + (dupe_index / 2);
+    num2 = Object.keys(dupes_list).length / 2;
+    html = `<h4>Duplicate ${num} of ${num2}</h4>`;
+    
+    // display image 1, image 2
+    img1 = dupes_list[dupe_index];
+    img2 = dupes_list[dupe_index+1];
+    
+    html += `<div class="dupes_grid"><div class="dupes_cell">`;
+    html += `<img class="result" data-id="${img1.image_id}" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/>`;
+    html += `</div><div class="dupes_cell">`;
+    html += `<img class="result" data-id="${img2.image_id}" src="/serve?p=${encodeURIComponent(img2.image_path)}" loading="lazy" title="${img2.image_path}"/></div>`;
+
+    // display path 1, path 2
+    html += `<div class="dupes_cell">${img1.image_path}</div><div class="dupes_cell">${img2.image_path}</div>`;
+
+    // display tags 1, tags 2
+    html += `<div class="dupes_cell">`;
+    foo = highlightStringDiff(img1.tags, img2.tags)
+    bar = highlightStringDiff(img2.tags, img1.tags)
+    html += `<p>${foo}</p></div><div class="dupes_cell"><p>${bar}</p></div>`;
+
+    // display buttons
+    html += `<div class="dupes_cell"><button id="nukeLeft">Remove from database</button><button id="tagsLeft">Keep these tags</button></div>`;
+    html += `<div class="dupes_cell"><button id="nukeRight">Remove from database</button><button id="tagsRight">Keep these tags</button></div>`;
+    
+    html += `<div class="dupes_cell"><button id="prevDupe">Previous</button><button id="nextDupe">Next</button></div>`;
+
+    results_div.innerHTML = html;
+
+    // prev-dupe on click: update dupe_index, call reconcileOneDupe
+    // next-dupe on click: update dupe_index, call reconcileOneDupe
+    prevbtn = document.getElementById("prevDupe");
+    if (num < 2) 
+        prevbtn.disabled = true;
+    nextbtn = document.getElementById("nextDupe");
+    if (num >= num2)
+        nextbtn.disabled = true;
+
+    prevbtn.addEventListener('click', () => {
+        dupe_index -= 2;
+        reconcileOneDupe();
+    });    
+    nextbtn.addEventListener('click', () => {
+        dupe_index += 2;
+        reconcileOneDupe();
+    });    
+
+    // Nuke buttons
+    nukeLbtn = document.getElementById("nukeLeft");
+    nukeLbtn.addEventListener('click', () => {
+        removeFromDatabase(img1.image_id);
+    });
+    nukeRbtn = document.getElementById("nukeRight");
+    nukeRbtn.addEventListener('click', () => {
+        removeFromDatabase(img2.image_id);
+    });
+    
+    // keep buttons
+    keepLbtn = document.getElementById("tagsLeft");
+    keepLbtn.addEventListener('click', () => {
+        keepTagsInDb(img1.image_id, img2.image_id);
+    });
+    keepRbtn = document.getElementById("tagsRight");
+    keepRbtn.addEventListener('click', () => {
+        keepTagsInDb(img2.image_id, img1.image_id);
+    });
+    
+}
+
+async function performReconcileDupes(autoDel) {
+    // clear
+    clearAll();
+    
+    // get the duplicated files
+    try {
+        let resp = null;
+        if (autoDel) {
+            resp = await fetch(`/dupl_images_auto_del`);
+        } else {
+            resp = await fetch(`/dupl_images`);
+        }
+        if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
+        dupes_list = await resp.json();
+    } catch (err) { console.error(err); }
+
+    // if none, post a message and return
+    num = Object.keys(dupes_list).length;
+    if (num < 1) {
+        results_div.innerHTML = `<h3>No duplicate images found.</h3>`;
+        return;
+    }
+        
+    // TODO assuming pairs; need to handle more than 2 dupes
+    dupe_index = 0;
+    reconcileOneDupe();
+}
+
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
@@ -701,6 +854,8 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 clear_button.addEventListener('click', clearAll);
 search_button.addEventListener('click', () => performSearch(false));
 dash_button.addEventListener('click', () => performExplore("G"));
+dupl_button.addEventListener('click', () => performReconcileDupes(false));
+dupl_button2.addEventListener('click', () => performReconcileDupes(true));
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));

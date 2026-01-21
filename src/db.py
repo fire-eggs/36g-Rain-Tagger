@@ -278,7 +278,7 @@ class ImageDb(SqliteDb):
         return results[0] if len(results) and results else None
 
 
-    def get_tag_by_sha256(self, sha256: str) -> dict:
+    def get_image_by_sha256(self, sha256: str) -> dict:
         row = (self.run_query_tuple('select image_id from image where sha256 = ?', (sha256,)))[0]
         if not row:
             return []
@@ -354,7 +354,8 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by max(image_tag.prob) desc""",
+            order by image.directory_id""",
+#            order by max(image_tag.prob) desc""",
             params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)]
         )
         if not total_rows:
@@ -376,9 +377,10 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by max(image_tag.prob) desc
+            order by image.directory_id
             limit ?
             offset ?""",
+#            order by max(image_tag.prob) desc
             params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids), per_page, offset]
         )
 
@@ -502,3 +504,54 @@ class ImageDb(SqliteDb):
                 
             sql = f"insert or replace into mra_tags (tag_name, tag_id, updated_at) SELECT tag_name, tag_id, CURRENT_TIMESTAMP from tag where tag_id={new_id}"
             self._run_query(sql, commit=True)
+
+    def get_sha_dupls(self):
+        # return a list of image data for those image groups which have the same sha256 values
+        
+        sql = '''SELECT A.image_id,A.sha256,A.directory_id,DIR.directory,A.filename,group_concat(t.tag_name) as tags
+                 FROM image A
+                     INNER JOIN (SELECT
+                            sha256, COUNT(*) AS CountOf
+                            FROM image
+                            where sha256 is not null
+                            GROUP BY sha256
+                            HAVING COUNT(*)>1
+                        ) dt ON A.sha256=dt.sha256
+                     INNER join directory DIR on A.directory_id = DIR.directory_id
+                     INNER JOIN image_tag it on A.image_id=it.image_id
+                     INNER JOIN tag t on t.tag_id = it.tag_id
+                     GROUP BY A.image_id
+                 ORDER BY A.sha256'''
+        results = self._run_query(sql)
+
+        #print(results)
+        
+        results2 = {}
+        i = 0
+        for item in results:
+            results2[i] = {
+                'image_id': item.image_id,
+                'image_path': os.path.join(item.directory, item.filename),
+                'sha256': item.sha256,
+                'tags': item.tags,
+            }
+            i += 1
+        #print(results2)
+        return results2
+
+    def remove_image(self, imageid):
+        
+        # TODO list of image ids
+        sql = f"delete from image_tag where image_id in ({imageid})"
+        self._run_query(sql) # no commit, next query will do it for automicity
+        sql = f"delete from image where image_id in ({imageid})"
+        self._run_query(sql, commit=True)
+
+    def keep_tags(self, srcimage, dstimage):
+        # replace the tags of the dstimage with the tags of the srcimage
+        
+        sql = f"delete from image_tag where image_id = {dstimage}"
+        self._run_query(sql) # no commit, next query will do it for automicity
+        sql = f"insert into image_tag (image_id, tag_id, prob) select {dstimage}, tag_id, prob from image_tag where image_id={srcimage}"
+        self._run_query(sql, commit=True)
+        
