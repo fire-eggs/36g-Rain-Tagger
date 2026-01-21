@@ -21,7 +21,7 @@ def row_factory(cursor, row: tuple):
 class SqliteDb:
     def __init__(self, db_path: str, sql_echo=False):
         self.db_path = db_path
-        self.conn = sqlite3.connect(self.db_path)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False) # HACK
         self.conn.row_factory = row_factory
         self.sql_echo = sql_echo
 
