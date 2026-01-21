@@ -847,6 +847,13 @@ async function performReconcileDupes(autoDel) {
     reconcileOneDupe();
 }
 
+async function performRemoveDeleted() {
+    try {
+        resp = await fetch('/remove_deleted')
+        if (!resp.ok) throw new Error(`remove delete failed: ${resp.status}`);
+    } catch (err) { console.error(err); }
+}
+
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
@@ -856,6 +863,7 @@ search_button.addEventListener('click', () => performSearch(false));
 dash_button.addEventListener('click', () => performExplore("G"));
 dupl_button.addEventListener('click', () => performReconcileDupes(false));
 dupl_button2.addEventListener('click', () => performReconcileDupes(true));
+remove_del_btn.addEventListener('click', () => performRemoveDeleted());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));

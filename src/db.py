@@ -32,6 +32,7 @@ class ImageDb(SqliteDb):
                 directory_id INTEGER NOT NULL,
                 filename TEXT NOT NULL,
                 ext INTEGER,
+                mark SMALLINT DEFAULT 0,
                 sha256 TEXT,
                 explicit REAL,
                 sensitive REAL,
@@ -42,6 +43,7 @@ class ImageDb(SqliteDb):
         ""","""
             CREATE TABLE IF NOT EXISTS directory (
                 directory_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mark SMALLINT DEFAULT 0,
                 directory TEXT NOT NULL,
                 FOREIGN KEY (directory_id) REFERENCES image(directory_id) ON DELETE CASCADE,
                 UNIQUE(directory)
@@ -554,4 +556,41 @@ class ImageDb(SqliteDb):
         self._run_query(sql) # no commit, next query will do it for automicity
         sql = f"insert into image_tag (image_id, tag_id, prob) select {dstimage}, tag_id, prob from image_tag where image_id={srcimage}"
         self._run_query(sql, commit=True)
+        
+    def clear_mark(self):
+        # clear the mark column in directory, image
+        sql = "update directory set mark = 0"
+        self._run_query(sql)
+        sql = "update image set mark = 0"
+        self._run_query(sql, commit=True)
+        
+    def mark_dir(self, dirp):
+        sql = f"update directory set mark = 1 where directory = '{dirp}' returning directory_id"
+        results = self._run_query(sql, commit=True)
+        return results
+
+    def mark_file(self, dirid, file):
+        sql = f"update image set mark = 1 where directory_id = ? and filename=?"
+        try:
+            self._run_query(sql, params=(dirid, file), commit=True)
+        except sqlite3.Error as e:
+            print(e)
+            print(f"{dirid}|{file}|")
+        
+    def mark_fileB(self, batch):
+        cur = self.conn.cursor()
+        sql = f"update image set mark = 1 where directory_id = ? and filename=?"
+        cur.executemany(sql, batch)
+        cur.close()
+        self.conn.commit()
+        #self._run_query(sql, params=batch, commit=True)
+        
+    def del_unmarked(self):
+        sql = "delete from image_tag where image_id in (select image_id from image where mark=0)"
+        self._run_query(sql)
+        sql = "delete from image where mark=0"
+        self._run_query(sql)
+        sql = "delete from directory where mark=0"
+        self._run_query(sql,commit=True)
+        
         

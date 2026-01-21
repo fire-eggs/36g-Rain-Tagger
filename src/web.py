@@ -313,6 +313,36 @@ def keep_tags():
     dst = request.args.get('to')
     current_app.db.keep_tags(src, dst)    
     return jsonify("")
+
+@bp.route('/remove_deleted')
+def remove_deleted():
+    current_app.db.clear_mark()
+    rp = configs.root_path
+    i = 0
+    batch = []
+    sql = "update image set mark = 1 where directory_id = ? and filename=?"
+    for currdir, _, files in os.walk(rp):
+        dirid = current_app.db.mark_dir(currdir)
+        if len(dirid) < 1:
+            continue # directory not in database, new, can't be missing
+        for file in files:
+            batch.append((dirid[0]["directory_id"], file))
+            #current_app.db.mark_file(dirid[0]["directory_id"], file)
+            i += 1
+            if i % 1000 == 0:
+                print(i)
+                current_app.db.mark_fileB(batch)
+                #current_app.db.run_query_many(sql, params=batch, commit=True)
+                batch.clear()
+
+    print(i)
+    if batch:
+        current_app.db.mark_fileB(batch)
+        #current_app.db.run_query_many(sql_string, params=batch, commit=True)
+    
+    current_app.db.del_unmarked()
+    
+    return jsonify("")
     
 print('flask_app, starting')
 
