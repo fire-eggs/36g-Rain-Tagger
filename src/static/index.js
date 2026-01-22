@@ -1,3 +1,5 @@
+/*jshint esversion: 8 */
+
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
 const file_input = document.getElementById('img');
@@ -14,11 +16,8 @@ const pagination2_div = document.getElementById('pagination2');
 // Info pane
 const clearSelectBtn = document.getElementById('clearSelect');
 const info_div = document.getElementById('info');
-const controls_div = document.getElementById('controls');
-const controls2_div = document.getElementById('addControls');
 const addTagInput = document.getElementById('addtag_input');
 const addTagSuggest = document.getElementById('addtag_suggestions');
-const selectAddTags = document.getElementById('selected_addtags');
 const addTagBtn = document.getElementById('addTextTag');
 const MRU_div = document.getElementById('MRUTags');
 
@@ -38,6 +37,13 @@ const f_questionable_value = document.getElementById('f_questionable_value');
 const per_page_input = document.getElementById('per_page_input');
 const page_input = document.getElementById('page_input');
 const go_input = document.getElementById('go_input');
+
+const dash_button = document.getElementById('dash_button');
+const dupl_button = document.getElementById('dupl_button');
+const dupl_button2 = document.getElementById('dupl_button2');
+const remove_del_btn = document.getElementById('remove_del_btn');
+const addtag_input = document.getElementById('addtag_input');
+const addtag_suggestions = document.getElementById('addtag_suggestions');
 
 [f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach(input => {
     input.addEventListener('input', () => {
@@ -88,6 +94,9 @@ results_div.addEventListener('click', (e) => {
     updateSelCount();
   });
 
+let active_info_tags = []; // tag_name and tag_id
+let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
+
 function deselectAll() {
     /* Clear selection state for all images */
     
@@ -96,7 +105,7 @@ function deselectAll() {
     
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
     results_div.querySelectorAll('img').forEach( img => {
-        iid = img.dataset.id;
+        let iid = img.dataset.id;
         if (selectedIds.has(iid))
             img.classList.toggle('selected');
     });
@@ -107,14 +116,11 @@ function deselectAll() {
     active_info_tags = [];
     active_text_tags = [];
     
-    warning = document.getElementById('warn'); // TODO function
+    let warning = document.getElementById('warn'); // TODO function
     warning.style.display = "none";
     
     updateSelCount();
 }
-
-active_info_tags = []; // tag_name and tag_id
-active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
 
 function renderInfoTags(container, selectedArray, className) {
     container.innerHTML = selectedArray.map(tag =>
@@ -128,11 +134,12 @@ function renderInfoTags(container, selectedArray, className) {
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
+            let warning = document.getElementById('warn');
+            
             if (id == 0) {
                 const idx = active_text_tags.findIndex(t => t === btn.textContent);
                 if (idx !== -1) {
                     active_text_tags.splice(idx, 1);
-                    warning = document.getElementById('warn');  // TODO refactor
                     warning.style.display = "block";
                 }
             }
@@ -140,7 +147,6 @@ function renderInfoTags(container, selectedArray, className) {
                 const idx = selectedArray.findIndex(t => t.tag_id === id);
                 if (idx !== -1) {
                     selectedArray.splice(idx, 1);
-                    warning = document.getElementById('warn');  // TODO refactor
                     warning.style.display = "block";
                 }
             }
@@ -152,12 +158,12 @@ function renderInfoTags(container, selectedArray, className) {
 async function applyTagChanges() {
     /* User clicks on apply button. Send the current tag set to the server to update the database. */
     
-    warning = document.getElementById('warn');
+    let warning = document.getElementById('warn');
     warning.style.display = "none";
     
     const params = new URLSearchParams();
     selectedIds.forEach(id => params.append('image_ids', id));
-    active_info_tags.forEach(blah => params.append('tag_ids', blah["tag_id"]));
+    active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
     active_text_tags.forEach(blah => params.append('text_tags', blah));
     try {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
@@ -169,13 +175,12 @@ async function applyTagChanges() {
 function updateInfoPane() {
 
     // updateInfoPane is invoked specifically because selection has changed; clear warning
-    warning = document.getElementById('warn'); // TODO function
+    let warning = document.getElementById('warn'); // TODO function
     warning.style.display = "none";
     
     renderInfoTags(info_div, active_info_tags, 'general');
     
-    //controls_div.innerHTML = `<div><p><button id="doit">Apply</button></p></div>`;
-    doit_button = document.getElementById('doit');
+    let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
         applyTagChanges();
         // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
@@ -199,7 +204,7 @@ function updateMRAtags(curr) {
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
                 
-                warning = document.getElementById('warn'); // TODO function
+                let warning = document.getElementById('warn'); // TODO function
                 warning.style.display = "block";
                 
                 renderInfoTags(info_div, active_info_tags, 'general');
@@ -230,7 +235,7 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
                 
-                warning = document.getElementById('warn'); // TODO function
+                let warning = document.getElementById('warn'); // TODO function
                 warning.style.display = "block";
                 
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
@@ -247,7 +252,7 @@ async function sendSelection(selection) {
     active_text_tags = [];
     const params = new URLSearchParams();
     selection.forEach(id => params.append('selected_ids', id));
-    results = [];
+    let results = [];
     try {
         const resp = await fetch(`/api/selection?${params.toString()}`);
         if (!resp.ok) throw new Error(`API selection fail: ${resp.status}`);
@@ -260,12 +265,12 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    newtag0 = addTagInput.value;
-    newtag = newtag0.replaceAll(" ", "_"); // no spaces
+    let newtag0 = addTagInput.value;
+    let newtag = newtag0.replaceAll(" ", "_"); // no spaces
     const idx = active_text_tags.findIndex(t => t == newtag);
     if (idx == -1) {
         active_text_tags.push(newtag);
-        warning = document.getElementById('warn'); // TODO function
+        let warning = document.getElementById('warn'); // TODO function
         warning.style.display = "block";
     }
     
@@ -413,7 +418,7 @@ function render_top_tags(tags) {
 }
 
 function renderResults(data) {
-    tot_pages = Math.ceil( data.tot_found / per_page );
+    let tot_pages = Math.ceil( data.tot_found / per_page );
     if (current_page > tot_pages)
         current_page = tot_pages;
 
@@ -464,8 +469,8 @@ function renderResults(data) {
     pagination_div.innerHTML = html;
     
     // Issue 25: bottom next/prev buttons not working
-    html2 = html.replace("prev_page", "prev_page2");
-    html3 = html2.replace("next_page", "next_page2");
+    let html2 = html.replace("prev_page", "prev_page2");
+    let html3 = html2.replace("next_page", "next_page2");
     pagination2_div.innerHTML = html3;
 
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
@@ -662,13 +667,13 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     html += `<p>Top 25 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
     html += `<div class="grid-contain">`;
     const params = new URLSearchParams();
-    params.append('expOption', selExpOption)
-    params.append('tagType', selTypeOption)
+    params.append('expOption', selExpOption);
+    params.append('tagType', selTypeOption);
     
     try {
         const resp = await fetch(`/top_tags?${params.toString()}`);
         if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
-        foo = renderTopGrid(await resp.json());
+        let foo = renderTopGrid(await resp.json());
         //console.log(foo);
         html += foo;
     } catch (err) { console.error(err); }
@@ -690,7 +695,7 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
 
 function updateSelCount() {
     let count = selectedIds.size;
-    selmsg = document.getElementById("selectMsg");
+    let selmsg = document.getElementById("selectMsg");
     selmsg.textContent = `${count} image${count != 1 ? 's' : ''} selected`;
 }
 
@@ -715,32 +720,32 @@ async function keepTagsInDb(srcimage, dstimage) {
     } catch (err) { console.error(err); }
 }
 
-function highlightStringDiff(str1, str2) { //( str1: string, str2: string ) {
-
-    tags1 = str1.split(",").sort((a,b) => a.localeCompare(b))
-    tags2 = str2.split(",").sort((a,b) => a.localeCompare(b))
-    outtags = []
-    index1 = 0
-    index2 = 0
+function highlightStringDiff(str1, str2) {
+    // two csv tag lists -> differences highlighted as space separated string
+    let tags1 = str1.split(",").sort((a,b) => a.localeCompare(b));
+    let tags2 = str2.split(",").sort((a,b) => a.localeCompare(b));
+    let outtags = [];
+    let index1 = 0;
+    let index2 = 0;
     while (index1 < tags1.length) {
         if (tags1[index1] == tags2[index2]) {
-            outtags.push(tags1[index1])
-            index1 += 1
-            index2 += 1
+            outtags.push(tags1[index1]);
+            index1 += 1;
+            index2 += 1;
         } else {
             if (tags1[index1] == tags2[index2+1]) {
                 // missing from tags1, do nothing
-                index2 += 1
+                index2 += 1;
             } else if (tags1[index1+1] == tags2[index2]) {
-                outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ")
-                index1 += 1
+                outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
+                index1 += 1;
             } else {
-                index1 += 1
-                index2 += 1
+                index1 += 1;
+                index2 += 1;
             }
         }
     }
-    return outtags.join(" ")
+    return outtags.join(" ");
 }
 
 let dupes_list = [];
@@ -749,13 +754,13 @@ let dupe_index = 0;
 function reconcileOneDupe() {
     // using dupes_list[dupes_index]
     
-    num = 1 + (dupe_index / 2);
-    num2 = Object.keys(dupes_list).length / 2;
-    html = `<h4>Duplicate ${num} of ${num2}</h4>`;
+    let num = 1 + (dupe_index / 2);
+    let num2 = Object.keys(dupes_list).length / 2;
+    let html = `<h4>Duplicate ${num} of ${num2}</h4>`;
     
     // display image 1, image 2
-    img1 = dupes_list[dupe_index];
-    img2 = dupes_list[dupe_index+1];
+    let img1 = dupes_list[dupe_index];
+    let img2 = dupes_list[dupe_index+1];
     
     html += `<div class="dupes_grid"><div class="dupes_cell">`;
     html += `<img class="result" data-id="${img1.image_id}" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/>`;
@@ -767,8 +772,8 @@ function reconcileOneDupe() {
 
     // display tags 1, tags 2
     html += `<div class="dupes_cell">`;
-    foo = highlightStringDiff(img1.tags, img2.tags)
-    bar = highlightStringDiff(img2.tags, img1.tags)
+    let foo = highlightStringDiff(img1.tags, img2.tags); // diffs between tags1 and tags2
+    let bar = highlightStringDiff(img2.tags, img1.tags); // diffs between tags2 and tags1
     html += `<p>${foo}</p></div><div class="dupes_cell"><p>${bar}</p></div>`;
 
     // display buttons
@@ -781,10 +786,10 @@ function reconcileOneDupe() {
 
     // prev-dupe on click: update dupe_index, call reconcileOneDupe
     // next-dupe on click: update dupe_index, call reconcileOneDupe
-    prevbtn = document.getElementById("prevDupe");
+    let prevbtn = document.getElementById("prevDupe");
     if (num < 2) 
         prevbtn.disabled = true;
-    nextbtn = document.getElementById("nextDupe");
+    let nextbtn = document.getElementById("nextDupe");
     if (num >= num2)
         nextbtn.disabled = true;
 
@@ -798,21 +803,21 @@ function reconcileOneDupe() {
     });    
 
     // Nuke buttons
-    nukeLbtn = document.getElementById("nukeLeft");
+    let nukeLbtn = document.getElementById("nukeLeft");
     nukeLbtn.addEventListener('click', () => {
         removeFromDatabase(img1.image_id);
     });
-    nukeRbtn = document.getElementById("nukeRight");
+    let nukeRbtn = document.getElementById("nukeRight");
     nukeRbtn.addEventListener('click', () => {
         removeFromDatabase(img2.image_id);
     });
     
     // keep buttons
-    keepLbtn = document.getElementById("tagsLeft");
+    let keepLbtn = document.getElementById("tagsLeft");
     keepLbtn.addEventListener('click', () => {
         keepTagsInDb(img1.image_id, img2.image_id);
     });
-    keepRbtn = document.getElementById("tagsRight");
+    let keepRbtn = document.getElementById("tagsRight");
     keepRbtn.addEventListener('click', () => {
         keepTagsInDb(img2.image_id, img1.image_id);
     });
@@ -836,7 +841,7 @@ async function performReconcileDupes(autoDel) {
     } catch (err) { console.error(err); }
 
     // if none, post a message and return
-    num = Object.keys(dupes_list).length;
+    let num = Object.keys(dupes_list).length;
     if (num < 1) {
         results_div.innerHTML = `<h3>No duplicate images found.</h3>`;
         return;
@@ -849,7 +854,7 @@ async function performReconcileDupes(autoDel) {
 
 async function performRemoveDeleted() {
     try {
-        resp = await fetch('/remove_deleted')
+        let resp = await fetch('/remove_deleted');
         if (!resp.ok) throw new Error(`remove delete failed: ${resp.status}`);
     } catch (err) { console.error(err); }
 }
