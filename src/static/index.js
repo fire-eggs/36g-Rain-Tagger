@@ -1,5 +1,7 @@
 /*jshint esversion: 8 */
 
+const CharacterTagTypeId = 4;
+
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
 const file_input = document.getElementById('img');
@@ -7,8 +9,8 @@ const general_tag_suggestions = document.getElementById('general_tag_suggestions
 const character_tag_suggestions = document.getElementById('character_tag_suggestions');
 const selected_general_tags_div = document.getElementById('selected_general_tags');
 const selected_character_tags_div = document.getElementById('selected_character_tags');
-const search_button = document.getElementById('search_button');
-const clear_button = document.getElementById('clear_button');
+//const search_button = document.getElementById('search_button');
+//const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
@@ -38,10 +40,10 @@ const per_page_input = document.getElementById('per_page_input');
 const page_input = document.getElementById('page_input');
 const go_input = document.getElementById('go_input');
 
-const dash_button = document.getElementById('dash_button');
-const dupl_button = document.getElementById('dupl_button');
-const dupl_button2 = document.getElementById('dupl_button2');
-const remove_del_btn = document.getElementById('remove_del_btn');
+//const dash_button = document.getElementById('dash_button');
+//const dupl_button = document.getElementById('dupl_button');
+//const dupl_button2 = document.getElementById('dupl_button2');
+//const remove_del_btn = document.getElementById('remove_del_btn');
 const addtag_input = document.getElementById('addtag_input');
 const addtag_suggestions = document.getElementById('addtag_suggestions');
 
@@ -283,7 +285,7 @@ async function fetchAllTags() {
 }
 
 function initializeTags() {
-    selected_character_tags = parseTagField('file_tags_character', 4);
+    selected_character_tags = parseTagField('file_tags_character', CharacterTagTypeId);
     selected_general_tags = parseTagField('file_tags_general', 0);
     renderTags(selected_general_tags_div, selected_general_tags, 'general');
     renderTags(selected_character_tags_div, selected_character_tags, 'character');
@@ -316,8 +318,8 @@ function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
             `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
         ).join('');
     }
-    attachSuggestionEvents(suggestionDiv, typeId === 4 ? selected_character_tags : selected_general_tags,
-        typeId === 4 ? renderCharacterTags : renderGeneralTags, typeId === 4 ? 'file_tags_character' : 'file_tags_general');
+    attachSuggestionEvents(suggestionDiv, typeId === CharacterTagTypeId ? selected_character_tags : selected_general_tags,
+        typeId === CharacterTagTypeId ? renderCharacterTags : renderGeneralTags, typeId === CharacterTagTypeId ? 'file_tags_character' : 'file_tags_general');
 }
 
 function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldId) {
@@ -858,14 +860,15 @@ async function performRemoveDeleted() {
 
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
-character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
-character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, 4));
-clear_button.addEventListener('click', clearAll);
-search_button.addEventListener('click', () => performSearch(false));
-dash_button.addEventListener('click', () => performExplore("G"));
-dupl_button.addEventListener('click', () => performReconcileDupes(false));
-dupl_button2.addEventListener('click', () => performReconcileDupes(true));
-remove_del_btn.addEventListener('click', () => performRemoveDeleted());
+character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, CharacterTagTypeId));
+character_tag_input.addEventListener('focus', () => handleTagInput(character_tag_input, character_tag_suggestions, CharacterTagTypeId));
+
+document.getElementById('clear_button').addEventListener('click', clearAll);
+document.getElementById('search_button').addEventListener('click', () => performSearch(false));
+document.getElementById('dash_button').addEventListener('click', () => performExplore("G"));
+document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes(false));
+document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupes(true));
+document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
