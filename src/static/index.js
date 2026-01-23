@@ -58,10 +58,10 @@ let current_page = 1;
 let per_page = 25;
 
 per_page_input.addEventListener('input', () => {
-    per_page = parseInt(per_page_input.value) || 25;
+    per_page = parseInt(per_page_input.value) ?? 25;
 });
 page_input.addEventListener('input', () => {
-    current_page = parseInt(page_input.value) || 1;
+    current_page = parseInt(page_input.value) ?? 1;
 });
 go_input.addEventListener('click', () => {
     performSearch(true);
@@ -89,7 +89,7 @@ results_div.addEventListener('click', (e) => {
     }
 
     const selection = [...selectedIds];
-    
+
     sendSelection(selection); // display a list of common tags for these images
     updateSelCount();
   });
@@ -99,26 +99,26 @@ let active_text_tags = []; // User has added a tag via text, which may or may no
 
 function deselectAll() {
     /* Clear selection state for all images */
-    
+
     if (selectedIds.size < 1)
         return;
-    
+
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
     results_div.querySelectorAll('img').forEach( img => {
         let iid = img.dataset.id;
         if (selectedIds.has(iid))
             img.classList.toggle('selected');
     });
-    
+
     // TODO: replace with deselectAll call?
     selectedIds.clear();
     info_div.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
-    
+
     let warning = document.getElementById('warn'); // TODO function
     warning.style.display = "none";
-    
+
     updateSelCount();
 }
 
@@ -126,17 +126,17 @@ function renderInfoTags(container, selectedArray, className) {
     container.innerHTML = selectedArray.map(tag =>
         `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
     ).join('');
-    
+
     container.innerHTML += active_text_tags.map(tag =>
         `<span class="pill ${className}">${tag} <button data-id="0" type="button">x</button></span>`
     ).join('');
-    
+
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
             let warning = document.getElementById('warn');
-            
-            if (id == 0) {
+
+            if (id === 0) {
                 const idx = active_text_tags.findIndex(t => t === btn.textContent);
                 if (idx !== -1) {
                     active_text_tags.splice(idx, 1);
@@ -157,10 +157,10 @@ function renderInfoTags(container, selectedArray, className) {
 
 async function applyTagChanges() {
     /* User clicks on apply button. Send the current tag set to the server to update the database. */
-    
+
     let warning = document.getElementById('warn');
     warning.style.display = "none";
-    
+
     const params = new URLSearchParams();
     selectedIds.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
@@ -177,7 +177,7 @@ function updateInfoPane() {
     // updateInfoPane is invoked specifically because selection has changed; clear warning
     let warning = document.getElementById('warn'); // TODO function
     warning.style.display = "none";
-    
+
     renderInfoTags(info_div, active_info_tags, 'general');
     
     let doit_button = document.getElementById('doit');
@@ -189,29 +189,28 @@ function updateInfoPane() {
 
 function updateMRAtags(curr) {
     // Update the most-recently-added tags list
-    
+
     curr.sort((a,b) => a.tag_name.localeCompare(b.tag_name)); // easier to find tags if alphabetized
 
     MRU_div.innerHTML = curr.map(tag =>
         `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
     ).join('');
-    
+
     MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
             const txt= btn.dataset.text;
-            
+
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
-                
+
                 let warning = document.getElementById('warn'); // TODO function
                 warning.style.display = "block";
-                
+
                 renderInfoTags(info_div, active_info_tags, 'general');
             }
         });
     });
-    
 }
 
 function handleAddTagInput(inputEl, suggestionDiv, typeId) {
@@ -228,16 +227,16 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     suggestionDiv.innerHTML = filtered.map(tag =>
         `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
     ).join('');
-    
+
     addTagSuggest.querySelectorAll('.tag_suggestion').forEach(el => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
-                
+
                 let warning = document.getElementById('warn'); // TODO function
                 warning.style.display = "block";
-                
+
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
             }
             // issue 27: don't remove the selected tag from the suggestion list
@@ -246,7 +245,6 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
         });
     });
 }
-
 
 async function sendSelection(selection) {
     active_text_tags = [];
@@ -267,8 +265,8 @@ function addTagClick() {
     
     let newtag0 = addTagInput.value;
     let newtag = newtag0.replaceAll(" ", "_"); // no spaces
-    const idx = active_text_tags.findIndex(t => t == newtag);
-    if (idx == -1) {
+    const idx = active_text_tags.findIndex(t => t === newtag);
+    if (idx === -1) {
         active_text_tags.push(newtag);
         let warning = document.getElementById('warn'); // TODO function
         warning.style.display = "block";
@@ -408,7 +406,7 @@ function render_tags_text(tags, category) {
 
 function render_top_tags(tags) {
 
-    let keys = Object.keys(tags);
+    let keys = Object.keys(tags || {});
     keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
@@ -458,12 +456,12 @@ function renderResults(data) {
     let start = current_page < 4 ? 1 : current_page - 2;
     let fin = tot_pages < start+4 ? tot_pages : start+4;
     start = start < 5 ? start : (fin - start < 4 ? fin-4 : start);
-    if (start != 1)
+    if (start !== 1)
         html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
     for (let blah= start; blah <= fin; blah++) {
-        html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah == current_page ? 'disabled' : ''}> ${blah} </button>`;
+        html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah === current_page ? 'disabled' : ''}> ${blah} </button>`;
     }
-    if (fin != tot_pages)
+    if (fin !== tot_pages)
         html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     
     pagination_div.innerHTML = html;
@@ -515,24 +513,24 @@ function performExploreLink(tagId, tagname) {
     /* User has selected a tag name in the explore grid. Set all the controls so that "search by
      * tag" will work, especially pagination.
      */
-    var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
-    var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+    const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+    const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
 
     // Set the filters appropriately [currently hard-coded values, as per the database views]
     f_tag.value = 0.6;
     f_tag_value.textContent = 0.6;
-    
-    // TODO: clearAll() should have a 'clear the filters' option
-    f_general.value = (selectedOption1 == "G" ? 0.5 : 0.0);
-    f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
-    f_sensitive.value = (selectedOption1 == "S" ? 0.5 : 0.0);
-    f_sensitive_value.textContent = (selectedOption1 == "S" ? 0.5 : 0.0);
-    f_questionable.value = (selectedOption1 == "Q" ? 0.5 : 0.0);
-    f_questionable_value.textContent = (selectedOption1 == "Q" ? 0.5 : 0.0);
-    f_explicit.value = (selectedOption1 == "X" ? 0.5 : 0.0);
-    f_explicit_value.textContent = (selectedOption1 == "X" ? 0.5 : 0.0);
 
-    if (selectedOption2 == "C") {
+    // TODO: clearAll() should have a 'clear the filters' option
+    f_general.value = (selectedOption1 === "G" ? 0.5 : 0.0);
+    f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
+    f_sensitive.value = (selectedOption1 === "S" ? 0.5 : 0.0);
+    f_sensitive_value.textContent = (selectedOption1 === "S" ? 0.5 : 0.0);
+    f_questionable.value = (selectedOption1 === "Q" ? 0.5 : 0.0);
+    f_questionable_value.textContent = (selectedOption1 === "Q" ? 0.5 : 0.0);
+    f_explicit.value = (selectedOption1 === "X" ? 0.5 : 0.0);
+    f_explicit_value.textContent = (selectedOption1 === "X" ? 0.5 : 0.0);
+
+    if (selectedOption2 === "C") {
         selected_character_tags.push({ tag_id: tagId, tag_name: tagname });
         renderCharacterTags();
     }
@@ -540,7 +538,7 @@ function performExploreLink(tagId, tagname) {
         selected_general_tags.push({ tag_id: tagId, tag_name: tagname });
         renderGeneralTags();
     }
-        
+
     performTagSearchGuts(false);
 }
 
@@ -626,9 +624,9 @@ function renderTopGrid(data) {
 }
 
 function handleExploreRadioChange() {
-    var selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
-    var selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
-    performExplore(selectedOption1,selectedOption2);  
+    const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
+    const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
+    performExplore(selectedOption1,selectedOption2);
 }
 
 async function performExplore(selExpOption="G",selTypeOption="G") {
@@ -696,7 +694,7 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
 function updateSelCount() {
     let count = selectedIds.size;
     let selmsg = document.getElementById("selectMsg");
-    selmsg.textContent = `${count} image${count != 1 ? 's' : ''} selected`;
+    selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
 }
 
 async function removeFromDatabase(imageid) {
@@ -728,15 +726,15 @@ function highlightStringDiff(str1, str2) {
     let index1 = 0;
     let index2 = 0;
     while (index1 < tags1.length) {
-        if (tags1[index1] == tags2[index2]) {
+        if (tags1[index1] === tags2[index2]) {
             outtags.push(tags1[index1]);
             index1 += 1;
             index2 += 1;
         } else {
-            if (tags1[index1] == tags2[index2+1]) {
+            if (tags1[index1] === tags2[index2+1]) {
                 // missing from tags1, do nothing
                 index2 += 1;
-            } else if (tags1[index1+1] == tags2[index2]) {
+            } else if (tags1[index1+1] === tags2[index2]) {
                 outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
                 index1 += 1;
             } else {
@@ -787,7 +785,7 @@ function reconcileOneDupe() {
     // prev-dupe on click: update dupe_index, call reconcileOneDupe
     // next-dupe on click: update dupe_index, call reconcileOneDupe
     let prevbtn = document.getElementById("prevDupe");
-    if (num < 2) 
+    if (num < 2)
         prevbtn.disabled = true;
     let nextbtn = document.getElementById("nextDupe");
     if (num >= num2)
@@ -796,11 +794,11 @@ function reconcileOneDupe() {
     prevbtn.addEventListener('click', () => {
         dupe_index -= 2;
         reconcileOneDupe();
-    });    
+    });
     nextbtn.addEventListener('click', () => {
         dupe_index += 2;
         reconcileOneDupe();
-    });    
+    });
 
     // Nuke buttons
     let nukeLbtn = document.getElementById("nukeLeft");
@@ -811,7 +809,7 @@ function reconcileOneDupe() {
     nukeRbtn.addEventListener('click', () => {
         removeFromDatabase(img2.image_id);
     });
-    
+
     // keep buttons
     let keepLbtn = document.getElementById("tagsLeft");
     keepLbtn.addEventListener('click', () => {
@@ -821,13 +819,12 @@ function reconcileOneDupe() {
     keepRbtn.addEventListener('click', () => {
         keepTagsInDb(img2.image_id, img1.image_id);
     });
-    
 }
 
 async function performReconcileDupes(autoDel) {
     // clear
     clearAll();
-    
+
     // get the duplicated files
     try {
         let resp = null;
@@ -846,7 +843,7 @@ async function performReconcileDupes(autoDel) {
         results_div.innerHTML = `<h3>No duplicate images found.</h3>`;
         return;
     }
-        
+
     // TODO assuming pairs; need to handle more than 2 dupes
     dupe_index = 0;
     reconcileOneDupe();
