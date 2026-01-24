@@ -1,6 +1,7 @@
 /*jshint esversion: 8 */
 
 const CharacterTagTypeId = 4;
+const DefaultPerPage = 25;
 
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
@@ -16,12 +17,12 @@ const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 
 // Info pane
-const clearSelectBtn = document.getElementById('clearSelect');
+//const clearSelectBtn = document.getElementById('clearSelect');
 const info_div = document.getElementById('info');
-const addTagInput = document.getElementById('addtag_input');
-const addTagSuggest = document.getElementById('addtag_suggestions');
-const addTagBtn = document.getElementById('addTextTag');
-const MRU_div = document.getElementById('MRUTags');
+//const addTagInput = document.getElementById('addtag_input');
+//const addTagSuggest = document.getElementById('addtag_suggestions');
+//const addTagBtn = document.getElementById('addTextTag');
+//const MRU_div = document.getElementById('MRUTags');
 
 // 'Filters'
 const f_tag = document.getElementById('f_tag');
@@ -57,10 +58,10 @@ let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = new Map();
 let current_page = 1;
-let per_page = 25;
+let per_page = DefaultPerPage;
 
 per_page_input.addEventListener('input', () => {
-    per_page = parseInt(per_page_input.value) ?? 25;
+    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
 });
 page_input.addEventListener('input', () => {
     current_page = parseInt(page_input.value) ?? 1;
@@ -194,6 +195,8 @@ function updateMRAtags(curr) {
 
     curr.sort((a,b) => a.tag_name.localeCompare(b.tag_name)); // easier to find tags if alphabetized
 
+    let MRU_div = document.getElementById('MRUTags');
+
     MRU_div.innerHTML = curr.map(tag =>
         `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
     ).join('');
@@ -230,7 +233,7 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
         `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
     ).join('');
 
-    addTagSuggest.querySelectorAll('.tag_suggestion').forEach(el => {
+    document.getElementById('addtag_suggestions').querySelectorAll('.tag_suggestion').forEach(el => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
@@ -265,7 +268,7 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    let newtag0 = addTagInput.value;
+    let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_"); // no spaces
     const idx = active_text_tags.findIndex(t => t === newtag);
     if (idx === -1) {
@@ -418,8 +421,8 @@ function render_top_tags(tags) {
 }
 
 function renderResults(data) {
-    per_page = isNaN(per_page) ? 25 : per_page;
-    per_page = per_page < 1 ? 25 : per_page;
+    per_page = isNaN(per_page) ? DefaultPerPage : per_page;
+    per_page = per_page < 1 ? DefaultPerPage : per_page;
     per_page_input.value = per_page;
     
     let tot_pages = Math.ceil( data.tot_found / per_page );
@@ -876,8 +879,8 @@ document.getElementById('remove_del_btn').addEventListener('click', () => perfor
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
-addTagBtn.addEventListener('click', () => addTagClick());
+document.getElementById('addTextTag').addEventListener('click', () => addTagClick());
 
-clearSelectBtn.addEventListener('click', () => deselectAll());
+document.getElementById('clearSelect').addEventListener('click', () => deselectAll());
 
 fetchAllTags();
