@@ -418,6 +418,10 @@ function render_top_tags(tags) {
 }
 
 function renderResults(data) {
+    per_page = isNaN(per_page) ? 25 : per_page;
+    per_page = per_page < 1 ? 25 : per_page;
+    per_page_input.value = per_page;
+    
     let tot_pages = Math.ceil( data.tot_found / per_page );
     if (current_page > tot_pages)
         current_page = tot_pages;
