@@ -130,7 +130,7 @@ function renderInfoTags(container, selectedArray, className) {
     ).join('');
 
     container.innerHTML += active_text_tags.map(tag =>
-        `<span class="pill ${className}">${tag} <button data-id="0" type="button">x</button></span>`
+        `<span class="pill ${className}">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>`
     ).join('');
 
     container.querySelectorAll('button[data-id]').forEach(btn => {
@@ -139,7 +139,7 @@ function renderInfoTags(container, selectedArray, className) {
             let warning = document.getElementById('warn');
 
             if (id === 0) {
-                const idx = active_text_tags.findIndex(t => t === btn.textContent);
+                const idx = active_text_tags.findIndex(t => t === btn.dataset.tagname);
                 if (idx !== -1) {
                     active_text_tags.splice(idx, 1);
                     warning.style.display = "block";
