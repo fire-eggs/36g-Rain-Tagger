@@ -216,7 +216,10 @@ def applyTagChanges():
     #print(f'ATC text tags: {text_tags}')
     if len(text_tags) > 0:
         current_app.db.add_possibly_new_tags(image_ids, text_tags, 32) # TODO last parameter is hardcoded as FUTURE
+    return jsonify([])
 
+@bp.route('/api/getMRAtags', methods=["GET"])
+def getMRAtags():
     results = current_app.db.get_mra_tags()
     return jsonify(results)        
 

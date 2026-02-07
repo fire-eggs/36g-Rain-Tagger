@@ -151,8 +151,8 @@ async function applyTagChanges() {
     try {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
         if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
-        updateMRAtags(await resp.json()); // database returns the list of most-recently-added tags
     } catch (err) { console.error(err); }
+    updateMRAtags();
 }
 
 function updateInfoPane() {
@@ -171,8 +171,14 @@ function updateInfoPane() {
     });
 }
 
-function updateMRAtags(curr) {
+async function updateMRAtags() {
     // Update the most-recently-added tags list
+    
+    try {
+        const resp = await fetch(`/api/getMRAtags`);
+        if (!resp.ok) throw new Error(`getMRAtags call failed: ${resp.status}`);
+        curr = await resp.json(); // database returns the list of most-recently-added tags
+    } catch (err) { console.error(err); return; }
 
     curr.sort((a,b) => a.tag_name.localeCompare(b.tag_name)); // easier to find tags if alphabetized
 
@@ -865,3 +871,4 @@ document.getElementById('addTextTag').addEventListener('click', () => addTagClic
 document.getElementById('clearSelect').addEventListener('click', () => deselectAll());
 
 fetchAllTags();
+updateMRAtags();
