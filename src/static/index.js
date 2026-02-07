@@ -70,6 +70,10 @@ go_input.addEventListener('click', () => {
     performSearch(true);
 });
 
+/* Warning icon, visible when changes not sent to database */
+const warning = document.getElementById('warn'); // TODO function
+const hideWarn = () => warning.style.display = "none";
+const showWarn = () => warning.style.display = "block";
 
 
 /* CG change */
@@ -137,20 +141,21 @@ function renderInfoTags(container, selectedArray, className) {
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
-            let warning = document.getElementById('warn');
 
             if (id === 0) {
+                // User-defined text tag [no database tag id]
                 const idx = active_text_tags.findIndex(t => t === btn.dataset.tagname);
                 if (idx !== -1) {
                     active_text_tags.splice(idx, 1);
-                    warning.style.display = "block";
+                    showWarn();
                 }
             }
             else {
+                // tag id from database
                 const idx = selectedArray.findIndex(t => t.tag_id === id);
                 if (idx !== -1) {
                     selectedArray.splice(idx, 1);
-                    warning.style.display = "block";
+                    showWarn();
                 }
             }
             renderInfoTags(container, selectedArray, className);
@@ -161,9 +166,7 @@ function renderInfoTags(container, selectedArray, className) {
 async function applyTagChanges() {
     /* User clicks on apply button. Send the current tag set to the server to update the database. */
 
-    let warning = document.getElementById('warn');
-    warning.style.display = "none";
-
+    hideWarn();
     const params = new URLSearchParams();
     selectedIds.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
@@ -178,8 +181,7 @@ async function applyTagChanges() {
 function updateInfoPane() {
 
     // updateInfoPane is invoked specifically because selection has changed; clear warning
-    let warning = document.getElementById('warn'); // TODO function
-    warning.style.display = "none";
+    hideWarn();
 
     renderInfoTags(info_div, active_info_tags, 'general');
     
@@ -208,10 +210,7 @@ function updateMRAtags(curr) {
 
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
-
-                let warning = document.getElementById('warn'); // TODO function
-                warning.style.display = "block";
-
+                showWarn();
                 renderInfoTags(info_div, active_info_tags, 'general');
             }
         });
@@ -239,8 +238,7 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
 
-                let warning = document.getElementById('warn'); // TODO function
-                warning.style.display = "block";
+                showWarn();
 
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
             }
@@ -273,8 +271,7 @@ function addTagClick() {
     const idx = active_text_tags.findIndex(t => t === newtag);
     if (idx === -1) {
         active_text_tags.push(newtag);
-        let warning = document.getElementById('warn'); // TODO function
-        warning.style.display = "block";
+        showWarn();
     }
     
     renderInfoTags(info_div, active_info_tags, 'general');
