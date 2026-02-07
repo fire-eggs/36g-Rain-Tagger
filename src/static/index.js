@@ -755,14 +755,22 @@ function reconcileOneDupe() {
     // display image 1, image 2
     let img1 = dupes_list[dupe_index];
     let img2 = dupes_list[dupe_index+1];
-    
+
+    // Really long paths need to be explicitly split for wrapping. NOTE: assumes really long paths have multiple '+' signs to split on! 
+    let outp1 = img1.image_path;
+    if (img1.image_path.length > 100)
+      outp1 = img1.image_path.replaceAll("+", " +");
+    let outp2 = img2.image_path;
+    if (img2.image_path.length > 100)
+      outp2 = img2.image_path.replaceAll("+", " +");
+      
     html += `<div class="dupes_grid"><div class="dupes_cell">`;
     html += `<img class="result" data-id="${img1.image_id}" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/>`;
     html += `</div><div class="dupes_cell">`;
     html += `<img class="result" data-id="${img2.image_id}" src="/serve?p=${encodeURIComponent(img2.image_path)}" loading="lazy" title="${img2.image_path}"/></div>`;
 
     // display path 1, path 2
-    html += `<div class="dupes_cell">${img1.image_path}</div><div class="dupes_cell">${img2.image_path}</div>`;
+    html += `<div class="dupes_cell">${outp1}</div><div class="dupes_cell">${outp2}</div>`;
 
     // display tags 1, tags 2
     html += `<div class="dupes_cell">`;
