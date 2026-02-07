@@ -78,6 +78,8 @@ const showWarn = () => warning.style.display = "block";
 
 /* CG change */
 const selectedIds = new Set();
+const anySelected = () => selectedIds.size > 0;
+
 results_div.addEventListener('click', (e) => {
     /* User clicks on an image. Add or remove from the list of selected images. */
     const item = e.target.closest('img.result');
@@ -107,7 +109,7 @@ let active_text_tags = []; // User has added a tag via text, which may or may no
 function deselectAll() {
     /* Clear selection state for all images */
 
-    if (selectedIds.size < 1)
+    if (!anySelected())
         return;
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
@@ -117,16 +119,7 @@ function deselectAll() {
             img.classList.toggle('selected');
     });
 
-    // TODO: replace with deselectAll call?
-    selectedIds.clear();
-    info_div.innerHTML = '';
-    active_info_tags = [];
-    active_text_tags = [];
-
-    let warning = document.getElementById('warn'); // TODO function
-    warning.style.display = "none";
-
-    updateSelCount();
+    clearAllSelection(); // NOTE: includes updateSelCount
 }
 
 function renderInfoTags(container, selectedArray, className) {
@@ -187,7 +180,9 @@ function updateInfoPane() {
     
     let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
-        applyTagChanges();
+        if (anySelected()) {
+            applyTagChanges();
+        }
         // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
 }
@@ -266,8 +261,11 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
+    if (!anySelected()) return;
     let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_"); // no spaces
+    if (newtag.length < 1) return;
+    
     const idx = active_text_tags.findIndex(t => t === newtag);
     if (idx === -1) {
         active_text_tags.push(newtag);
@@ -360,6 +358,15 @@ function renderCharacterTags() {
     renderTags(selected_character_tags_div, selected_character_tags, 'character');
 }
 
+function clearAllSelection() {
+    selectedIds.clear();
+    info_div.innerHTML = '';
+    active_info_tags = [];
+    active_text_tags = [];
+    updateSelCount();
+    hideWarn();
+}
+
 function clearAll() {
     selected_general_tags = [];
     selected_character_tags = [];
@@ -374,13 +381,8 @@ function clearAll() {
     results_div.innerHTML = '';
     pagination_div.innerHTML = '';
     pagination2_div.innerHTML = '';
-    
-    // TODO: replace with deselectAll call?
-    selectedIds.clear();
-    info_div.innerHTML = '';
-    active_info_tags = [];
-    active_text_tags = [];
-    updateSelCount();
+
+    clearAllSelection();
 }
 
 let current_display_mode = "List";
