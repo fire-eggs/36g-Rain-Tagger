@@ -5,24 +5,18 @@ const DefaultPerPage = 25;
 
 const general_tag_input = document.getElementById('general_tag_input');
 const character_tag_input = document.getElementById('character_tag_input');
-const file_input = document.getElementById('img');
 const general_tag_suggestions = document.getElementById('general_tag_suggestions');
 const character_tag_suggestions = document.getElementById('character_tag_suggestions');
 const selected_general_tags_div = document.getElementById('selected_general_tags');
 const selected_character_tags_div = document.getElementById('selected_character_tags');
-//const search_button = document.getElementById('search_button');
-//const clear_button = document.getElementById('clear_button');
 const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 
 // Info pane
-//const clearSelectBtn = document.getElementById('clearSelect');
 const info_div = document.getElementById('info');
-//const addTagInput = document.getElementById('addtag_input');
-//const addTagSuggest = document.getElementById('addtag_suggestions');
-//const addTagBtn = document.getElementById('addTextTag');
-//const MRU_div = document.getElementById('MRUTags');
+const addtag_input = document.getElementById('addtag_input');
+const addtag_suggestions = document.getElementById('addtag_suggestions');
 
 // 'Filters'
 const f_tag = document.getElementById('f_tag');
@@ -31,7 +25,6 @@ const f_sensitive = document.getElementById('f_sensitive');
 const f_explicit = document.getElementById('f_explicit');
 const f_questionable = document.getElementById('f_questionable');
 
-const f_tag_value = document.getElementById('f_tag_value');
 const f_general_value = document.getElementById('f_general_value');
 const f_sensitive_value = document.getElementById('f_sensitive_value');
 const f_explicit_value = document.getElementById('f_explicit_value');
@@ -39,14 +32,6 @@ const f_questionable_value = document.getElementById('f_questionable_value');
 
 const per_page_input = document.getElementById('per_page_input');
 const page_input = document.getElementById('page_input');
-const go_input = document.getElementById('go_input');
-
-//const dash_button = document.getElementById('dash_button');
-//const dupl_button = document.getElementById('dupl_button');
-//const dupl_button2 = document.getElementById('dupl_button2');
-//const remove_del_btn = document.getElementById('remove_del_btn');
-const addtag_input = document.getElementById('addtag_input');
-const addtag_suggestions = document.getElementById('addtag_suggestions');
 
 [f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach(input => {
     input.addEventListener('input', () => {
@@ -66,7 +51,7 @@ per_page_input.addEventListener('input', () => {
 page_input.addEventListener('input', () => {
     current_page = parseInt(page_input.value) ?? 1;
 });
-go_input.addEventListener('click', () => {
+document.getElementById('go_input').addEventListener('click', () => {
     performSearch(true);
 });
 
@@ -74,7 +59,6 @@ go_input.addEventListener('click', () => {
 const warning = document.getElementById('warn'); // TODO function
 const hideWarn = () => warning.style.display = "none";
 const showWarn = () => warning.style.display = "block";
-
 
 /* CG change */
 const selectedIds = new Set();
@@ -525,6 +509,7 @@ function performExploreLink(tagId, tagname) {
     const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
 
     // Set the filters appropriately [currently hard-coded values, as per the database views]
+    const f_tag_value = document.getElementById('f_tag_value');
     f_tag.value = 0.6;
     f_tag_value.textContent = 0.6;
 
@@ -593,6 +578,8 @@ async function performSearch(isPagination = false) {
 
     if (!isPagination) current_page = 1;
 
+    const file_input = document.getElementById('img');
+
     let file = null;
     if (file_input) {
         file = file_input.files[0];
@@ -612,12 +599,7 @@ async function performSearch(isPagination = false) {
         performTagSearchGuts(isPagination);
     }
     
-    // TODO: replace with deselectAll call?
-    selectedIds.clear();
-    info_div.innerHTML = '';
-    active_info_tags = [];
-    active_text_tags = [];
-    updateSelCount();
+    clearAllSelection();
 }
 
 function renderTopGrid(data) {
