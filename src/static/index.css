@@ -77,10 +77,18 @@ input[type=number]{
 }
 
 #general_tag_suggestions,
-#character_tag_suggestions,
-#addtag_suggestions {
+#character_tag_suggestions {
     width: 100%;
     height: 200px;
+    overflow-y: auto;
+    overflow-x: scroll;
+    border: 1px solid #006f7e;
+    background-color: #383838;
+}
+
+#addtag_suggestions {
+    width: 100%;
+    height: 175px;
     overflow-y: auto;
     overflow-x: scroll;
     border: 1px solid #006f7e;
@@ -214,12 +222,12 @@ img.result.selected {
     background: #383838;
     display: flex;
     flex-direction: column;
-    height: 95vh;
+    height: 98vh;
 }
 
 .info-tags {
     flex: 1 0 auto;
-    max-height: 50vh;
+    max-height: 45vh;
     overflow-y: auto;
     /*background-color: lightblue; */
     padding: 2px;
