@@ -9,58 +9,62 @@
 </head>
 <body>
     <div class="row">
-    <div class="container">
-        <h3 class="center"><a href="https://github.com/fire-eggs/36g-Rain-Tagger" style="color: inherit;">36g Rain Tagger</a></h3>
-        <div class="filters">
-            <label for="f_tag"><span>Tags</span><input type="range" id="f_tag" value="0.0" min="0" max="1" step="0.1"><output id="f_tag_value">0.0</output></label>
-            <label for="f_general"><span>General</span><input type="range" id="f_general" value="0.0" min="0" max="1" step="0.1"><output id="f_general_value">0.0</output></label>
-            <label for="f_sensitive"><span>Sensitive</span><input type="range" id="f_sensitive" value="0.0" min="0" max="1" step="0.1"><output id="f_sensitive_value">0.0</output></label>
-            <label for="f_questionable"><span>Questionable</span><input type="range" id="f_questionable" value="0.0" min="0" max="1" step="0.1"><output id="f_questionable_value">0.0</output></label>
-            <label for="f_explicit"><span>Explicit</span><input type="range" id="f_explicit" value="0.0" min="0" max="1" step="0.1"><output id="f_explicit_value">0.0</output></label>
-        </div>
+        <div class="container">
+            <h3 class="center"><a href="https://github.com/fire-eggs/36g-Rain-Tagger" style="color: inherit;">36g Rain Tagger</a></h3>
+            <div class="filters">
+                <label for="f_tag"><span>Tags</span><input type="range" id="f_tag" value="0.0" min="0" max="1" step="0.1"><output id="f_tag_value">0.0</output></label>
+                <label for="f_general"><span>General</span><input type="range" id="f_general" value="0.0" min="0" max="1" step="0.1"><output id="f_general_value">0.0</output></label>
+                <label for="f_sensitive"><span>Sensitive</span><input type="range" id="f_sensitive" value="0.0" min="0" max="1" step="0.1"><output id="f_sensitive_value">0.0</output></label>
+                <label for="f_questionable"><span>Questionable</span><input type="range" id="f_questionable" value="0.0" min="0" max="1" step="0.1"><output id="f_questionable_value">0.0</output></label>
+                <label for="f_explicit"><span>Explicit</span><input type="range" id="f_explicit" value="0.0" min="0" max="1" step="0.1"><output id="f_explicit_value">0.0</output></label>
+            </div>
 
-        <input id="file_tags_general" maxlength="100" minlength="0" name="file_tags_general" style="display: none;" type="text" value="">
-        <input id="file_tags_character" maxlength="100" minlength="0" name="file_tags_character" style="display: none;" type="text" value="">
+            <input id="file_tags_general" maxlength="100" minlength="0" name="file_tags_general" style="display: none;" type="text" value="">
+            <input id="file_tags_character" maxlength="100" minlength="0" name="file_tags_character" style="display: none;" type="text" value="">
 
-        <div class="search">
-            <input id="general_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
-            <div id="general_tag_suggestions"></div>
-            <div id="selected_general_tags"></div>
-        </div>
-        <div class="search">
-            <input id="character_tag_input" type="text" autocomplete="off" placeholder="Search only character tags">
-            <div id="character_tag_suggestions"></div>
-            <div id="selected_character_tags"></div>
-        </div>
-        {% if allow_file_upload_search %}
-        <div class="search">
-            <input type="file" id="img" name="img" accept="image/png, image/jpeg, image/gif"/>
-        </div>
-        <button id="search_button" class="flat">Search by Tags or File</button>
-        {% else %}
-        <button id="search_button" class="flat">Search by Tags</button>
-        {% endif %}
-        <button id="clear_button" class="flat">Clear Form</button>
-        <button id="display_button" class="flat">Display: Gallery</button>
+            <div class="search">
+                <input id="general_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
+                <div id="general_tag_suggestions"></div>
+                <div id="selected_general_tags"></div>
+            </div>
+            <div class="search">
+                <input id="character_tag_input" type="text" autocomplete="off" placeholder="Search only character tags">
+                <div id="character_tag_suggestions"></div>
+                <div id="selected_character_tags"></div>
+            </div>
+            {% if allow_file_upload_search %}
+            <div class="search">
+                <input type="file" id="img" name="img" accept="image/png, image/jpeg, image/gif"/>
+            </div>
+            <button id="search_button" class="flat">Search by Tags or File</button>
+            {% else %}
+            <button id="search_button" class="flat">Search by Tags</button>
+            {% endif %}
+            <button id="clear_button" class="flat">Clear Form</button>
+            <button id="display_button" class="flat">Display: Gallery</button>
 
-        <button id="dash_button">Explore</button>
-        <button id="dupl_button">Reconcile Duplicates</button>
-        <button id="dupl_button2">Reconcile Dupes, Auto Del</button>
-        <button id="remove_del_btn">Remove Missing Images</button>
+            <button id="dash_button">Explore</button>
+            <button id="dupl_button">Reconcile Duplicates</button>
+            <button id="dupl_button2">Reconcile Dupes, Auto Del</button>
+            <button id="remove_del_btn">Remove Missing Images</button>
 
-    </div>
-    <div class="gallery">
-        <div style="padding: 1px;">
-            <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
-            <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
-            <button id="go_input" class="flat">Go</button>
         </div>
-        <div id="pagination"></div>
-        <div id="results"></div>
-        <div id="pagination2"></div>
-    </div>
+        <div class="gallery">
+            <div style="padding: 1px;">
+                <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
+                <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
+                <button id="go_input" class="flat">Go</button>
+            </div>
+            <div id="pagination"></div>
+            <div id="results"></div>
+            <div id="pagination2"></div>
+        </div>
+    </div><!-- row -->
     
-    <div class="info-pane"> <!-- CG Change -->
+    <div class="details-panel" id="panel">
+        <div class="resize-handle" id="resizeHandle"></div>
+        <div class="toggle-btn" id="togglePanel">⮜</div>
+        
         <button id="clearSelect" style="margin-bottom:0;">Clear Selection</button>
         <p id="selectMsg" style="margin:0;">0 Images Selected</p>
         <p style="margin:0; line-height:24px;"><b>Common Tags for Selected Images</b></p>
@@ -70,9 +74,6 @@
                 <img id="warn" src="/static/small-warning-icon.png" width="32" height="32" style="display:none;">
                 <button id="doit">Apply Changes</button>
             </div>
-            <!-- <div id="controls" style="border:1px solid blue;"></div> -->
-            <!-- <div id="addControls" style="border:1px solid blue;"></div> -->
-            <!-- <div class="search"> -->
             <div>
                 <input id="addtag_input" type="text" autocomplete="off" placeholder="Select or enter tag to add"><button id="addTextTag">Add</button>
                 <div id="addtag_suggestions"></div>
@@ -81,7 +82,14 @@
         <div id="MRUTags" class="info-MRU" style="border:1px solid green;"></div>
         
     </div>
-    
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+      <div class="close-btn" id="closeBtn" title="Close Lightbox">&times;</div>
+      <div class="fit-btn" id="fitBtn">※</div>
+      <div class="lightbox-image-area">
+        <img id="lightboxImg" />
+      </div>
     </div>
 
     <script src="/static/index.js"></script>

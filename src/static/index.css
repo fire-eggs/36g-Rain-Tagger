@@ -111,7 +111,7 @@ input[type=number]{
     display: inline-block;
     background: #4f3da6;
     border-radius: 12px;
-    padding: 5px 10px;
+    padding: 3px 9px;
     margin: 1px;
     font-size: 12px;
     color: #e7e7e7;
@@ -137,16 +137,19 @@ input[type=number]{
 }
     
 .row {
-    display: grid; /* CG change */
-    grid-template-columns: auto 5fr 17%; /* CG change */
-    max-width: 99%;
+    display: grid;
+    grid-template-columns: auto auto;
+    /*max-width: 99%;*/
     overflow-y:hidden;
-    /*background-color: red;*/
+    background-color: red;
+    margin-right: 330px;
 }
+
 
 .gallery {
     height: 100vh;
     overflow-y:scroll;
+    background-color: orange;
 }
 
 .m {
@@ -297,4 +300,92 @@ img.result.selected {
     border: 1px solid #bbb;
     word-wrap: break-all;
     overflow-wrap: break-all;
+}
+
+/* ---------- Details Panel ---------- */
+.details-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  background: #383838;
+  border-left: 1px solid #ccc;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 3000;
+  width: 320px;
+}
+
+.toggle-btn {
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.resize-handle {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+/* ---------- Lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: none;
+  z-index: 1900;
+}
+
+.lightbox.active {
+  display: block;
+}
+
+.lightbox-image-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: var(--panel-width, 320px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lightbox-image-area img {
+  cursor: grab;
+}
+
+.lightbox-image-area img.fit{
+  cursor: grab;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.close-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 26px;
+  color: white;
+  background-color: black;
+  cursor: pointer;
+  z-index: 2500;
+}
+
+.fit-btn {
+  position: fixed;
+  top: 15px;
+  left: 50px;
+  font-size: 26px;
+  color: white;
+  background-color: black;
+  cursor: pointer;
+  z-index: 2500;
 }

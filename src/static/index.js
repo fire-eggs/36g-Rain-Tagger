@@ -444,6 +444,10 @@ function renderResults(data) {
     }
     results_div.innerHTML = html;
 
+    results_div.querySelectorAll('img[data-id]').forEach(img => {
+        img.addEventListener('dblclick', () => openLightbox(img));
+    });
+
     html = `
         <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
         Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
@@ -579,6 +583,59 @@ function updateSelCount() {
     let selmsg = document.getElementById("selectMsg");
     selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
 }
+
+/* ---------- Lightbox ---------- */
+let zoom = 1, panX = 0, panY = 0;
+let dragging = false, startX, startY;
+
+function openLightbox(img) {
+  lightboxImg.src = img.src;
+  zoom = 1; panX = panY = 0;
+  updateTransform();
+  lightbox.classList.add('active');
+}
+
+document.getElementById('fitBtn').onclick =
+  () => lightboxImg.classList.add('fit');
+
+document.getElementById('closeBtn').onclick =
+  () => lightbox.classList.remove('active');
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') lightbox.classList.remove('active');
+});
+
+/* ---------- Zoom & Pan ---------- */
+lightboxImg.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom += e.deltaY * -0.001;
+  zoom = Math.min(Math.max(1, zoom), 4);
+  updateTransform();
+});
+
+lightboxImg.addEventListener('mousedown', e => {
+  dragging = true;
+  startX = e.clientX - panX;
+  startY = e.clientY - panY;
+  lightboxImg.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  panX = e.clientX - startX;
+  panY = e.clientY - startY;
+  updateTransform();
+});
+
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  lightboxImg.style.cursor = 'grab';
+});
+
+function updateTransform() {
+  lightboxImg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+}
+
 
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
