@@ -379,6 +379,7 @@ let current_display_mode = "List";
 const display_button = document.getElementById('display_button');
 
 display_button.addEventListener('click', () => {
+    // TODO can this be a style toggle?
     if (current_display_mode === "List") {
         current_display_mode = "Gallery";
         display_button.textContent = "Display: List";
@@ -410,6 +411,7 @@ function render_top_tags(tags) {
 }
 
 function renderResults(data) {
+    /* update the gallery to show the current page's images */
     per_page = isNaN(per_page) ? DefaultPerPage : per_page;
     per_page = per_page < 1 ? DefaultPerPage : per_page;
     per_page_input.value = per_page;
@@ -584,57 +586,42 @@ function updateSelCount() {
     selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
 }
 
-/* ---------- Lightbox ---------- */
-let zoom = 1, panX = 0, panY = 0;
-let dragging = false, startX, startY;
+/* ---------- Panel state ---------- */
+const COLLAPSED_WIDTH = 40;
+let expandedWidth = 320;
+let isCollapsed = false;
 
-function openLightbox(img) {
-  lightboxImg.src = img.src;
-  zoom = 1; panX = panY = 0;
-  updateTransform();
-  lightbox.classList.add('active');
+/* ---------- Helpers ---------- */
+function setPanelWidth(px) {
+  document.documentElement.style.setProperty('--panel-width', px + 'px');
 }
 
-document.getElementById('fitBtn').onclick =
-  () => lightboxImg.classList.add('fit');
+/* ---------- Collapse / Expand ---------- */
+togglePanel.onclick = () => {
+  if (!isCollapsed) {
+    expandedWidth = panel.offsetWidth;
+    setPanelWidth(COLLAPSED_WIDTH);
+    togglePanel.textContent = '⮜';
+  } else {
+    setPanelWidth(expandedWidth);
+    togglePanel.textContent = '⮞';
+  }
+  isCollapsed = !isCollapsed;
+};
 
-document.getElementById('closeBtn').onclick =
-  () => lightbox.classList.remove('active');
+/* ---------- Resize ---------- */
+let resizing = false;
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') lightbox.classList.remove('active');
-});
-
-/* ---------- Zoom & Pan ---------- */
-lightboxImg.addEventListener('wheel', e => {
-  e.preventDefault();
-  zoom += e.deltaY * -0.001;
-  zoom = Math.min(Math.max(1, zoom), 4);
-  updateTransform();
-});
-
-lightboxImg.addEventListener('mousedown', e => {
-  dragging = true;
-  startX = e.clientX - panX;
-  startY = e.clientY - panY;
-  lightboxImg.style.cursor = 'grabbing';
-});
+resizeHandle.onmousedown = () => {
+  if (!isCollapsed) resizing = true;
+};
 
 window.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  panX = e.clientX - startX;
-  panY = e.clientY - startY;
-  updateTransform();
-});
+  if (!resizing) return;
+  expandedWidth = Math.max(200, window.innerWidth - e.clientX);
+  setPanelWidth(expandedWidth);});
 
-window.addEventListener('mouseup', () => {
-  dragging = false;
-  lightboxImg.style.cursor = 'grab';
-});
-
-function updateTransform() {
-  lightboxImg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-}
+window.addEventListener('mouseup', () => resizing = false);
 
 
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));

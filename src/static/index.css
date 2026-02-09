@@ -1,3 +1,7 @@
+:root {
+  --panel-width: 320px;
+}
+
 html {
     background-color: #272727;
     font-size: 14px;
@@ -10,8 +14,8 @@ html {
     flex-direction: column;
     /* max-width: 100%; */
     width: 225px;
-    padding: 10px;
-    margin: 5px;
+    padding: 8px;
+    /* margin: 5px; */
     overflow-y:hidden;
     gap: 3px;
 }
@@ -138,18 +142,18 @@ input[type=number]{
     
 .row {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 1fr 6fr;
     /*max-width: 99%;*/
     overflow-y:hidden;
-    background-color: red;
-    margin-right: 330px;
+    /* background-color: red; */
+    margin-right: var(--panel-width);
+    transition: margin-right 0.15s ease;
 }
-
 
 .gallery {
     height: 100vh;
     overflow-y:scroll;
-    background-color: orange;
+    /* background-color: orange; */
 }
 
 .m {
@@ -232,13 +236,13 @@ img.result.selected {
     flex: 1 0 auto;
     max-height: 45vh;
     overflow-y: auto;
-    /*background-color: lightblue; */
+    /* background-color: lightblue; */
     padding: 2px;
 }
 
 .info-rest {
     flex: 0 0;
-    /*background-color: lightgreen;*/
+    /* background-color: lightgreen; */
     padding: 2px;
 }
 
@@ -313,9 +317,9 @@ img.result.selected {
   padding: 5px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 5px;
   z-index: 3000;
-  width: 320px;
+  width: var(--panel-width);
 }
 
 .toggle-btn {
@@ -350,7 +354,7 @@ img.result.selected {
   top: 0;
   left: 0;
   bottom: 0;
-  right: var(--panel-width, 320px);
+  right: var(--panel-width);
   display: flex;
   align-items: center;
   justify-content: center;
