@@ -1,12 +1,21 @@
 /* ---------- Lightbox ---------- */
 let zoom = 1, panX = 0, panY = 0;
 let dragging = false, startX, startY;
+let currImg = null;
 
 function openLightbox(img) {
-  lightboxImg.src = img.src;
-  zoom = 1; panX = panY = 0;
-  updateTransform();
-  lightbox.classList.add('active');
+    // TODO tags for current image
+    
+    const firsttime = (currImg == null);
+    
+    currImg = img;
+    lightboxImg.src = img.src;
+    zoom = 1; panX = panY = 0;
+    updateTransform();
+    lightbox.classList.add('active');
+    
+    // make sure we start in 'fit' mode    
+    if (firsttime) lightboxImg.classList.toggle('fit');
 }
 
 document.getElementById('fitBtn').onclick =
