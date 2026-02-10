@@ -15,7 +15,32 @@ function openLightbox(img) {
     lightbox.classList.add('active');
     
     // make sure we start in 'fit' mode    
-    if (firsttime) lightboxImg.classList.toggle('fit');
+    if (firsttime) lightboxImg.classList.toggle('fit'); 
+}
+
+function nextImage() {
+    const target = currImg.dataset["id"];
+    let getnext = false;
+    let nextImg = null;
+  
+    results_div.querySelectorAll('img[data-id]').forEach(img => {
+        if (getnext) { nextImg = img; getnext = false; }
+        if (img.dataset["id"] == target) getnext = true;
+    });
+    if (nextImg != null)
+        openLightbox(nextImg);
+}
+
+function prevImage() {
+    const target = currImg.dataset["id"];
+    let stoplook = false;
+    let prevImg = null;
+    results_div.querySelectorAll('img[data-id]').forEach(img => {
+        if (img.dataset["id"] == target) stoplook = true;
+        if (!stoplook) prevImg = img;
+    });
+    if (prevImg != null)
+        openLightbox(prevImg);
 }
 
 document.getElementById('fitBtn').onclick =
@@ -24,8 +49,16 @@ document.getElementById('fitBtn').onclick =
 document.getElementById('closeBtn').onclick =
   () => lightbox.classList.remove('active');
 
+document.getElementById('nextBtn').onclick = nextImage;
+document.getElementById('prevBtn').onclick = prevImage;
+
+document.querySelector('.zone.left').onclick = prevImage;
+document.querySelector('.zone.right').onclick = nextImage;
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') lightbox.classList.remove('active');
+  if (e.key === 'ArrowRight') nextImage();
+  if (e.key === 'ArrowLeft') prevImage();
 });
 
 /* ---------- Zoom & Pan ---------- */
