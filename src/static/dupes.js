@@ -39,9 +39,15 @@ function highlightStringDiff(str1, str2) {
                 // missing from tags1, do nothing
                 index2 += 1;
             } else if (tags1[index1+1] === tags2[index2]) {
+                // missing from tags2, mark for tags1
                 outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
                 index1 += 1;
             } else {
+                // Issue 57: tags at current pos are different from each other, was being thrown away
+                // TODO will fail if the next tag is different
+                if (tags1[index1+1] === tags2[index2+1]) {
+                  outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
+                }
                 index1 += 1;
                 index2 += 1;
             }
