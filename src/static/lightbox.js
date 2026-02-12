@@ -57,8 +57,12 @@ document.querySelector('.zone.right').onclick = nextImage;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') lightbox.classList.remove('active');
-  if (e.key === 'ArrowRight') nextImage();
-  if (e.key === 'ArrowLeft') prevImage();
+  let lightboxOn = lightbox.classList.contains('active');  
+  if (e.key === 'ArrowRight' && lightboxOn) nextImage();
+  if (e.key === 'ArrowLeft' && lightboxOn) prevImage();
+  let dupesActive = document.getElementById("prevDupe") != null;
+  if (e.key === 'ArrowRight' && dupesActive) nextDupe();
+  if (e.key === 'ArrowLeft' && dupesActive) prevDupe();
 });
 
 /* ---------- Zoom & Pan ---------- */

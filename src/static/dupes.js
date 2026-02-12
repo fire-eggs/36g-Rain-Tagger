@@ -56,6 +56,18 @@ function highlightStringDiff(str1, str2) {
     return outtags.join(" ");
 }
 
+function nextDupe() {
+    dupe_index += 2;
+    if (dupe_index >= Object.keys(dupes_list).length) return;
+    reconcileOneDupe();
+}
+
+function prevDupe() {
+    if (dupe_index < 2) return;
+    dupe_index -= 2;
+    reconcileOneDupe();
+}
+
 function reconcileOneDupe() {
     // using dupes_list[dupes_index]
     
@@ -106,14 +118,8 @@ function reconcileOneDupe() {
     if (num >= num2)
         nextbtn.disabled = true;
 
-    prevbtn.addEventListener('click', () => {
-        dupe_index -= 2;
-        reconcileOneDupe();
-    });
-    nextbtn.addEventListener('click', () => {
-        dupe_index += 2;
-        reconcileOneDupe();
-    });
+    prevbtn.addEventListener('click', () => prevDupe());
+    nextbtn.addEventListener('click', () => nextDupe());
 
     // Nuke buttons
     let nukeLbtn = document.getElementById("nukeLeft");
