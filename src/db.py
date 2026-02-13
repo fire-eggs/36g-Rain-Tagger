@@ -347,6 +347,7 @@ class ImageDb(SqliteDb):
         total_rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
+                       join directory using(directory_id)
             where
                 image_tag.tag_id in ({get_placeholders(tag_ids)})
                 and image_tag.prob >= ?
@@ -356,7 +357,7 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by image.directory_id""",
+            order by directory.directory""",
 #            order by max(image_tag.prob) desc""",
             params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)]
         )
@@ -370,6 +371,7 @@ class ImageDb(SqliteDb):
         rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
+                       join directory using(directory_id)
             where
                 image_tag.tag_id in ({get_placeholders(tag_ids)})
                 and image_tag.prob >= ?
@@ -379,7 +381,7 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by image.directory_id
+            order by directory.directory
             limit ?
             offset ?""",
 #            order by max(image_tag.prob) desc
@@ -464,6 +466,7 @@ class ImageDb(SqliteDb):
         return results
 
     def get_mra_tags(self):
+        # return the list of most-recently-added tags
         sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" # TODO hard-coded limit
         results = self._run_query(sql)
         return results
