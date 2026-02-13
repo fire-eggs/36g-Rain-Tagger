@@ -2,6 +2,7 @@
 let zoom = 1, panX = 0, panY = 0;
 let dragging = false, startX, startY;
 let currImg = null;
+let state = "fit";
 
 function openLightbox(img) {
     // TODO tags for current image
@@ -43,8 +44,24 @@ function prevImage() {
         openLightbox(prevImg);
 }
 
-document.getElementById('fitBtn').onclick =
-  () => lightboxImg.classList.toggle('fit');
+document.getElementById('fitBtn').onclick = () => {
+    lightboxImg.classList.remove("fit");
+    lightboxImg.classList.remove("fill");
+    if (state == "fill") { 
+        state = null;
+        return;
+    }
+    if (state == "fit") {
+        state = "fill";
+        lightboxImg.classList.add("fill");
+        return;
+    }
+    if (state == null) {
+        state = "fit";
+        lightboxImg.classList.add("fit");
+        return;
+    }
+}
 
 document.getElementById('closeBtn').onclick =
   () => lightbox.classList.remove('active');
