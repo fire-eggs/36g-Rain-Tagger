@@ -16,7 +16,9 @@ function openLightbox(img) {
     lightbox.classList.add('active');
     
     // make sure we start in 'fit' mode    
-    if (firsttime) lightboxImg.classList.toggle('fit'); 
+    if (firsttime) lightboxImg.classList.toggle('fit');
+
+    setInfoPaneImages([img.dataset["id"]]);
 }
 
 function nextImage() {
@@ -63,8 +65,10 @@ document.getElementById('fitBtn').onclick = () => {
     }
 }
 
-document.getElementById('closeBtn').onclick =
-  () => lightbox.classList.remove('active');
+document.getElementById('closeBtn').onclick = () => {
+    lightbox.classList.remove('active');
+    setInfoPaneImages([...selectedIds]);
+};
 
 document.getElementById('nextBtn').onclick = nextImage;
 document.getElementById('prevBtn').onclick = prevImage;

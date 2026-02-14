@@ -83,7 +83,7 @@ results_div.addEventListener('click', (e) => {
 
     const selection = [...selectedIds];
 
-    sendSelection(selection); // display a list of common tags for these images
+    setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
   });
 
@@ -145,7 +145,8 @@ async function applyTagChanges() {
 
     hideWarn();
     const params = new URLSearchParams();
-    selectedIds.forEach(id => params.append('image_ids', id));
+    //selectedIds.forEach(id => params.append('image_ids', id));
+    infoPaneImages.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
     active_text_tags.forEach(blah => params.append('text_tags', blah));
     try {
@@ -164,7 +165,8 @@ function updateInfoPane() {
     
     let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
-        if (anySelected()) {
+        //if (anySelected()) {
+        if (infoPaneImages.length != 0) {
             applyTagChanges();
         }
         // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
@@ -190,6 +192,7 @@ async function updateMRAtags() {
 
     MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (infoPaneImages.length == 0) return;
             const id = parseInt(btn.dataset.id);
             const txt= btn.dataset.text;
 
@@ -234,10 +237,14 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     });
 }
 
-async function sendSelection(selection) {
+let infoPaneImages = []; // the image(s) currently handled by the info pane
+
+async function setInfoPaneImages(selection) {
     active_text_tags = [];
     const params = new URLSearchParams();
+    infoPaneImages = [];
     selection.forEach(id => params.append('selected_ids', id));
+    selection.forEach(id => infoPaneImages.push(id));
     let results = [];
     try {
         const resp = await fetch(`/api/selection?${params.toString()}`);
@@ -251,7 +258,8 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    if (!anySelected()) return;
+    //if (!anySelected()) return;
+    if (infoPaneImages.length == 0) return;
     let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_"); // no spaces
     if (newtag.length < 1) return;
@@ -355,6 +363,7 @@ function clearAllSelection() {
     active_text_tags = [];
     updateSelCount();
     hideWarn();
+    infoPaneImages = [];
 }
 
 function clearAll() {
