@@ -641,8 +641,8 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 document.getElementById('clear_button').addEventListener('click', clearAll);
 document.getElementById('search_button').addEventListener('click', () => performSearch(false));
 document.getElementById('dash_button').addEventListener('click', () => performExplore("G"));
-document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes(false));
-document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupes(true));
+document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
+document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));

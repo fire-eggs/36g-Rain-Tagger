@@ -142,22 +142,18 @@ function reconcileOneDupe() {
     });
 }
 
-async function performReconcileDupes(autoDel) {
-    // clear
-    clearAll();
+async function finalizeDupesAuto(eventSource) {
+    // When the 'auto delete' part is done, the database contains the
+    // remaining dupes, fetched the same as 'reconcile dupes' does.
+    progressBar.style.width = "100%";
+    progressBar.textContent = "Done!";
+    eventSource.close();
 
-    // get the duplicated files
-    try {
-        let resp = null;
-        if (autoDel) {
-            resp = await fetch(`/dupl_images_auto_del`);
-        } else {
-            resp = await fetch(`/dupl_images`);
-        }
-        if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
-        dupes_list = await resp.json();
-    } catch (err) { console.error(err); }
-
+    // TODO error handling    
+    let resp = await fetch(`/dupl_images`);
+    if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
+    dupes_list = await resp.json();
+    
     // if none, post a message and return
     let num = Object.keys(dupes_list).length;
     if (num < 1) {
@@ -170,10 +166,68 @@ async function performReconcileDupes(autoDel) {
     reconcileOneDupe();
 }
 
-async function performRemoveDeleted() {
+async function performReconcileDupesAuto() {
+    // This is a potentially long task, so thread it with progress.
+    clearAll();
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
+
+    // TODO error handling
+    await fetch(`/dupl_images_auto_del`);    
+
+    const eventSource = new EventSource("/progress");
+
+    eventSource.onmessage = (event) => {
+        const progress = event.data;
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+    };
+
+    eventSource.addEventListener("done", () => finalizeDupesAuto(eventSource));
+}
+
+async function performReconcileDupes() {
+    
+    // clear
+    clearAll();
+
+    // get the duplicated files
     try {
-        let resp = await fetch('/remove_deleted');
-        if (!resp.ok) throw new Error(`remove delete failed: ${resp.status}`);
+        let resp = await fetch(`/dupl_images`);
+        if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
+        dupes_list = await resp.json();
     } catch (err) { console.error(err); }
+    
+    let num = Object.keys(dupes_list).length;
+    if (num < 1) {
+        results_div.innerHTML = `<h3>No duplicate images found.</h3>`;
+        return;
+    }
+
+    // TODO assuming pairs; need to handle more than 2 dupes
+    dupe_index = 0;
+    reconcileOneDupe();
+}
+
+const progressBar = document.getElementById("progress-bar");
+async function performRemoveDeleted() {
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
+
+    await fetch("/remove_deleted", { method: "POST" });
+    
+    const eventSource = new EventSource("/progress");
+
+    eventSource.onmessage = (event) => {
+        const progress = event.data;
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+    };
+
+    eventSource.addEventListener("done", () => {
+        progressBar.style.width = "100%";
+        progressBar.textContent = "Done!";
+        eventSource.close();
+    });
 }
 

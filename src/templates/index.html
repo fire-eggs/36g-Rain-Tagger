@@ -50,10 +50,14 @@
 
         </div>
         <div class="gallery">
-            <div style="padding: 2px;">
+            <div style="padding: 2px; display:flex;">
                 <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
                 <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
                 <button id="go_input" class="flat">Go</button>
+                <div id="progress-container">
+                    <div id="progress-bar">0%</div>
+                </div>
+                
             </div>
             <div id="pagination"></div>
             <div id="results"></div>
