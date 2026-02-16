@@ -258,7 +258,8 @@ class ImageDb(SqliteDb):
             return []
 
         results = {}
-        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future'}
+        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future',
+                        TagType.artist.value: 'artist', TagType.franchise.value: 'franchise' }
         for image_id, (directory, filename, general, explicit, sensitive, questionable) in image_id_2_data.items():
             results[image_id] = {
                 'image_id': image_id,
@@ -267,6 +268,8 @@ class ImageDb(SqliteDb):
                 'general': {},
                 'character': {},
                 'future': {},
+                'artist': {},
+                'franchise': {},
             }
 
         for image_id, tag_name, tag_type_id, prob in tags:
@@ -453,7 +456,7 @@ class ImageDb(SqliteDb):
         for imgid in image_ids:
             # ignoring tag class
             #sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
-            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
+            sql += f"select t.tag_id, t.tag_name, t.tag_type_id from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
             if curr != count: # no extra intersect
                 sql += " INTERSECT "
             curr += 1
@@ -467,7 +470,10 @@ class ImageDb(SqliteDb):
 
     def get_mra_tags(self):
         # return the list of most-recently-added tags
-        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" # TODO hard-coded limit
+        #sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" 
+        # TODO hard-coded limit        
+        sql = "select m.tag_name, m.tag_id, t.tag_type_id from mra_tags m join tag t on t.tag_id = m.tag_id order by updated_at desc limit 20"
+
         results = self._run_query(sql)
         return results
 

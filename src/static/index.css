@@ -172,11 +172,11 @@ img.result {
     border: 4px solid transparent; /* CG change */
 }
 
-/* CG change */
 img.result.selected {
     border-color: dodgerblue;
 }
 
+/* pill colors for types */
 .rating {
     background-color: #008573;
 }
@@ -190,6 +190,19 @@ img.result.selected {
     color: black;
 }
 
+.newtext {
+    background-color: #61863D;
+}
+
+.franchise {
+    background-color: #6a0618;
+}
+
+.artist {
+    background-color: #e51f96;
+}
+
+/* --------------------------- */
 .filters {
     display: table;
     margin: 0 auto;

@@ -106,13 +106,23 @@ function deselectAll() {
     clearAllSelection(); // NOTE: includes updateSelCount
 }
 
+function generateTagPill(text, tag_id, tagtype, letter="x") {
+    tagclass = "general";
+    // TODO consider having the db return the tagclass string, not the number
+    if (tagtype == 4) tagclass = "character";
+    if (tagtype == 12) tagclass = "artist";
+    if (tagtype == 14) tagclass = "franchise";
+    if (tagtype ==99) tagclass = "newtext";   // special: user has typed new tag not in database
+    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" type="button">${letter}</button></span>`;
+}
+
 function renderInfoTags(container, selectedArray, className) {
-    container.innerHTML = selectedArray.map(tag =>
-        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
+    /*        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>` */
+    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id)
     ).join('');
 
-    container.innerHTML += active_text_tags.map(tag =>
-        `<span class="pill ${className}">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>`
+    /*    `<span class="pill newtext">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>` */
+    container.innerHTML += active_text_tags.map(tag => generateTagPill(tag, 0, 99)
     ).join('');
 
     container.querySelectorAll('button[data-id]').forEach(btn => {
@@ -186,9 +196,8 @@ async function updateMRAtags() {
 
     let MRU_div = document.getElementById('MRUTags');
 
-    MRU_div.innerHTML = curr.map(tag =>
-        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
-    ).join('');
+    //`<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
+    MRU_div.innerHTML = curr.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id, "+")).join('');
 
     MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
