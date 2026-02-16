@@ -451,6 +451,9 @@ function renderResults(data) {
                             ${render_tags_text(result.rating, 'rating')}
                             ${render_tags_text(result.general, 'general')}
                             ${render_tags_text(result.character, 'character')}
+                            ${render_tags_text(result.future, 'general')}
+                            ${render_tags_text(result.franchise, 'franchise')}
+                            ${render_tags_text(result.artist, 'artist')}
                         </div>
                     </div>
                 </div>
