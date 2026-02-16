@@ -28,6 +28,8 @@ class TagType(Enum):
     character = 4
     rating = 9
     future = 32
+    artist = 12
+    franchise=14
 
 
 class Ratings(Enum):

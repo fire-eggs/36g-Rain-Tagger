@@ -203,7 +203,7 @@ async function updateMRAtags() {
         btn.addEventListener('click', () => {
             if (infoPaneImages.length == 0) return;
             const id = parseInt(btn.dataset.id);
-            const txt= btn.dataset.text;
+            const txt= btn.dataset.tagname; //text;
 
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
