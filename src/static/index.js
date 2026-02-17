@@ -65,6 +65,7 @@ const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
 results_div.addEventListener('click', (e) => {
+    // TODO add onclick event to <img> tag
     /* User clicks on an image. Add or remove from the list of selected images. */
     const item = e.target.closest('img.result');
     if (!item) {
@@ -113,7 +114,7 @@ function generateTagPill(text, tag_id, tagtype, letter="x") {
     if (tagtype == 12) tagclass = "artist";
     if (tagtype == 14) tagclass = "franchise";
     if (tagtype ==99) tagclass = "newtext";   // special: user has typed new tag not in database
-    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" type="button">${letter}</button></span>`;
+    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}">${letter}</button></span>`;
 }
 
 function renderInfoTags(container, selectedArray, className) {
@@ -126,6 +127,7 @@ function renderInfoTags(container, selectedArray, className) {
     ).join('');
 
     container.querySelectorAll('button[data-id]').forEach(btn => {
+        // TODO add onclick event to button creation
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
 
@@ -206,7 +208,7 @@ async function updateMRAtags() {
             const txt= btn.dataset.tagname; //text;
 
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
-                active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
+                active_info_tags.push({ tag_id: id, tag_name: txt.trim(), tag_type_id: parseInt(btn.dataset.typeid) });
                 showWarn();
                 renderInfoTags(info_div, active_info_tags, 'general');
             }
@@ -219,21 +221,18 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
-// ignoring tag class
-//    const filtered = Array.from(all_tags.values())
-//        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
 
     const filtered = Array.from(all_tags.values())
         .filter(tag => tag[1].toLowerCase().includes(query));
     suggestionDiv.innerHTML = filtered.map(tag =>
-        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        `<div class="tag_suggestion" data-id="${tag[0]}" data-tag_type_id="${tag[2]}">${tag[1]}</div>`
     ).join('');
 
     document.getElementById('addtag_suggestions').querySelectorAll('.tag_suggestion').forEach(el => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
-                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
+                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim(), tag_type_id: parseInt(el.dataset.tag_type_id) });
 
                 showWarn();
 
