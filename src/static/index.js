@@ -45,6 +45,8 @@ let all_tags = new Map();
 let current_page = 1;
 let per_page = DefaultPerPage;
 
+// TODO move to web.py / search_w_tags
+/* 
 per_page_input.addEventListener('input', () => {
     per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
 });
@@ -54,6 +56,7 @@ page_input.addEventListener('input', () => {
 document.getElementById('go_input').addEventListener('click', () => {
     performSearch(true);
 });
+*/
 
 /* Warning icon, visible when changes not sent to database */
 const warning = document.getElementById('warn'); // TODO function
@@ -64,8 +67,10 @@ const showWarn = () => warning.style.display = "block";
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
+// TODO move to web.py / search_w_tags
+/*
 results_div.addEventListener('click', (e) => {
-    /* User clicks on an image. Add or remove from the list of selected images. */
+    // User clicks on an image. Add or remove from the list of selected images.
     const item = e.target.closest('img.result');
     if (!item) {
         //console.log("click fail");
@@ -86,6 +91,7 @@ results_div.addEventListener('click', (e) => {
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
   });
+*/
 
 let active_info_tags = []; // tag_name and tag_id
 let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
@@ -451,6 +457,9 @@ function renderResults(data) {
                             ${render_tags_text(result.rating, 'rating')}
                             ${render_tags_text(result.general, 'general')}
                             ${render_tags_text(result.character, 'character')}
+                            ${render_tags_text(result.future, 'general')}
+                            ${render_tags_text(result.franchise, 'franchise')}
+                            ${render_tags_text(result.artist, 'artist')}
                         </div>
                     </div>
                 </div>
@@ -555,12 +564,17 @@ async function performTagSearchGuts(isPagination) {
     Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
     params.append('page', current_page);
     params.append('per_page', per_page);
+    
+    fetch(`/search_w_tags?${params.toString()}`)
+    .then(res => res.text())
+    .then(html => { document.getElementById("gallery2").innerHTML = html; });
+/*    
     try {
         const resp = await fetch(`/search_w_tags?${params.toString()}`);
         if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
         renderResults(await resp.json());
     } catch (err) { console.error(err); }
-    
+*/    
 }
 
 async function performSearch(isPagination = false) {

@@ -2,14 +2,30 @@
 let zoom = 1, panX = 0, panY = 0;
 let dragging = false, startX, startY;
 let currImg = null;
+let currId = null;
 let state = "fit";
 
-function openLightbox(img) {
-    // TODO tags for current image
+function openLightbox2(img_src, img_id) {
+    const firsttime = (currImg == null);
     
+    currImg = img_src;
+    currId = img_id;
+    lightboxImg.src = img_src;
+    zoom = 1; panX = panY = 0;
+    updateTransform();
+    lightbox.classList.add('active');
+    
+    // make sure we start in 'fit' mode    
+    if (firsttime) lightboxImg.classList.toggle('fit');
+
+    setInfoPaneImages([img_id]);
+}
+
+function openLightbox(img) {
     const firsttime = (currImg == null);
     
     currImg = img;
+    currId = img.dataset["id"];
     lightboxImg.src = img.src;
     zoom = 1; panX = panY = 0;
     updateTransform();
@@ -22,24 +38,25 @@ function openLightbox(img) {
 }
 
 function nextImage() {
-    const target = currImg.dataset["id"];
     let getnext = false;
     let nextImg = null;
-  
+    let results_div = document.getElementById("results");
+    
     results_div.querySelectorAll('img[data-id]').forEach(img => {
         if (getnext) { nextImg = img; getnext = false; }
-        if (img.dataset["id"] == target) getnext = true;
+        if (img.dataset["id"] == currId) getnext = true;
     });
     if (nextImg != null)
         openLightbox(nextImg);
 }
 
 function prevImage() {
-    const target = currImg.dataset["id"];
     let stoplook = false;
     let prevImg = null;
+    let results_div = document.getElementById("results");
+    
     results_div.querySelectorAll('img[data-id]').forEach(img => {
-        if (img.dataset["id"] == target) stoplook = true;
+        if (img.dataset["id"] == currId) stoplook = true;
         if (!stoplook) prevImg = img;
     });
     if (prevImg != null)

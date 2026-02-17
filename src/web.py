@@ -129,12 +129,18 @@ def search_w_tags():
     results,tot_count = current_app.db.get_images_by_tag_ids(tags, filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], page, per_page) #if tags else [],0
     f1 = perf_counter() - i1
 
+    # TODO move results mapping out of db._fetch_results to here
+    # TODO render_top_tags equivalent here
+    # TODO page / max_page / tot_found / pagination
+    
     image_count = current_app.db.get_image_count()
-    return jsonify({
-        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
-        'results': results,
-        'tot_found': tot_count,
-    })
+    return render_template("gallery_mode.html", images=results)
+    
+#    return jsonify({
+#        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
+#        'results': results,
+#        'tot_found': tot_count,
+#    })
 
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
@@ -153,28 +159,28 @@ def get_top_tags():
     })
 
 
-@bp.route('/all_images', methods=['GET'])
-def all_images():
-    """An endpoint for testing demo.html only.
+# @bp.route('/all_images', methods=['GET'])
+# def all_images():
+    # """An endpoint for testing demo.html only.
 
-    This will populate the file ~/demo/results.js.
-    """
+    # This will populate the file ~/demo/results.js.
+    # """
 
-    if not current_app.debug:
-        raise ValueError('Not in debug mode.')
+    # if not current_app.debug:
+        # raise ValueError('Not in debug mode.')
 
-    results = current_app.db._get_all_images()
+    # results = current_app.db._get_all_images()
 
-    result_js_path = make_path('..', 'demo', 'results.js')
-    with open(result_js_path, mode='w') as f:
-        # I know.
-        s = 'const results = ' + json.dumps(results) + ';'
-        f.write(s)
+    # result_js_path = make_path('..', 'demo', 'results.js')
+    # with open(result_js_path, mode='w') as f:
+        # # I know.
+        # s = 'const results = ' + json.dumps(results) + ';'
+        # f.write(s)
 
-    # You can also use bash with this one liner...
-    # echo -n "const results = " > ~/Desktop/results.js && curl -s http://127.0.0.1:8000/all_images >> ~/Desktop/results.js && echo ";" >> ~/Desktop/results.js
+    # # You can also use bash with this one liner...
+    # # echo -n "const results = " > ~/Desktop/results.js && curl -s http://127.0.0.1:8000/all_images >> ~/Desktop/results.js && echo ";" >> ~/Desktop/results.js
 
-    return jsonify(results)
+    # return jsonify(results)
 
 
 @bp.route('/')
@@ -259,8 +265,9 @@ def serve():
     if not file_path:
         abort(400)
 
+    # print(f"{file_path}")
     if not file_path.split('.')[-1].lower().endswith(configs.valid_extensions):
-        abort(UnsupportedMediaType)
+        abort(UnsupportedMediaType, description=file_path)
 
     if not file_path.startswith(configs.web_media_roots):
         abort(Forbidden)

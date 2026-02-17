@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 from functools import lru_cache
 import os
+import urllib
 
 from enums import Ratings, TagData, TagType
 from sqlitedb import SqliteDb, get_placeholders
@@ -257,6 +258,7 @@ class ImageDb(SqliteDb):
         if not tags:
             return []
 
+        # TODO move into web.py / search_w_tags
         results = {}
         tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future',
                         TagType.artist.value: 'artist', TagType.franchise.value: 'franchise' }
@@ -270,6 +272,7 @@ class ImageDb(SqliteDb):
                 'future': {},
                 'artist': {},
                 'franchise': {},
+                'image_url': urllib.parse.quote(os.path.join(directory, filename), safe='')
             }
 
         for image_id, tag_name, tag_type_id, prob in tags:
@@ -291,14 +294,14 @@ class ImageDb(SqliteDb):
         return result
 
 
-    def get_tags_by_tag_name(self, tag_name: str) -> list[dict]:
-        s = """select distinct image_tag.image_id from tag join image_tag on tag.tag_id = image_tag.tag_id where tag.tag_name = ?"""
-        rows = self.run_query_tuple(s, (tag_name,))
-        if not rows:
-            return []
+    # def get_tags_by_tag_name(self, tag_name: str) -> list[dict]:
+        # s = """select distinct image_tag.image_id from tag join image_tag on tag.tag_id = image_tag.tag_id where tag.tag_name = ?"""
+        # rows = self.run_query_tuple(s, (tag_name,))
+        # if not rows:
+            # return []
 
-        results = self._fetch_results([row[0] for row in rows])
-        return results
+        # results = self._fetch_results([row[0] for row in rows])
+        # return results
 
 
     @lru_cache()
@@ -314,24 +317,21 @@ class ImageDb(SqliteDb):
         sql = """select count(image_id) from image where general is not null;"""
         return int((self.run_query_tuple(sql))[0][0])
 
-
     def get_image_count(self) -> int:
         """Utilizes a daily cache."""
         return self._get_image_count(datetime.now().strftime('%Y%m%d'))
 
+    # def _get_all_images(self) -> list[dict]:
+        # """Used for testing on small data sets"""
+        # rows = self.run_query_tuple("""select image_id from image order by image_id""")
 
-    def _get_all_images(self) -> list[dict]:
-        """Used for testing on small data sets"""
-        rows = self.run_query_tuple("""select image_id from image order by image_id""")
+        # if not rows:
+            # return []
 
-        if not rows:
-            return []
+        # image_ids = [row[0] for row in rows]
 
-        image_ids = [row[0] for row in rows]
-
-        results = self._fetch_results(image_ids)
-        return results
-
+        # results = self._fetch_results(image_ids)
+        # return results
 
     def get_untagged_images(self) -> set[tuple[int, str, str]]:
         sql = f"""
