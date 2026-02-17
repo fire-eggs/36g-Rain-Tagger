@@ -271,10 +271,11 @@ img.result.selected {
     }
 }
 
+/* NOTE: by removing the template rows, we don't fill the vertical space
+    /*grid-template-rows: 5fr 1fr 4fr;*/
 .dupes_grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 5fr 2fr 4fr 1fr;
     gap: 5px;
 }
 

@@ -101,12 +101,27 @@ function reconcileOneDupe() {
     let bar = highlightStringDiff(img2.tags, img1.tags); // diffs between tags2 and tags1
     html += `<p>${foo}</p></div><div class="dupes_cell"><p>${bar}</p></div>`;
 
-    // display buttons
-    html += `<div class="dupes_cell"><button id="nukeLeft">Remove from database</button><button id="tagsLeft">Keep these tags</button></div>`;
-    html += `<div class="dupes_cell"><button id="nukeRight">Remove from database</button><button id="tagsRight">Keep these tags</button></div>`;
+    html += `</div>`; // end of grid
     
-    html += `<div class="dupes_cell"><button id="prevDupe">Previous</button><button id="nextDupe">Next</button></div>`;
+    // display buttons at fixed location [bottom] so they don't move around as the user moves through dupe pairs
+    html += `<div style="position:absolute; bottom:10px;">`;
+    // TODO this is *almost* the way I want it, ideally the button pairs should be centered horizontally
+    html += `
+    <div style="display: table; table-layout:fixed; width:70%;">
+        <div style="display: table-row">
+            <div style="display: table-cell;">
+                <button id="nukeLeft">Remove from database</button><button id="tagsLeft">Keep these tags</button>        
+            </div>
+            <div style="display: table-cell;">
+                <button id="nukeRight">Remove from database</button><button id="tagsRight">Keep these tags</button>
+            </div>
+        </div>
+    </div>
+    `;
 
+    html += `<div><button id="prevDupe">Previous</button><button id="nextDupe">Next</button></div>`;
+    html += `</div>`;
+    
     results_div.innerHTML = html;
 
     // prev-dupe on click: update dupe_index, call reconcileOneDupe
