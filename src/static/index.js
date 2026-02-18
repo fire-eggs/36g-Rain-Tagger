@@ -65,7 +65,7 @@ const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
 results_div.addEventListener('click', (e) => {
-    // TODO add onclick event to <img> tag
+    // TODO add onclick event to <img> tag?
     /* User clicks on an image. Add or remove from the list of selected images. */
     const item = e.target.closest('img.result');
     if (!item) {
@@ -106,6 +106,21 @@ function deselectAll() {
 
     clearAllSelection(); // NOTE: includes updateSelCount
 }
+
+function selectAll() {
+    results_div.querySelectorAll('img').forEach( img => {
+        let iid = img.dataset.id;
+        if (!selectedIds.has(iid)) {
+            img.classList.toggle('selected');
+            selectedIds.add(iid);
+        }
+    });
+    // TODO copy-pasta
+    const selection = [...selectedIds];
+    setInfoPaneImages(selection); // display a list of common tags for these images
+    updateSelCount();
+}
+
 
 function generateTagPill(text, tag_id, tagtype, letter="x") {
     tagclass = "general";
@@ -660,7 +675,9 @@ addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, add
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 document.getElementById('addTextTag').addEventListener('click', () => addTagClick());
 
-document.getElementById('clearSelect').addEventListener('click', () => deselectAll());
+document.getElementById('clear_sel').addEventListener('click', () => deselectAll());
+document.getElementById('sel_all').addEventListener('click', () => selectAll());
+
 
 fetchAllTags();
 updateMRAtags();
