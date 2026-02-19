@@ -327,14 +327,14 @@ function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
         const filtered = Array.from(all_tags.values())
             .filter(tag => tag[1].toLowerCase().includes(query));
         suggestionDiv.innerHTML = filtered.map(tag =>
-            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+            `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
     else {
         const filtered = Array.from(all_tags.values())
             .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
         suggestionDiv.innerHTML = filtered.map(tag =>
-            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+            `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
     attachSuggestionEvents(suggestionDiv, typeId === CharacterTagTypeId ? selected_character_tags : selected_general_tags,
@@ -346,7 +346,7 @@ function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldI
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!selectedArray.some(tag => tag.tag_id === id)) {
-                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim() });
+                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id });
                 renderFn();
             }
             el.remove();
@@ -356,9 +356,8 @@ function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldI
 }
 
 function renderTags(container, selectedArray, className) {
-    container.innerHTML = selectedArray.map(tag =>
-        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
-    ).join('');
+    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.type_id)).join('');
+        
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
