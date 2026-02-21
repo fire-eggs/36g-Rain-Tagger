@@ -496,8 +496,9 @@ function renderResults(data) {
         img.addEventListener('dblclick', () => openLightbox(img));
     });
 
+    const prevDisable = current_page === 1 || tot_pages < 1;
     html = `
-        <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
+        <button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>Previous</button>
         Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
         <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
     `;
