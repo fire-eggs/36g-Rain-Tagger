@@ -129,7 +129,7 @@ function generateTagPill(text, tag_id, tagtype, letter="x") {
     if (tagtype == 12) tagclass = "artist";
     if (tagtype == 14) tagclass = "franchise";
     if (tagtype ==99) tagclass = "newtext";   // special: user has typed new tag not in database
-    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}">${letter}</button></span>`;
+    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}>${letter}</button></span>`;
 }
 
 function renderInfoTags(container, selectedArray, className) {
@@ -441,6 +441,18 @@ function render_top_tags(tags) {
         .join(',');
 }
 
+function prevPage() {
+    if (current_page > 1) {
+        current_page--;
+        performSearch(true);
+    }
+}
+
+function nextPage() {
+    current_page++;
+    performSearch(true);
+}
+
 function renderResults(data) {
     /* update the gallery to show the current page's images */
     per_page = isNaN(per_page) ? DefaultPerPage : per_page;
@@ -522,29 +534,12 @@ function renderResults(data) {
             performSearch(true);
         }); });
         
-    document.getElementById('prev_page').addEventListener('click', () => {
-        if (current_page > 1) {
-            current_page--;
-            performSearch(true);
-        }
-    });
-
-    document.getElementById('next_page').addEventListener('click', () => {
-        current_page++;
-        performSearch(true);
-    });
+    document.getElementById('prev_page').addEventListener('click', () => prevPage());
+    document.getElementById('next_page').addEventListener('click', () => nextPage());
 
     // Issue 25: bottom next/prev buttons not working
-    document.getElementById('prev_page2').addEventListener('click', () => {
-        if (current_page > 1) {
-            current_page--;
-            performSearch(true);
-        }
-    });
-    document.getElementById('next_page2').addEventListener('click', () => {
-        current_page++;
-        performSearch(true);
-    });
+    document.getElementById('prev_page2').addEventListener('click', () => prevPage());
+    document.getElementById('next_page2').addEventListener('click', () => nextPage());
 }
 
 async function performTagSearchGuts(isPagination) {

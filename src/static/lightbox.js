@@ -84,6 +84,8 @@ document.addEventListener('keydown', e => {
   let dupesActive = document.getElementById("prevDupe") != null;
   if (e.key === 'ArrowRight' && dupesActive) nextDupe();
   if (e.key === 'ArrowLeft' && dupesActive) prevDupe();
+  if (e.key == 'ArrowRight') nextPage();
+  if (e.key == 'ArrowLeft') prevPage();
 });
 
 /* ---------- Zoom & Pan ---------- */
