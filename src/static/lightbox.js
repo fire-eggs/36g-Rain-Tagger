@@ -16,9 +16,18 @@ function openLightbox(img) {
     lightbox.classList.add('active');
     
     // make sure we start in 'fit' mode    
-    if (firsttime) lightboxImg.classList.toggle('fit');
+    if (firsttime) setState('fit');
 
     setInfoPaneImages([img.dataset["id"]]);
+}
+
+function setState(target) {
+    lightboxImg.classList.remove("fit");
+    lightboxImg.classList.remove("fill");
+    state = target;
+    if (state != null) {
+        lightboxImg.classList.add(target);
+    }
 }
 
 function nextImage() {
@@ -47,25 +56,13 @@ function prevImage() {
 }
 
 document.getElementById('fitBtn').onclick = () => {
-    lightboxImg.classList.remove("fit");
-    lightboxImg.classList.remove("fill");
-    if (state == "fill") { 
-        state = null;
-        return;
-    }
-    if (state == "fit") {
-        state = "fill";
-        lightboxImg.classList.add("fill");
-        return;
-    }
-    if (state == null) {
-        state = "fit";
-        lightboxImg.classList.add("fit");
-        return;
-    }
+    if (state == "fill") return setState(null);
+    if (state == "fit")  return setState("fill");
+    if (state == null )  return setState("fit");
 }
 
 document.getElementById('closeBtn').onclick = () => {
+    currImg = null; // TODO reset back to 'fit' for the next lightbox open, is this "correct"?
     lightbox.classList.remove('active');
     setInfoPaneImages([...selectedIds]);
 };
