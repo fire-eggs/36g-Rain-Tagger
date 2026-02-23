@@ -4,6 +4,7 @@ import os
 import logging
 from functools import lru_cache
 from time import perf_counter
+import subprocess
 
 from flask import (
     Blueprint,
@@ -234,7 +235,6 @@ def removeImage():
     current_app.db.remove_image(image_ids)
     return jsonify("")
 
-
 @lru_cache(maxsize=1)
 def get_all_tags():
     tags = current_app.db.get_tags()
@@ -386,6 +386,18 @@ def progress():
             yield f"data: {msg}\n\n"
 
     return Response(event_stream(), mimetype="text/event-stream")
+
+@bp.route('/api/open_image')
+def openImage():
+    image_id = request.args.get('p')
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return jsonify("")
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    print(file_path)
+    #subprocess.Popen([f"xdg-open {file_path}"]);
+    subprocess.call(["xdg-open", file_path])
+    return jsonify("")
     
 print('flask_app, starting')
 

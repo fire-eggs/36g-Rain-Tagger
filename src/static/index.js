@@ -196,9 +196,26 @@ function updateInfoPane() {
         if (infoPaneImages.length != 0) {
             applyTagChanges();
         }
-        // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
+        // TODO QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
+    
+    const p2 = document.getElementById("detail_panel2");
+    if (infoPaneImages.length == 1) {
+        html = `<h4>Image Id: ${infoPaneImages[0]}</h4><button>Delete</button><button id="open_me" data-id=${infoPaneImages[0]}>Open</button>`;
+    } else {
+        html = `<h4>Details only available when one image selected!</h4>`;
+    }        
+    p2.innerHTML = html;
+    if (infoPaneImages.length == 1) {
+        document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
+    }    
 }
+
+function openImage(image_id) {
+    console.log(image_id);
+    const resp = fetch(`/api/open_image?p=${image_id}`);
+}
+
 
 async function updateMRAtags() {
     // Update the most-recently-added tags list
@@ -616,6 +633,13 @@ function updateSelCount() {
     selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
 }
 
+function swap_divs() {
+    const p1 = document.getElementById("panel");
+    const p2 = document.getElementById("detail_panel2");
+    if (p1.style.display == "none") { p2.style.display="none"; p1.style.display="block"; }
+    else { p1.style.display="none"; p2.style.display="block"; }
+}
+
 /* ---------- Panel state ---------- */
 const COLLAPSED_WIDTH = 40;
 let expandedWidth = 320;
@@ -673,6 +697,7 @@ document.getElementById('addTextTag').addEventListener('click', () => addTagClic
 document.getElementById('clear_sel').addEventListener('click', () => deselectAll());
 document.getElementById('sel_all').addEventListener('click', () => selectAll());
 
+document.getElementById('swap_details').addEventListener('click', () => swap_divs());
 
 fetchAllTags();
 updateMRAtags();

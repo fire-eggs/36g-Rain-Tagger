@@ -67,7 +67,8 @@
         </div>
     </div><!-- row -->
     
-    <div class="details-panel" id="panel">
+    <div><button id="swap_details" class="swap-btn">Swap</button></div>
+    <div class="details-panel" id="panel" style="display:block; border: 2px dashed red">
         <div class="resize-handle" id="resizeHandle"></div>
         <div style="display: flex;">
             <div class="toggle-btn" id="togglePanel">⮞</div>
@@ -87,9 +88,10 @@
             </div>
         </div>
         <div id="MRUTags" class="info-MRU" style="border:1px solid green;"></div>
-        
     </div>
-
+    <div class="details-panel" id="detail_panel2" style="display:none; border: 2px dotted blue">
+    </div>
+    
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox">
       <div class="close-btn" id="closeBtn" title="Close Lightbox">&times;</div>
