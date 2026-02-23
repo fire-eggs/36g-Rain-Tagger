@@ -76,11 +76,11 @@ document.querySelector('.zone.right').onclick = nextImage;
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') lightbox.classList.remove('active');
   let lightboxOn = lightbox.classList.contains('active');  
-  if (e.key === 'ArrowRight' && lightboxOn) nextImage();
-  if (e.key === 'ArrowLeft' && lightboxOn) prevImage();
+  if (e.key === 'ArrowRight' && lightboxOn) return nextImage();
+  if (e.key === 'ArrowLeft' && lightboxOn) return prevImage();
   let dupesActive = document.getElementById("prevDupe") != null;
-  if (e.key === 'ArrowRight' && dupesActive) nextDupe();
-  if (e.key === 'ArrowLeft' && dupesActive) prevDupe();
+  if (e.key === 'ArrowRight' && dupesActive) return nextDupe();
+  if (e.key === 'ArrowLeft' && dupesActive) return prevDupe();
   if (e.key == 'ArrowRight') nextPage();
   if (e.key == 'ArrowLeft') prevPage();
 });

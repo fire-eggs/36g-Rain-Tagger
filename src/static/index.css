@@ -362,6 +362,15 @@ img.result.selected {
     min-height: 20vh;
 }
 
+.details-panel2 {
+    overflow-y: scroll:
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content auto;
+}
+
 /* ---------- Lightbox ---------- */
 .lightbox {
   position: fixed;

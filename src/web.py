@@ -5,6 +5,7 @@ import logging
 from functools import lru_cache
 from time import perf_counter
 import subprocess
+import exiftool
 
 from flask import (
     Blueprint,
@@ -387,6 +388,13 @@ def progress():
 
     return Response(event_stream(), mimetype="text/event-stream")
 
+def getPathForImageId(image_id):
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return None
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    return file_path
+
 @bp.route('/api/open_image')
 def openImage():
     image_id = request.args.get('p')
@@ -394,10 +402,20 @@ def openImage():
     if len(results) != 1:
         return jsonify("")
     file_path = os.path.join(results[0]["directory"], results[0]["filename"])
-    print(file_path)
+    #print(file_path)
     #subprocess.Popen([f"xdg-open {file_path}"]);
     subprocess.call(["xdg-open", file_path])
     return jsonify("")
+
+@bp.route('/api/get_meta')
+def getMetadata():
+    image_id = request.args.get('p')
+    file_path = getPathForImageId(image_id)
+    if file_path is None or not os.path.isfile(file_path):
+        return jsonify("")
+    with exiftool.ExifToolHelper(common_args=None) as et:
+        metadata = et.get_metadata([file_path])
+    return jsonify(metadata)
     
 print('flask_app, starting')
 

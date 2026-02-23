@@ -17,6 +17,7 @@ const pagination2_div = document.getElementById('pagination2');
 const info_div = document.getElementById('info');
 const addtag_input = document.getElementById('addtag_input');
 const addtag_suggestions = document.getElementById('addtag_suggestions');
+const info_div2 = document.getElementById('detail_panel2');
 
 // 'Filters'
 const f_tag = document.getElementById('f_tag');
@@ -121,7 +122,6 @@ function selectAll() {
     updateSelCount();
 }
 
-
 function generateTagPill(text, tag_id, tagtype, letter="x") {
     tagclass = "general";
     // TODO consider having the db return the tagclass string, not the number
@@ -183,7 +183,16 @@ async function applyTagChanges() {
     updateMRAtags();
 }
 
-function updateInfoPane() {
+const metaToFilter = ["APP14Flags0", "APP14Flags1", "CurrentIPTCDigest", "DocumentID", "IPTCDigest",
+                      "InstanceID","ImageSize","FileName","Directory","PhotoshopThumbnail",
+                      "NativeDigest","ThumbnailImage","ExifToolVersion","HistoryInstanceID",
+                      "DerivedFromDocumentID","DerivedFromInstanceID","DerivedFromOriginalDocumentID",
+                      "LegacyIPTCDigest","OriginalDocumentID","ProfileID"];
+function filterMetadata(element) {
+    return !metaToFilter.includes(element[0]);
+}
+
+async function updateInfoPane() {
 
     // updateInfoPane is invoked specifically because selection has changed; clear warning
     hideWarn();
@@ -200,13 +209,36 @@ function updateInfoPane() {
     });
     
     const p2 = document.getElementById("detail_panel2");
+    afile = null;
+    metadata = null;
     if (infoPaneImages.length == 1) {
-        html = `<h4>Image Id: ${infoPaneImages[0]}</h4><button>Delete</button><button id="open_me" data-id=${infoPaneImages[0]}>Open</button>`;
+        try {
+            const resp = await fetch(`/api/get_meta?p=${infoPaneImages[0]}`);
+            if (!resp.ok) throw new Error(`get_meta fail: ${resp.status}`);
+            metadata = await resp.json();
+            afile = metadata[0];
+            //console.log(afile);
+        } catch (err) { console.error(err); p2.innerHTML = `<h4>${err}</h4>`; return; }
+        
+        if (afile == undefined) {
+            html = `<h4>Image metadata unavailable</h4>`;
+        }
+        else {
+            html = `<h4>Image Id: ${infoPaneImages[0]}</h4><button>Delete</button><button id="open_me" data-id=${infoPaneImages[0]}>Open</button>`;
+            
+            str = `<dl>`;
+            str += Object.entries(afile || {})
+                .filter(filterMetadata)
+                .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+            str += `</dl>`;
+            
+            html += str;
+        }
     } else {
         html = `<h4>Details only available when one image selected!</h4>`;
     }        
     p2.innerHTML = html;
-    if (infoPaneImages.length == 1) {
+    if (infoPaneImages.length == 1 && afile != undefined) {
         document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
     }    
 }
@@ -215,7 +247,6 @@ function openImage(image_id) {
     console.log(image_id);
     const resp = fetch(`/api/open_image?p=${image_id}`);
 }
-
 
 async function updateMRAtags() {
     // Update the most-recently-added tags list
@@ -398,6 +429,7 @@ function renderCharacterTags() {
 function clearAllSelection() {
     selectedIds.clear();
     info_div.innerHTML = '';
+    info_div2.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
     updateSelCount();

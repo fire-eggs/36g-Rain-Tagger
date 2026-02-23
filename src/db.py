@@ -603,9 +603,9 @@ class ImageDb(SqliteDb):
         self._run_query(sql,commit=True)
         
     def get_image_path(self, imageid):
-        self.sql_echo = True
+        #self.sql_echo = True
         results = self._run_query("select D.directory, I.filename from image I join directory D on I.directory_id = D.directory_id where I.image_id = ?", params=(imageid,));
-        print(results)
-        self.sql_echo = False
+        #print(results)
+        #self.sql_echo = False
         return results
         
