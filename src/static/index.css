@@ -291,7 +291,7 @@ img.result.selected {
     justify-content: center;
     border: 1px solid #bbb;
     word-wrap: break-all;
-    overflow-wrap: break-all;
+    overflow-wrap: anywhere; /*break-all;*/
 }
 
 /* ---------- Details Panel ---------- */
