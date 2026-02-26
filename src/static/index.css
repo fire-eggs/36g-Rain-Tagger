@@ -329,6 +329,11 @@ img.result.selected {
   width: 8px;
   height: 100%;
   cursor: ew-resize;
+  
+    /* Prevent the browser's built-in drag from interfering */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .info-pane {
