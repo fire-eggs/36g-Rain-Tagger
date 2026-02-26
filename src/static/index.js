@@ -698,14 +698,20 @@ togglePanel.onclick = () => {
 /* ---------- Resize ---------- */
 let resizing = false;
 
+// TODO addEventListener
 resizeHandle.onmousedown = () => {
+  if (!isCollapsed) resizing = true;
+};
+// TODO addEventListener
+resizeHandle2.onmousedown = () => {
   if (!isCollapsed) resizing = true;
 };
 
 window.addEventListener('mousemove', e => {
   if (!resizing) return;
   expandedWidth = Math.max(200, window.innerWidth - e.clientX);
-  setPanelWidth(expandedWidth);});
+  setPanelWidth(expandedWidth);}
+);
 
 window.addEventListener('mouseup', () => resizing = false);
 
