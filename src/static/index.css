@@ -14,7 +14,7 @@ html {
     flex-direction: column;
     /* max-width: 100%; */
     width: 225px;
-    padding: 8px;
+    /* padding: 8px; */
     /* margin: 5px; */
     overflow-y:hidden;
     gap: 3px;
@@ -151,7 +151,7 @@ input[type=number]{
 }
 
 .gallery {
-    height: 100vh;
+    /*height: 100vh;*/
     overflow-y:scroll;
     /* background-color: orange; */
 }
@@ -302,7 +302,7 @@ img.result.selected {
   height: 100vh;
   background: #383838;
   border-left: 1px solid #ccc;
-  padding: 5px;
+  /*padding: 5px;*/
   display: flex;
   flex-direction: column;
   gap: 5px;
