@@ -1,13 +1,23 @@
             <div style="padding: 2px; display:flex; flex-direction: row; gap: 3px">
-                <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
+                <label for='per_page_input'>Per Page: </label>
+                <input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25' oninput="perPageInput()">
                 <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
-                <button id="go_input" class="flat">Go</button>
+                <button id="go_input" class="flat" onclick="performSearch(true)">Go</button>
                 <div id="progress-container">
                     <div id="progress-bar">0%</div>
                 </div>
                 
             </div>
-            <div id="pagination"></div>
+            <div id="pagination">
+                <button id="prev_page" class="flat" onclick="prevGalleryPage()" {% if current_page == 1 %}disabled{%endif%}>Previous</button>
+                Page: {{ current_page }} of {{ tot_pages }}, Per Page: {{ per_page }}
+                <button id="next_page" class="flat" onclick="nextGalleryPage()" {% if current_page == tot_pages %}disabled{%endif%}>Next</button>
+                {% if need_first %}<button class="pgbtn" type="button" onclick="pageClick(1)"> &lt;&lt; </button>{% endif %}
+                {% for pg in pgbtns %}
+                <button class="pgbtn" data-id="${blah}" type="button" {% if pg == current_page %}disabled{% endif %} onclick="pageClick({{pg}})"> {{ pg }} </button>
+                {% endfor %}
+                {% if need_last %} <button class="pgbtn" type="button" onclick="pageClick({{tot_pages}}"> &gt;&gt; </button>{% endif %}
+            </div>
             <div id="results">
             {% block content %}{% endblock %}
             </div>

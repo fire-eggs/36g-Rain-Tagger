@@ -97,6 +97,8 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     } catch (err) { console.error(err); }
     
     html += `</div>`;
+    
+    const results_div = document.getElementById('results');
     results_div.innerHTML = html;
 
     // for each button in grid [I would do this in renderTopGrid, except results_div doesn't have the contents yet]

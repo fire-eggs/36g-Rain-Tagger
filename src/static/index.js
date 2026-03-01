@@ -9,7 +9,6 @@ const general_tag_suggestions = document.getElementById('general_tag_suggestions
 const character_tag_suggestions = document.getElementById('character_tag_suggestions');
 const selected_general_tags_div = document.getElementById('selected_general_tags');
 const selected_character_tags_div = document.getElementById('selected_character_tags');
-const results_div = document.getElementById('results');
 const pagination_div = document.getElementById('pagination');
 const pagination2_div = document.getElementById('pagination2');
 
@@ -58,6 +57,11 @@ document.getElementById('go_input').addEventListener('click', () => {
 });
 */
 
+function perPageInput() {
+    let per_page_input = document.getElementById('per_page_input');
+    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
+}
+
 /* Warning icon, visible when changes not sent to database */
 const warning = document.getElementById('warn'); // TODO function
 const hideWarn = () => warning.style.display = "none";
@@ -103,6 +107,7 @@ function deselectAll() {
         return;
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
+    const results_div = document.getElementById('results');
     results_div.querySelectorAll('img').forEach( img => {
         let iid = img.dataset.id;
         if (selectedIds.has(iid))
@@ -392,9 +397,12 @@ function clearAll() {
     character_tag_suggestions.innerHTML = '';
     document.getElementById('file_tags_character').value = '';
     document.getElementById('file_tags_general').value = '';
-    results_div.innerHTML = '';
-    pagination_div.innerHTML = '';
-    pagination2_div.innerHTML = '';
+    const results_div = document.getElementById('results');
+    if (results_div != null) results_div.innerHTML = '';
+    const pagination_div = document.getElementById('pagination');
+    const pagination2_div = document.getElementById('pagination2');
+    if (pagination_div != null) pagination_div.innerHTML = '';
+    if (pagination2_div != null) pagination2_div.innerHTML = '';
 
     clearAllSelection();
 }
@@ -434,6 +442,23 @@ function render_top_tags(tags) {
         .join(',');
 }
 
+function prevGalleryPage() {
+    if (current_page > 1) {
+        current_page--;
+        performSearch(true);
+    }
+}
+    
+function nextGalleryPage() {
+    current_page++;
+    performSearch(true);
+}
+
+function pageClick(target) {
+    current_page = target;
+    performSearch(true);
+}
+
 function renderResults(data) {
     /* update the gallery to show the current page's images */
     per_page = isNaN(per_page) ? DefaultPerPage : per_page;
@@ -471,6 +496,7 @@ function renderResults(data) {
             html += `<div class="m">${r}</div>`;
         }
     }
+    const results_div = document.getElementById('results');
     results_div.innerHTML = html;
 
     results_div.querySelectorAll('img[data-id]').forEach(img => {
