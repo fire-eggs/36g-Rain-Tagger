@@ -16,7 +16,7 @@
                 {% for pg in pgbtns %}
                 <button class="pgbtn" data-id="${blah}" type="button" {% if pg == current_page %}disabled{% endif %} onclick="pageClick({{pg}})"> {{ pg }} </button>
                 {% endfor %}
-                {% if need_last %} <button class="pgbtn" type="button" onclick="pageClick({{tot_pages}}"> &gt;&gt; </button>{% endif %}
+                {% if need_last %} <button class="pgbtn" type="button" onclick="pageClick({{tot_pages}})"> &gt;&gt; </button>{% endif %}
             </div>
             <div id="results">
             {% block content %}{% endblock %}
