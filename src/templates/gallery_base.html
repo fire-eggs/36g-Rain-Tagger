@@ -3,6 +3,8 @@
                 <input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='{{ per_page }}' oninput="perPageInput()">
                 <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
                 <button id="go_input" class="flat" onclick="performSearch(true)">Go</button>
+                <button id="clear_sel" class="flat" style="margin-left:20px;" onclick="deselectAll()">Clear Sel</button>
+                <button id="sel_all" class="flat" onclick="selectAll()">Select All</button>
                 <div id="progress-container">
                     <div id="progress-bar">0%</div>
                 </div>

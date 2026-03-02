@@ -71,34 +71,39 @@ const showWarn = () => warning.style.display = "block";
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
-// TODO move to web.py / search_w_tags
-/*
-results_div.addEventListener('click', (e) => {
-    // User clicks on an image. Add or remove from the list of selected images.
-    const item = e.target.closest('img.result');
-    if (!item) {
-        //console.log("click fail");
-        return;
-    }
-    const id = item.dataset.id;
-
-    item.classList.toggle('selected');
-
-    if (selectedIds.has(id)) {
-      selectedIds.delete(id);
-    } else {
-      selectedIds.add(id);
-    }
-
+function updateSelection() {
     const selection = [...selectedIds];
-
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
-  });
-*/
+}
+
+function imgClick(image_id) {
+    const results_div = document.getElementById('results');
+    let which = results_div.querySelector(`[data-id="${image_id}"]`);
+    which.classList.toggle('selected');
+    if (selectedIds.has(image_id)) {
+      selectedIds.delete(image_id);
+    } else {
+      selectedIds.add(image_id);
+    }
+    updateSelection();
+}
+
 
 let active_info_tags = []; // tag_name and tag_id
 let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
+
+function selectAll() {
+    const results_div = document.getElementById('results');
+    results_div.querySelectorAll('img').forEach( img => {
+        let iid = img.dataset.id;
+        if (!selectedIds.has(iid)) {
+            img.classList.toggle('selected');
+            selectedIds.add(iid);
+        }
+    });
+    updateSelection();
+}
 
 function deselectAll() {
     /* Clear selection state for all images */
@@ -108,12 +113,15 @@ function deselectAll() {
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
     const results_div = document.getElementById('results');
+    selectedIds.forEach( imgid => {
+        results_div.querySelector(`[data-id="${imgid}"]`).classList.toggle('selected'); });
+/*        
     results_div.querySelectorAll('img').forEach( img => {
         let iid = img.dataset.id;
         if (selectedIds.has(iid))
             img.classList.toggle('selected');
     });
-
+*/
     clearAllSelection(); // NOTE: includes updateSelCount
 }
 

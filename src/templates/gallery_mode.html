@@ -7,6 +7,7 @@
             data-id="{{ image.image_id }}"
             loading="lazy"
             title="{{ image.image_path }}&#013;&#013; render_top_tags( {{ image.general }} )"
+            onclick="imgClick( {{ image.image_id }} )"
             ondblclick="openLightbox2( '/serve?p={{ image.image_url }}', {{ image.image_id }} )"
         >
     {% endfor %}
