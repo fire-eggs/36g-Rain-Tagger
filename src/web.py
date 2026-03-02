@@ -112,32 +112,18 @@ def search_w_file():
 
     return jsonify(app_process_images_from_path(img_path, page, per_page))
 
-def render_pagination(current_page, per_page, tot_found):
+def calc_pagination(current_page, per_page, tot_found):
     per_page = DefaultPerPage if math.isnan(per_page) else per_page
     per_page = DefaultPerPage if per_page < 1 else per_page
-    #per_page_input.value = per_page;
     
     tot_pages = math.ceil( tot_found / per_page );
     if (current_page > tot_pages):
         current_page = tot_pages;
-
-    #html = `
-    #    <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
-    #    Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
-    #    <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
-    #`;
     
     # pagination buttons. show a "go to first"; "go to last"; and five page buttons. current page button is disabled.
     start = 1 if current_page < 4 else current_page - 2;
     fin = tot_pages if tot_pages < start+4 else start+4;
     start = start if start < 5 else (fin-4 if fin - start < 4 else start);
-#    if (start !== 1)
-#        html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
-#    for (let blah= start; blah <= fin; blah++) {
-#        html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah === current_page ? 'disabled' : ''}> ${blah} </button>`;
-#    }
-#    if (fin !== tot_pages)
-#        html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
     return per_page, tot_pages, (start != 1), start, fin, (fin != tot_pages)
 
 @bp.route('/search_w_tags', methods=['GET'])
@@ -159,21 +145,14 @@ def search_w_tags():
 
     # TODO move results mapping out of db._fetch_results to here
     # TODO render_top_tags equivalent here
-    # TODO page / max_page / tot_found / pagination
     
     image_count = current_app.db.get_image_count()
-    per_page, tot_pages, need_first, start, fin, need_last = render_pagination(page, per_page, tot_count)
+    per_page, tot_pages, need_first, start, fin, need_last = calc_pagination(page, per_page, tot_count)
     pgbtns = []
     for i in range(start, fin+1):
         pgbtns.append(i)
     return render_template("gallery_mode.html", images=results, current_page=page, per_page=per_page, tot_pages=tot_pages,
                             need_first=(start != 1),need_last=(fin!=tot_pages), pgbtns=pgbtns)
-    
-#    return jsonify({
-#        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
-#        'results': results,
-#        'tot_found': tot_count,
-#    })
 
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
