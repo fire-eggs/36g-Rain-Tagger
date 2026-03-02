@@ -187,7 +187,7 @@ const metaToFilter = ["APP14Flags0", "APP14Flags1", "CurrentIPTCDigest", "Docume
                       "InstanceID","ImageSize","FileName","Directory","PhotoshopThumbnail",
                       "NativeDigest","ThumbnailImage","ExifToolVersion","HistoryInstanceID",
                       "DerivedFromDocumentID","DerivedFromInstanceID","DerivedFromOriginalDocumentID",
-                      "LegacyIPTCDigest","OriginalDocumentID","ProfileID"];
+                      "LegacyIPTCDigest","OriginalDocumentID","ProfileID","SourceFile"];
 function filterMetadata(element) {
     return !metaToFilter.includes(element[0]);
 }
