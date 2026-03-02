@@ -1,6 +1,6 @@
             <div style="padding: 2px; display:flex; flex-direction: row; gap: 3px">
                 <label for='per_page_input'>Per Page: </label>
-                <input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25' oninput="perPageInput()">
+                <input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='{{ per_page }}' oninput="perPageInput()">
                 <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
                 <button id="go_input" class="flat" onclick="performSearch(true)">Go</button>
                 <div id="progress-container">
