@@ -407,6 +407,21 @@ def openImage():
     subprocess.call(["xdg-open", file_path])
     return jsonify("")
 
+@bp.route('/api/del_image')
+def delImage():
+    image_id = request.args.get('p')
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return jsonify("")
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    if (not os.path.isfile(file_path)):
+        abort(410);
+    rmres = subprocess.run(["rm", "-f", file_path])
+    if (rmres.returncode != 0):
+        abort(423);
+    current_app.db.remove_image(image_id)
+    return jsonify("")
+
 @bp.route('/api/get_meta')
 def getMetadata():
     image_id = request.args.get('p')

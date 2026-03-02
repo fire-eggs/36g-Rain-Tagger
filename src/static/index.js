@@ -224,7 +224,10 @@ async function updateInfoPane() {
             html = `<h4>Image metadata unavailable</h4>`;
         }
         else {
-            html = `<h4>Image Id: ${infoPaneImages[0]}</h4><button>Delete</button><button id="open_me" data-id=${infoPaneImages[0]}>Open</button>`;
+            const filename = afile["FileName"];
+            const direct = afile["Directory"];
+            html = `<h4>${direct}<br>${filename}</h4>`;
+            html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
             
             str = `<dl>`;
             str += Object.entries(afile || {})
@@ -240,12 +243,18 @@ async function updateInfoPane() {
     p2.innerHTML = html;
     if (infoPaneImages.length == 1 && afile != undefined) {
         document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
+        document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0]));
     }    
 }
 
 function openImage(image_id) {
-    console.log(image_id);
     const resp = fetch(`/api/open_image?p=${image_id}`);
+}
+
+function deleteImage(image_id) {
+    // TODO delete confirmation
+    const resp = fetch(`/api/del_image?p=${image_id}`);
+    // TODO delete fail
 }
 
 async function updateMRAtags() {
