@@ -477,3 +477,29 @@ dl {
     text-align: center;
     color: white;
 }
+
+/* ------------------- word cloud */
+  #cloud {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--panel);
+    border-radius: 16px;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .word {
+    position: absolute;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: font-size 0.5s ease, transform 0.2s ease, color 0.2s ease, filter 0.2s ease;
+    transform: scale(var(--scale, 1));
+  }
+
+  .word:hover {
+    --scale: 1.15;
+    filter: brightness(1.2) saturate(1.1);
+    z-index: 10;
+  }

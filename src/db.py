@@ -609,3 +609,36 @@ class ImageDb(SqliteDb):
         #self.sql_echo = False
         return results
         
+    def get_cloud_tags(self, choice, tagtype):
+        
+        target = "general";
+        match choice:
+            case "S":
+                target = "sensitive";
+            case "X":
+                target = "explicit";
+            case "Q":
+                target = "questionable"
+                
+        view = "tags_for_images_prob60_v2"
+        match tagtype:  # future support for other tagtype values, e.g. "artist"
+            case "C":
+                view = "char_tags_for_images_prob60_v2"
+        
+        sql_string = f"select tag_name, count(image_id) as imgcount, tag_id from {view} where {target}"
+        sql_string += ''' >= 0.6
+                        group by 1
+                        order by imgcount desc
+                        limit 100'''
+        
+        results = self._run_query(sql_string)
+        
+        sql_string = f"select count(DISTINCT image_id) as tcount from {view} where {target} >= 0.6";
+        results2 = self._run_query(sql_string)
+        cnt = int(results2[0]["tcount"])
+        cnt = int(results[0]["imgcount"])
+        
+        outres = []
+        for res in results:
+            outres.append( ( res['tag_name'], res['tag_id'], int(res['imgcount']) / cnt ) )
+        return outres

@@ -736,6 +736,7 @@ document.getElementById('dash_button').addEventListener('click', () => performEx
 document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
 document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
+document.getElementById('cloud_btn').addEventListener('click', () => performCloud());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));

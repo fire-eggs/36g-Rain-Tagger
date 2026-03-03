@@ -141,15 +141,21 @@ def search_w_tags():
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
 
-    """ Future params:
-    - general or character tags
-    - probability level
-    - count
-    """
     choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
     choice2 = request.args.get('tagType') # general/character; future "artist"
 
     results = current_app.db.get_top_tags(choice1,choice2)
+    return jsonify({
+    'results': results,
+    })
+
+@bp.route('/cloud_tags', methods=['GET'])
+def get_cloud_tags():
+
+    choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
+    choice2 = request.args.get('tagType') # general/character; future "artist"
+
+    results = current_app.db.get_cloud_tags(choice1,choice2)
     return jsonify({
     'results': results,
     })
