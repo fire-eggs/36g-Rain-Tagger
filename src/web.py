@@ -6,6 +6,8 @@ from functools import lru_cache
 from time import perf_counter
 import subprocess
 import exiftool
+import base64
+import pickle
 
 from flask import (
     Blueprint,
@@ -437,7 +439,43 @@ def getMetadata():
     with exiftool.ExifToolHelper(common_args=None) as et:
         metadata = et.get_metadata([file_path])
     return jsonify(metadata)
+
+@bp.route('/random_search_w_tags', methods=['GET'])
+def random_search_w_tags():
+    filters = {k: clamp(request.args.get(k, type=float), 0.0, 0.0, 1.0) for k in get_filters()}
+    page = clamp(request.args.get('page', type=int), 0, 0, 100_000_000)
+    per_page = clamp(request.args.get('per_page', type=int), 25, 0, 1_000)
+
+    general_tag_ids = request.args.getlist('general_tag_ids', type=int)
+    character_tag_ids = request.args.getlist('character_tag_ids', type=int)
+
+    tags = general_tag_ids + character_tag_ids
+
+    randstateEnc = request.args.get('state')
+    restored_state = None
+    if len(randstateEnc) != 0:
+        decoded_state_bytes = base64.b64decode(randstateEnc)
+        restored_state = pickle.loads(decoded_state_bytes)
     
+    i1 = perf_counter()
+    results,tot_count,randstate = current_app.db.get_random_images_by_tag_ids(restored_state, tags,
+            filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], 
+            page, per_page) 
+    f1 = perf_counter() - i1
+
+    state_bytes = pickle.dumps(randstate)
+    encoded_state = base64.b64encode(state_bytes)    
+    randstateRet = encoded_state.decode('utf-8')
+
+    image_count = current_app.db.get_image_count()
+    return jsonify({
+        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
+        'results': results,
+        'tot_found': tot_count,
+        'randstate': randstateRet
+    })
+
+#===================================================================================    
 print('flask_app, starting')
 
 flask_app = Flask(__name__)

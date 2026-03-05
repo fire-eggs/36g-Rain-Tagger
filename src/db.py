@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 from functools import lru_cache
 import os
+import random
 
 from enums import Ratings, TagData, TagType
 from sqlitedb import SqliteDb, get_placeholders
@@ -236,22 +237,16 @@ class ImageDb(SqliteDb):
             return []
 
         phg = get_placeholders(image_ids)
-        rows = self.run_query_tuple(f'''
-            select
-                image_id, directory, filename, general, explicit, sensitive, questionable
-            from image join directory using (directory_id)
-            where image_id in ({phg})
+        rows = self.run_query_tuple(f'''select image_id, directory, filename, general, explicit, sensitive, questionable
+            from image join directory using (directory_id) where image_id in ({phg})
         ''', image_ids)
         if not rows:
             return []
 
         image_id_2_data = {row[0]: [row[1], row[2], row[3], row[4], row[5], row[6]] for row in rows}
 
-        tags = self.run_query_tuple(f"""
-            select image_tag.image_id, tag.tag_name, tag.tag_type_id, image_tag.prob
-            from image_tag
-                join tag on image_tag.tag_id = tag.tag_id
-            where image_tag.image_id in ({phg})""",
+        tags = self.run_query_tuple(f"""select image_tag.image_id, tag.tag_name, tag.tag_type_id, image_tag.prob from image_tag
+                join tag on image_tag.tag_id = tag.tag_id where image_tag.image_id in ({phg})""",
             [k for k in image_id_2_data]
         )
         if not tags:
@@ -642,3 +637,72 @@ class ImageDb(SqliteDb):
         for res in results:
             outres.append( ( res['tag_name'], res['tag_id'], int(res['imgcount']) / cnt ) )
         return outres
+    
+    def get_random_images_by_tag_ids(self, rand_state, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
+
+        randstateOut = None
+        if rand_state is None:
+            random.seed()
+            randstateOut = random.getstate()
+        else:
+            random.setstate(rand_state)
+            randstateOut = rand_state
+        
+        if tag_ids is None or len(tag_ids) == 0:
+            imgids = self.run_query_tuple(f"""
+                select image_tag.image_id
+                from image join image_tag using(image_id)
+                           join directory using(directory_id)
+                where
+                    general >= ?
+                    and sensitive >= ?
+                    and questionable >= ?
+                    and explicit >= ?
+                group by image_tag.image_id""",
+            params=[f_general, f_sensitive, f_questionable, f_explicit])
+        else:
+            imgids = self.run_query_tuple(f"""
+                select image_tag.image_id
+                from image join image_tag using(image_id)
+                           join directory using(directory_id)
+                where
+                    image_tag.tag_id in ({get_placeholders(tag_ids)})
+                    and image_tag.prob >= ?
+                    and general >= ?
+                    and sensitive >= ?
+                    and questionable >= ?
+                    and explicit >= ?
+                group by image_tag.image_id
+                having count(distinct image_tag.tag_id) = ?""",
+            params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)])
+            
+        if not imgids:
+            return [], 0
+            
+        image_ids = [row[0] for row in imgids]
+        imgmax = len(image_ids)
+        
+        # we've reset the rand gen, so skip past those images from earlier pages
+        skips = []
+        skip = (page - 1 ) * per_page
+        if (page != 1):        
+            while len(skips) < skip:
+                who = random.randint(0, imgmax-1)
+                if (image_ids[who] not in skips):
+                    skips.append( image_ids[who] )
+        
+        thispagelen = imgmax - skip
+        targetlen = thispagelen if thispagelen < per_page else per_page
+        targets = []
+        # random may get a duplicate id, or be out of range
+        while len(targets) < targetlen:    
+            try:
+                who = random.randint(0, imgmax-1)
+                if (image_ids[who] not in targets and image_ids[who] not in skips):
+                    targets.append( image_ids[who] )
+            except:
+                print(f"except: {who} {imgmax}")
+
+        results = self._fetch_results(targets)
+        return results,imgmax,randstateOut
+        

@@ -53,7 +53,7 @@ page_input.addEventListener('input', () => {
     current_page = parseInt(page_input.value) ?? 1;
 });
 document.getElementById('go_input').addEventListener('click', () => {
-    performSearch(true);
+    if (inRandom) performRandom(true); else performSearch(true);
 });
 
 /* Warning icon, visible when changes not sent to database */
@@ -502,13 +502,18 @@ function render_top_tags(tags) {
 function prevPage() {
     if (current_page > 1) {
         current_page--;
-        performSearch(true);
+        if (inRandom) performRandom(true); else performSearch(true);
     }
 }
 
 function nextPage() {
     current_page++;
-    performSearch(true);
+    if (inRandom) performRandom(true); else performSearch(true);
+}
+
+function targetPage(target) {
+    current_page = target;
+    if (inRandom) performRandom(true); else performSearch(true);
 }
 
 function renderResults(data) {
@@ -583,14 +588,12 @@ function renderResults(data) {
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
-            current_page = target;
-            performSearch(true);
+            targetPage(target);
         }); });
     pagination2_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
-            current_page = target;
-            performSearch(true);
+            targetPage(target);
         }); });
         
     document.getElementById('prev_page').addEventListener('click', () => prevPage());
@@ -633,6 +636,46 @@ async function performTagSearchGuts(isPagination) {
     
 }
 
+let randstate = "";
+let inRandom = false;
+
+async function performRandom(isPagination=false) {
+    const filters = {
+        tag: f_tag.value,
+        general: f_general.value,
+        sensitive: f_sensitive.value,
+        explicit: f_explicit.value,
+        questionable: f_questionable.value
+    };
+
+    inRandom = true;    
+    if (!isPagination) {
+        current_page = 1;
+        randstate = "";
+    }
+    
+    const generalIds = selected_general_tags.map(t => t.tag_id);
+    const characterIds = selected_character_tags.map(t => t.tag_id);
+
+    const params = new URLSearchParams();
+    generalIds.forEach(id => params.append('general_tag_ids', id));
+    characterIds.forEach(id => params.append('character_tag_ids', id));
+    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
+    params.append('page', current_page);
+    params.append('per_page', per_page);
+    params.append('state', randstate);
+    
+    try {
+        const resp = await fetch(`/random_search_w_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`Random search failed: ${resp.status}`);
+        let results = await resp.json();
+        randstate = results.randstate;
+        renderResults(results);
+    } catch (err) { console.error(err); }
+    
+    clearAllSelection();
+}
+
 async function performSearch(isPagination = false) {
     const filters = {
         tag: f_tag.value,
@@ -642,6 +685,7 @@ async function performSearch(isPagination = false) {
         questionable: f_questionable.value
     };
 
+    inRandom = false;
     if (!isPagination) current_page = 1;
 
     const file_input = document.getElementById('img');
@@ -737,6 +781,7 @@ document.getElementById('dupl_button').addEventListener('click', () => performRe
 document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
 document.getElementById('cloud_btn').addEventListener('click', () => performCloud());
+document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
