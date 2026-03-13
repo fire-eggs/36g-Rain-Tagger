@@ -1,0 +1,27 @@
+{% extends "gallery_base.html" %}
+
+{% block content %}
+    <h2>List Mode</h2>
+    {% for image in images %}
+        <div class="m row">
+            <img class="result" src="/serve?p={{ image.image_url }}" 
+                loading="lazy"
+                data-id="{{ image.image_id }}"
+                onclick="imgClick( {{ image.image_id }} )"
+                ondblclick="openLightbox2( '/serve?p={{ image.image_url }}', {{ image.image_id }} )"
+            />
+            <div class="outer_pills">
+                <p class="fn">{{ image.image_path }}</p>
+                <div class="pills">
+                    ${render_tags_text(result.rating, 'rating')}
+                    ${render_tags_text(result.general, 'general')}
+                    ${render_tags_text(result.character, 'character')}
+                    ${render_tags_text(result.future, 'general')}
+                    ${render_tags_text(result.franchise, 'franchise')}
+                    ${render_tags_text(result.artist, 'artist')}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+

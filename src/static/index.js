@@ -46,14 +46,8 @@ let per_page = DefaultPerPage;
 
 // TODO move to web.py / search_w_tags
 /* 
-per_page_input.addEventListener('input', () => {
-    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
-});
 page_input.addEventListener('input', () => {
     current_page = parseInt(page_input.value) ?? 1;
-});
-document.getElementById('go_input').addEventListener('click', () => {
-    performSearch(true);
 });
 */
 
@@ -427,9 +421,11 @@ display_button.addEventListener('click', () => {
         current_display_mode = "List";
         display_button.textContent = "Display: Gallery";
     }
-    if (window.lastSearchResults) {
+    performSearch(true);
+/*    if (window.lastSearchResults) {
         renderResults(window.lastSearchResults);
     }
+*/
 });
 
 function render_tags_text(tags, category) {
@@ -598,6 +594,7 @@ async function performTagSearchGuts(isPagination) {
     Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
     params.append('page', current_page);
     params.append('per_page', per_page);
+    params.append('mode', current_display_mode === "List" ? 'L' : 'G');
     
     fetch(`/search_w_tags?${params.toString()}`)
     .then(res => res.text())

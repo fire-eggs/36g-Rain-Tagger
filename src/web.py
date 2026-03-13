@@ -134,7 +134,8 @@ def search_w_tags():
 
     general_tag_ids = request.args.getlist('general_tag_ids', type=int)
     character_tag_ids = request.args.getlist('character_tag_ids', type=int)
-
+    mode = request.args.get('mode')
+    
     tags = general_tag_ids + character_tag_ids
     if not tags:
         return jsonify({'message': 'Try changing your filters.', 'result': [{}]})
@@ -144,16 +145,21 @@ def search_w_tags():
     f1 = perf_counter() - i1
 
     # TODO move results mapping out of db._fetch_results to here
-    # TODO render_top_tags equivalent here
     
     image_count = current_app.db.get_image_count()
     per_page, tot_pages, need_first, start, fin, need_last = calc_pagination(page, per_page, tot_count)
     pgbtns = []
     for i in range(start, fin+1):
         pgbtns.append(i)
-    return render_template("gallery_mode.html", images=results, current_page=page, per_page=per_page, tot_pages=tot_pages,
-                            need_first=(start != 1),need_last=(fin!=tot_pages), pgbtns=pgbtns)
-
+    if mode == 'L': # TODO values seem backward
+        # TODO render_top_tags equivalent here
+        return render_template("gallery_mode.html", images=results, current_page=page, per_page=per_page, tot_pages=tot_pages,
+                                need_first=(start != 1),need_last=(fin!=tot_pages), pgbtns=pgbtns)
+    else:
+        # TODO render_tags_text equivalent here
+        return render_template("list_mode.html", images=results, current_page=page, per_page=per_page, tot_pages=tot_pages,
+                                need_first=(start != 1),need_last=(fin!=tot_pages), pgbtns=pgbtns)
+        
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
 
