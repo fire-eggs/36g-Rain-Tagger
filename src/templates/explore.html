@@ -1,0 +1,18 @@
+<form name="blah" id="blahform">
+    <br>Tag Category:
+    <input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleExploreRadioChange()" {{ "checked" if tagOption == "G" }}>General</input>
+    <input type="radio" id="TTchar"    name="TTOptions" value="C" onChange="handleExploreRadioChange()" {{ "checked" if tagOption == "C" }}>Character</input>
+    <br>Sexiness Level:
+    <input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()" {{ "checked" if selExpOption == "G" }}>General</input>
+    <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleExploreRadioChange()" {{ "checked" if selExpOption == "S" }}>Sensitive</input>
+    <input type="radio" id="Rquest"   name="expOptions" value="Q" onChange="handleExploreRadioChange()" {{ "checked" if selExpOption == "Q" }}>Questionable</input>
+    <input type="radio" id="Rexpl"    name="expOptions" value="X" onChange="handleExploreRadioChange()" {{ "checked" if selExpOption == "X" }}>Explicit</input>    
+</form>
+
+<h4>Top 25 [50%+] {{tagtype}} tags where probability is >= 60% [{{expType}} images]</h4>
+<div class="grid-contain">
+    <div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>
+    {% for tag in tags %}
+        <div><button class="expbtn" onclick="performExploreLink( {{tag.tag_id}},'{{tag.tag_name}}')">{{tag.tag_name}}</div><div>{{tag.imgcount}}</div>
+    {% endfor %}
+</div>

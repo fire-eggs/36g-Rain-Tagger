@@ -170,12 +170,19 @@ def get_top_tags():
     """
     choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
     choice2 = request.args.get('tagType') # general/character; future "artist"
-
     results = current_app.db.get_top_tags(choice1,choice2)
-    return jsonify({
-    'results': results,
-    })
 
+    # TODO is there a more pythonic way to do this?
+    exptext = "General";
+    match choice1:
+        case "S":
+            exptext = "Sensitive";
+        case "X":
+            exptext = "Explicit";
+        case "Q":
+            exptext = "Questionable"
+
+    return render_template("explore.html", tags=results, tagtype = "Character" if choice2 == 'C' else "General", tagOption=choice2, selExpOption=choice1, expType=exptext)
 
 # @bp.route('/all_images', methods=['GET'])
 # def all_images():
