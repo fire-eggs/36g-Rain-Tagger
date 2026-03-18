@@ -494,7 +494,7 @@ function render_top_tags(tags) {
     keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
-        .filter(([k, v]) => v >= 0.7)
+        .filter(([k, v]) => v >= 0.6)
         .map(([k, v]) => `${k}`)
         .join(',');
 }
@@ -548,7 +548,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
+                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
