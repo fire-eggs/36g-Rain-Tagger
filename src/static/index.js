@@ -532,7 +532,7 @@ function renderResults(data) {
         if (current_display_mode === 'Gallery') {
             html += data.results.map(result => `
                 <div class="m row">
-                    <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
+                    <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
                     <div class="outer_pills">
                         <p class="fn">${result.image_path}</p>
                         <div class="pills">
