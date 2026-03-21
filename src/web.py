@@ -440,6 +440,27 @@ def getMetadata():
         metadata = et.get_metadata([file_path])
     return jsonify(metadata)
 
+@bp.route('/api/get_tree')
+def fetchTree():
+    rows = current_app.db.get_all_directories()
+    # turn each directory_id/directory to a dir-id/level/leaf
+    results = []
+    basePath = configs.root_path
+    if not basePath.endswith("/"):
+        basePath += "/";
+        
+    # Insure the root is the first in the list!
+    results.append((-1, configs.root_path, -1));  # TODO check for duplication
+    
+    # TODO deal with holes - currently 'category'
+    for row in rows:
+        reduced = row["directory"].removeprefix(basePath)
+        parts = reduced.split('/')
+        level = len(parts)
+        leaf = parts[-1]
+        results.append((level, leaf, row["directory_id"]))
+    return jsonify(results)
+    
 @bp.route('/random_search_w_tags', methods=['GET'])
 def random_search_w_tags():
     filters = {k: clamp(request.args.get(k, type=float), 0.0, 0.0, 1.0) for k in get_filters()}
@@ -474,6 +495,12 @@ def random_search_w_tags():
         'tot_found': tot_count,
         'randstate': randstateRet
     })
+
+@bp.route('/api/image_path', methods=['GET'])
+def getImagePath():
+    image_id = request.args.get('p')
+    results = getPathForImageId(image_id)
+    return jsonify(results)
 
 #===================================================================================    
 print('flask_app, starting')

@@ -603,6 +603,10 @@ class ImageDb(SqliteDb):
         #print(results)
         #self.sql_echo = False
         return results
+
+    def get_all_directories(self):
+        results = self._run_query("select directory_id, directory from directory order by directory COLLATE NOCASE ASC")
+        return results
         
     def get_cloud_tags(self, choice, tagtype):
         

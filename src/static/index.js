@@ -228,6 +228,7 @@ async function updateInfoPane() {
             const direct = afile["Directory"];
             html = `<h4>${direct}<br>${filename}</h4>`;
             html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
+            html += `<button id="move_me" data-id=${infoPaneImages[0]}>Move</button>`;
             
             str = `<dl>`;
             str += Object.entries(afile || {})
@@ -244,6 +245,7 @@ async function updateInfoPane() {
     if (infoPaneImages.length == 1 && afile != undefined) {
         document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
         document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0]));
+        document.getElementById("move_me").addEventListener('click', () => moveImage(infoPaneImages[0]));
     }    
 }
 
@@ -256,6 +258,11 @@ function deleteImage(image_id) {
     const resp = fetch(`/api/del_image?p=${image_id}`);
     // TODO delete fail
 }
+
+function moveImage(image_id) {
+    openFoldTree(image_id);
+}
+
 
 async function updateMRAtags() {
     // Update the most-recently-added tags list
