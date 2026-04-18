@@ -111,6 +111,14 @@
     <!-- Tag manager -->
     <div class="tagEdit" id="tagManager">
         <div class="close-btn" id="TEcloseBtn" title="Close Tag Editor">&times;</div>
+        <input id="edit_tags_magic" maxlength="200" minlength="0" style="display: none;" type="text" value="">
+        <div style="display:flex; flex-direction: column;  position: fixed; top:100px;">
+            <div class="search">
+                <input id="edit_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
+                <div id="edit_tag_suggestions"></div>
+                <div id="selected_edit_tags"></div>
+            </div>
+        </div>
     </div>
 
     <script src="/static/index.js"></script>
