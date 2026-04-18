@@ -4,6 +4,10 @@ import os
 import logging
 from functools import lru_cache
 from time import perf_counter
+import subprocess
+import exiftool
+import base64
+import pickle
 
 from flask import (
     Blueprint,
@@ -14,6 +18,8 @@ from flask import (
     render_template,
     request,
     send_file,
+    Response,
+    session,
 )
 from PIL import Image
 from werkzeug.datastructures import FileStorage
@@ -32,7 +38,10 @@ from utils import clamp, get_sha256_from_bytesio, make_path
 
 if configs.allow_file_upload_search:
     from processor import process_images_from_imgs
+import threading
+import queue
 
+progress_queue = queue.Queue()
 
 bp = Blueprint('36g', __name__)
 
@@ -134,15 +143,21 @@ def search_w_tags():
 @bp.route('/top_tags', methods=['GET'])
 def get_top_tags():
 
-    """ Future params:
-    - general or character tags
-    - probability level
-    - count
-    """
     choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
     choice2 = request.args.get('tagType') # general/character; future "artist"
 
     results = current_app.db.get_top_tags(choice1,choice2)
+    return jsonify({
+    'results': results,
+    })
+
+@bp.route('/cloud_tags', methods=['GET'])
+def get_cloud_tags():
+
+    choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
+    choice2 = request.args.get('tagType') # general/character; future "artist"
+
+    results = current_app.db.get_cloud_tags(choice1,choice2)
     return jsonify({
     'results': results,
     })
@@ -229,7 +244,6 @@ def removeImage():
     current_app.db.remove_image(image_ids)
     return jsonify("")
 
-
 @lru_cache(maxsize=1)
 def get_all_tags():
     tags = current_app.db.get_tags()
@@ -270,9 +284,42 @@ def serve():
 def dupl_images():
     # Identify moved images: "duplicates" based on sha256 values.
     # NOTE: essentially requires sha256 values to have been calculated by the tagger.
+    # NOTE: also used by 'dupl auto del' to fetch initial AND final results.
     # TODO: currently assumes only pairs of duplicates, will behave badly if more than 2 matches occur
-    return current_app.db.get_sha_dupls()
+    res = current_app.db.get_sha_dupls()
+    return res
 
+def auto_del_dupl_task(dupls):
+    with flask_app.app_context():
+        newdupls = []
+        index = 0
+        maxcount = len(dupls)
+        while index < maxcount:
+            
+            file1ok = os.path.isfile(dupls[index]["image_path"])
+            file2ok = os.path.isfile(dupls[index+1]["image_path"])
+            if dupls[index]["tags"] == dupls[index+1]["tags"]:
+                todelete = dupls[index]["image_id"] if file2ok else dupls[index+1]["image_id"]
+                current_app.db.remove_image(todelete)
+            else:
+                # TODO unnecessary?
+                newdupls.append(dupls[index])
+                newdupls.append(dupls[index+1])
+                
+            index += 2
+
+            if (index % 50 == 0):            
+                progress = int((index / maxcount) * 100)
+                progress_queue.put(progress)
+            
+            if index < len(dupls) and dupls[index]["sha256"] == dupls[index-1]["sha256"]:
+                print("dupl_images_auto_delete: More than two duplications encountered, punting")
+                progress_queue.put("DONE")
+                return
+                
+    progress_queue.put("DONE")
+    
+    
 @bp.route('/dupl_images_auto_del')
 def dupl_images_auto_delete():
     # Reconcile moved images. 
@@ -284,31 +331,12 @@ def dupl_images_auto_delete():
     
     # TODO: because this queries the file system, can take a while, needs progress bar
     # TODO: currently assumes only pairs of duplicates, will behave badly if more than 2 matches occur
-    
-    dupls = current_app.db.get_sha_dupls()
-    
-    newdupls = []
-    
-    #print(dupls[0])
-    index = 0
-    while index < len(dupls):
-        
-        file1ok = os.path.isfile(dupls[index]["image_path"])
-        file2ok = os.path.isfile(dupls[index+1]["image_path"])
-        if dupls[index]["tags"] == dupls[index+1]["tags"]:
-            todelete = dupls[index]["image_id"] if file2ok else dupls[index+1]["image_id"]
-            #print(f"deleting {index} {todelete} {file1ok} {file2ok}")
-            current_app.db.remove_image(todelete)
-        else:
-            newdupls.append(dupls[index])
-            newdupls.append(dupls[index+1])
-            
-        index += 2
-        if index < len(dupls) and dupls[index]["sha256"] == dupls[index-1]["sha256"]:
-            print("dupl_images_auto_delete: More than two duplications encountered, punting")
-            return newdupls
 
-    return newdupls
+    dupls = current_app.db.get_sha_dupls()
+
+    thread = threading.Thread(target=auto_del_dupl_task, args=([dupls]))
+    thread.start()
+    return jsonify({"status": "started"})
 
 @bp.route('/keep_tags')
 def keep_tags():
@@ -317,36 +345,137 @@ def keep_tags():
     current_app.db.keep_tags(src, dst)    
     return jsonify("")
 
-@bp.route('/remove_deleted')
-def remove_deleted():
-    current_app.db.clear_mark()
-    rp = configs.root_path
-    i = 0
-    batch = []
-    sql = "update image set mark = 1 where directory_id = ? and filename=?"
-    for currdir, _, files in os.walk(rp):
-        dirid = current_app.db.mark_dir(currdir)
-        if len(dirid) < 1:
-            continue # directory not in database, new, can't be missing
-        for file in files:
-            batch.append((dirid[0]["directory_id"], file))
-            #current_app.db.mark_file(dirid[0]["directory_id"], file)
-            i += 1
-            if i % 1000 == 0:
-                print(i)
-                current_app.db.mark_fileB(batch)
-                #current_app.db.run_query_many(sql, params=batch, commit=True)
-                batch.clear()
+def remove_deleted_task():
+    # potentially long-running task: remove deleted files from the database
+    with flask_app.app_context():
+        maxcount = current_app.db.get_image_count()
+        current_app.db.clear_mark()
+        rp = configs.root_path
+        i = 0
+        batch = []
+        sql = "update image set mark = 1 where directory_id = ? and filename=?"
+        for currdir, _, files in os.walk(rp):
+            dirid = current_app.db.mark_dir(currdir)
+            if len(dirid) < 1:
+                continue # directory not in database, new, can't be missing
+            for file in files:
+                batch.append((dirid[0]["directory_id"], file))
+                #current_app.db.mark_file(dirid[0]["directory_id"], file)
+                i += 1
+                if i % 1000 == 0:
+                    progress = int((i / maxcount) * 100)
+                    progress_queue.put(progress)
+                    #print(i)
+                    current_app.db.mark_fileB(batch)
+                    #current_app.db.run_query_many(sql, params=batch, commit=True)
+                    batch.clear()
 
-    print(i)
-    if batch:
-        current_app.db.mark_fileB(batch)
-        #current_app.db.run_query_many(sql_string, params=batch, commit=True)
+        #print(i)
+        if batch:
+            current_app.db.mark_fileB(batch)
+            #current_app.db.run_query_many(sql_string, params=batch, commit=True)
+        
+        current_app.db.del_unmarked()
+    progress_queue.put("DONE")
     
-    current_app.db.del_unmarked()
-    
+@bp.route('/remove_deleted', methods=["POST"])
+def remove_deleted():
+    thread = threading.Thread(target=remove_deleted_task)
+    thread.start()
+    return jsonify({"status": "started"})
+
+@bp.route('/progress')
+def progress():
+    def event_stream():
+        while True:
+            msg = progress_queue.get()
+            if msg == "DONE":
+                yield "event: done\ndata: complete\n\n"
+                break
+            yield f"data: {msg}\n\n"
+
+    return Response(event_stream(), mimetype="text/event-stream")
+
+def getPathForImageId(image_id):
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return None
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    return file_path
+
+@bp.route('/api/open_image')
+def openImage():
+    image_id = request.args.get('p')
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return jsonify("")
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    #print(file_path)
+    #subprocess.Popen([f"xdg-open {file_path}"]);
+    subprocess.call(["xdg-open", file_path])
     return jsonify("")
+
+@bp.route('/api/del_image')
+def delImage():
+    image_id = request.args.get('p')
+    results = current_app.db.get_image_path(image_id)
+    if len(results) != 1:
+        return jsonify("")
+    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
+    if (not os.path.isfile(file_path)):
+        abort(410);
+    rmres = subprocess.run(["rm", "-f", file_path])
+    if (rmres.returncode != 0):
+        abort(423);
+    current_app.db.remove_image(image_id)
+    return jsonify("")
+
+@bp.route('/api/get_meta')
+def getMetadata():
+    image_id = request.args.get('p')
+    file_path = getPathForImageId(image_id)
+    if file_path is None or not os.path.isfile(file_path):
+        return jsonify("")
+    with exiftool.ExifToolHelper(common_args=None) as et:
+        metadata = et.get_metadata([file_path])
+    return jsonify(metadata)
+
+@bp.route('/random_search_w_tags', methods=['GET'])
+def random_search_w_tags():
+    filters = {k: clamp(request.args.get(k, type=float), 0.0, 0.0, 1.0) for k in get_filters()}
+    page = clamp(request.args.get('page', type=int), 0, 0, 100_000_000)
+    per_page = clamp(request.args.get('per_page', type=int), 25, 0, 1_000)
+
+    general_tag_ids = request.args.getlist('general_tag_ids', type=int)
+    character_tag_ids = request.args.getlist('character_tag_ids', type=int)
+
+    tags = general_tag_ids + character_tag_ids
+
+    randstateEnc = request.args.get('state')
+    restored_state = None
+    if len(randstateEnc) != 0:
+        decoded_state_bytes = base64.b64decode(randstateEnc)
+        restored_state = pickle.loads(decoded_state_bytes)
     
+    i1 = perf_counter()
+    results,tot_count,randstate = current_app.db.get_random_images_by_tag_ids(restored_state, tags,
+            filters['f_tag'], filters['f_general'], filters['f_sensitive'], filters['f_explicit'], filters['f_questionable'], 
+            page, per_page) 
+    f1 = perf_counter() - i1
+
+    state_bytes = pickle.dumps(randstate)
+    encoded_state = base64.b64encode(state_bytes)    
+    randstateRet = encoded_state.decode('utf-8')
+
+    image_count = current_app.db.get_image_count()
+    return jsonify({
+        'message': f'We searched the tags of {image_count:,} images in {f1:.3f}s and found {tot_count:,} results.',
+        'results': results,
+        'tot_found': tot_count,
+        'randstate': randstateRet
+    })
+
+#===================================================================================    
 print('flask_app, starting')
 
 flask_app = Flask(__name__)
@@ -370,5 +499,5 @@ print('flask_app, created')
 if __name__=='__main__':
     print('flask_app.run, starting')
     # gunicorn -b 127.0.0.1:8000 -w 1 --threads 1 web:flask_app
-    flask_app.run(host=configs.host, port=configs.port, debug=configs.debug)
+    flask_app.run(host=configs.host, port=configs.port, debug=configs.debug, threaded=True)
     print('flask_app.run, exiting')

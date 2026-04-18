@@ -39,15 +39,33 @@ function highlightStringDiff(str1, str2) {
                 // missing from tags1, do nothing
                 index2 += 1;
             } else if (tags1[index1+1] === tags2[index2]) {
+                // missing from tags2, mark for tags1
                 outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
                 index1 += 1;
             } else {
+                // Issue 57: tags at current pos are different from each other, was being thrown away
+                // TODO will fail if the next tag is different
+                if (tags1[index1+1] === tags2[index2+1]) {
+                  outtags.push('<span style="background-color: #000080">' + tags1[index1] + "</span> ");
+                }
                 index1 += 1;
                 index2 += 1;
             }
         }
     }
     return outtags.join(" ");
+}
+
+function nextDupe() {
+    dupe_index += 2;
+    if (dupe_index >= Object.keys(dupes_list).length) return;
+    reconcileOneDupe();
+}
+
+function prevDupe() {
+    if (dupe_index < 2) return;
+    dupe_index -= 2;
+    reconcileOneDupe();
 }
 
 function reconcileOneDupe() {
@@ -61,13 +79,8 @@ function reconcileOneDupe() {
     let img1 = dupes_list[dupe_index];
     let img2 = dupes_list[dupe_index+1];
 
-    // Really long paths need to be explicitly split for wrapping. NOTE: assumes really long paths have multiple '+' signs to split on! 
     let outp1 = img1.image_path;
-    if (img1.image_path.length > 100)
-      outp1 = img1.image_path.replaceAll("+", " +");
     let outp2 = img2.image_path;
-    if (img2.image_path.length > 100)
-      outp2 = img2.image_path.replaceAll("+", " +");
       
     html += `<div class="dupes_grid"><div class="dupes_cell">`;
     html += `<img class="result" data-id="${img1.image_id}" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/>`;
@@ -83,12 +96,27 @@ function reconcileOneDupe() {
     let bar = highlightStringDiff(img2.tags, img1.tags); // diffs between tags2 and tags1
     html += `<p>${foo}</p></div><div class="dupes_cell"><p>${bar}</p></div>`;
 
-    // display buttons
-    html += `<div class="dupes_cell"><button id="nukeLeft">Remove from database</button><button id="tagsLeft">Keep these tags</button></div>`;
-    html += `<div class="dupes_cell"><button id="nukeRight">Remove from database</button><button id="tagsRight">Keep these tags</button></div>`;
+    html += `</div>`; // end of grid
     
-    html += `<div class="dupes_cell"><button id="prevDupe">Previous</button><button id="nextDupe">Next</button></div>`;
+    // display buttons at fixed location [bottom] so they don't move around as the user moves through dupe pairs
+    html += `<div style="position:absolute; bottom:10px;">`;
+    // TODO this is *almost* the way I want it, ideally the button pairs should be centered horizontally
+    html += `
+    <div style="display: table; table-layout:fixed; width:70%;">
+        <div style="display: table-row">
+            <div style="display: table-cell;">
+                <button id="nukeLeft">Remove from database</button><button id="tagsLeft">Keep these tags</button>        
+            </div>
+            <div style="display: table-cell;">
+                <button id="nukeRight">Remove from database</button><button id="tagsRight">Keep these tags</button>
+            </div>
+        </div>
+    </div>
+    `;
 
+    html += `<div><button id="prevDupe">Previous</button><button id="nextDupe">Next</button></div>`;
+    html += `</div>`;
+    
     results_div.innerHTML = html;
 
     // prev-dupe on click: update dupe_index, call reconcileOneDupe
@@ -100,14 +128,8 @@ function reconcileOneDupe() {
     if (num >= num2)
         nextbtn.disabled = true;
 
-    prevbtn.addEventListener('click', () => {
-        dupe_index -= 2;
-        reconcileOneDupe();
-    });
-    nextbtn.addEventListener('click', () => {
-        dupe_index += 2;
-        reconcileOneDupe();
-    });
+    prevbtn.addEventListener('click', () => prevDupe());
+    nextbtn.addEventListener('click', () => nextDupe());
 
     // Nuke buttons
     let nukeLbtn = document.getElementById("nukeLeft");
@@ -130,22 +152,18 @@ function reconcileOneDupe() {
     });
 }
 
-async function performReconcileDupes(autoDel) {
-    // clear
-    clearAll();
+async function finalizeDupesAuto(eventSource) {
+    // When the 'auto delete' part is done, the database contains the
+    // remaining dupes, fetched the same as 'reconcile dupes' does.
+    progressBar.style.width = "100%";
+    progressBar.textContent = "Done!";
+    eventSource.close();
 
-    // get the duplicated files
-    try {
-        let resp = null;
-        if (autoDel) {
-            resp = await fetch(`/dupl_images_auto_del`);
-        } else {
-            resp = await fetch(`/dupl_images`);
-        }
-        if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
-        dupes_list = await resp.json();
-    } catch (err) { console.error(err); }
-
+    // TODO error handling    
+    let resp = await fetch(`/dupl_images`);
+    if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
+    dupes_list = await resp.json();
+    
     // if none, post a message and return
     let num = Object.keys(dupes_list).length;
     if (num < 1) {
@@ -158,10 +176,68 @@ async function performReconcileDupes(autoDel) {
     reconcileOneDupe();
 }
 
-async function performRemoveDeleted() {
+async function performReconcileDupesAuto() {
+    // This is a potentially long task, so thread it with progress.
+    clearAll();
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
+
+    // TODO error handling
+    await fetch(`/dupl_images_auto_del`);    
+
+    const eventSource = new EventSource("/progress");
+
+    eventSource.onmessage = (event) => {
+        const progress = event.data;
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+    };
+
+    eventSource.addEventListener("done", () => finalizeDupesAuto(eventSource));
+}
+
+async function performReconcileDupes() {
+    
+    // clear
+    clearAll();
+
+    // get the duplicated files
     try {
-        let resp = await fetch('/remove_deleted');
-        if (!resp.ok) throw new Error(`remove delete failed: ${resp.status}`);
+        let resp = await fetch(`/dupl_images`);
+        if (!resp.ok) throw new Error(`dupl_images failed: ${resp.status}`);
+        dupes_list = await resp.json();
     } catch (err) { console.error(err); }
+    
+    let num = Object.keys(dupes_list).length;
+    if (num < 1) {
+        results_div.innerHTML = `<h3>No duplicate images found.</h3>`;
+        return;
+    }
+
+    // TODO assuming pairs; need to handle more than 2 dupes
+    dupe_index = 0;
+    reconcileOneDupe();
+}
+
+const progressBar = document.getElementById("progress-bar");
+async function performRemoveDeleted() {
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
+
+    await fetch("/remove_deleted", { method: "POST" });
+    
+    const eventSource = new EventSource("/progress");
+
+    eventSource.onmessage = (event) => {
+        const progress = event.data;
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+    };
+
+    eventSource.addEventListener("done", () => {
+        progressBar.style.width = "100%";
+        progressBar.textContent = "Done!";
+        eventSource.close();
+    });
 }
 

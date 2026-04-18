@@ -39,7 +39,7 @@ class TaggerConfigs:
 
         self.commit_sha256 = configs.get('commit_sha256', True)
 
-        valid_extensions = configs.get('valid_extensions', 'png,jpeg,jpg,gif,webp,avif')
+        valid_extensions = configs.get('valid_extensions', 'png,jpeg,jpg,gif,webp,avif,apng,tif,tiff')
         self.valid_extensions = tuple([v.strip() for v in valid_extensions.split(',')])
         assert self.valid_extensions, self.valid_extensions
         for v in self.valid_extensions: Ext[v]

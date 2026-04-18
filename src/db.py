@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 from functools import lru_cache
 import os
+import random
 
 from enums import Ratings, TagData, TagType
 from sqlitedb import SqliteDb, get_placeholders
@@ -236,29 +237,24 @@ class ImageDb(SqliteDb):
             return []
 
         phg = get_placeholders(image_ids)
-        rows = self.run_query_tuple(f'''
-            select
-                image_id, directory, filename, general, explicit, sensitive, questionable
-            from image join directory using (directory_id)
-            where image_id in ({phg})
+        rows = self.run_query_tuple(f'''select image_id, directory, filename, general, explicit, sensitive, questionable
+            from image join directory using (directory_id) where image_id in ({phg})
         ''', image_ids)
         if not rows:
             return []
 
         image_id_2_data = {row[0]: [row[1], row[2], row[3], row[4], row[5], row[6]] for row in rows}
 
-        tags = self.run_query_tuple(f"""
-            select image_tag.image_id, tag.tag_name, tag.tag_type_id, image_tag.prob
-            from image_tag
-                join tag on image_tag.tag_id = tag.tag_id
-            where image_tag.image_id in ({phg})""",
+        tags = self.run_query_tuple(f"""select image_tag.image_id, tag.tag_name, tag.tag_type_id, image_tag.prob from image_tag
+                join tag on image_tag.tag_id = tag.tag_id where image_tag.image_id in ({phg})""",
             [k for k in image_id_2_data]
         )
         if not tags:
             return []
 
         results = {}
-        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future'}
+        tag_type_map = {TagType.rating.value: 'rating', TagType.general.value: 'general', TagType.character.value: 'character', TagType.future.value: 'future',
+                        TagType.artist.value: 'artist', TagType.franchise.value: 'franchise' }
         for image_id, (directory, filename, general, explicit, sensitive, questionable) in image_id_2_data.items():
             results[image_id] = {
                 'image_id': image_id,
@@ -267,6 +263,8 @@ class ImageDb(SqliteDb):
                 'general': {},
                 'character': {},
                 'future': {},
+                'artist': {},
+                'franchise': {},
             }
 
         for image_id, tag_name, tag_type_id, prob in tags:
@@ -347,6 +345,7 @@ class ImageDb(SqliteDb):
         total_rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
+                       join directory using(directory_id)
             where
                 image_tag.tag_id in ({get_placeholders(tag_ids)})
                 and image_tag.prob >= ?
@@ -356,7 +355,7 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by image.directory_id""",
+            order by directory.directory""",
 #            order by max(image_tag.prob) desc""",
             params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)]
         )
@@ -370,6 +369,7 @@ class ImageDb(SqliteDb):
         rows = self.run_query_tuple(f"""
             select image_tag.image_id
             from image join image_tag using(image_id)
+                       join directory using(directory_id)
             where
                 image_tag.tag_id in ({get_placeholders(tag_ids)})
                 and image_tag.prob >= ?
@@ -379,7 +379,7 @@ class ImageDb(SqliteDb):
                 and explicit >= ?
             group by image_tag.image_id
             having count(distinct image_tag.tag_id) = ?
-            order by image.directory_id
+            order by directory.directory
             limit ?
             offset ?""",
 #            order by max(image_tag.prob) desc
@@ -451,7 +451,7 @@ class ImageDb(SqliteDb):
         for imgid in image_ids:
             # ignoring tag class
             #sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob} and t.tag_type_id={tagtype}"
-            sql += f"select t.tag_id, t.tag_name from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
+            sql += f"select t.tag_id, t.tag_name, t.tag_type_id from tag t join image_tag it on t.tag_id=it.tag_id where it.image_id={imgid} and it.prob >={prob}"
             if curr != count: # no extra intersect
                 sql += " INTERSECT "
             curr += 1
@@ -464,7 +464,11 @@ class ImageDb(SqliteDb):
         return results
 
     def get_mra_tags(self):
-        sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" # TODO hard-coded limit
+        # return the list of most-recently-added tags
+        #sql = "select tag_name, tag_id from mra_tags order by updated_at desc limit 20" 
+        # TODO hard-coded limit        
+        sql = "select m.tag_name, m.tag_id, t.tag_type_id from mra_tags m join tag t on t.tag_id = m.tag_id order by updated_at desc limit 20"
+
         results = self._run_query(sql)
         return results
 
@@ -593,4 +597,112 @@ class ImageDb(SqliteDb):
         sql = "delete from directory where mark=0"
         self._run_query(sql,commit=True)
         
+    def get_image_path(self, imageid):
+        #self.sql_echo = True
+        results = self._run_query("select D.directory, I.filename from image I join directory D on I.directory_id = D.directory_id where I.image_id = ?", params=(imageid,));
+        #print(results)
+        #self.sql_echo = False
+        return results
+        
+    def get_cloud_tags(self, choice, tagtype):
+        
+        target = "general";
+        match choice:
+            case "S":
+                target = "sensitive";
+            case "X":
+                target = "explicit";
+            case "Q":
+                target = "questionable"
+                
+        view = "tags_for_images_prob60_v2"
+        match tagtype:  # future support for other tagtype values, e.g. "artist"
+            case "C":
+                view = "char_tags_for_images_prob60_v2"
+        
+        sql_string = f"select tag_name, count(image_id) as imgcount, tag_id from {view} where {target}"
+        sql_string += ''' >= 0.6
+                        group by 1
+                        order by imgcount desc
+                        limit 100'''
+        
+        results = self._run_query(sql_string)
+        
+        sql_string = f"select count(DISTINCT image_id) as tcount from {view} where {target} >= 0.6";
+        results2 = self._run_query(sql_string)
+        cnt = int(results2[0]["tcount"])
+        cnt = int(results[0]["imgcount"])
+        
+        outres = []
+        for res in results:
+            outres.append( ( res['tag_name'], res['tag_id'], int(res['imgcount']) / cnt ) )
+        return outres
+    
+    def get_random_images_by_tag_ids(self, rand_state, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
+
+        randstateOut = None
+        if rand_state is None:
+            random.seed()
+            randstateOut = random.getstate()
+        else:
+            random.setstate(rand_state)
+            randstateOut = rand_state
+        
+        if tag_ids is None or len(tag_ids) == 0:
+            imgids = self.run_query_tuple(f"""
+                select image_tag.image_id
+                from image join image_tag using(image_id)
+                           join directory using(directory_id)
+                where
+                    general >= ?
+                    and sensitive >= ?
+                    and questionable >= ?
+                    and explicit >= ?
+                group by image_tag.image_id""",
+            params=[f_general, f_sensitive, f_questionable, f_explicit])
+        else:
+            imgids = self.run_query_tuple(f"""
+                select image_tag.image_id
+                from image join image_tag using(image_id)
+                           join directory using(directory_id)
+                where
+                    image_tag.tag_id in ({get_placeholders(tag_ids)})
+                    and image_tag.prob >= ?
+                    and general >= ?
+                    and sensitive >= ?
+                    and questionable >= ?
+                    and explicit >= ?
+                group by image_tag.image_id
+                having count(distinct image_tag.tag_id) = ?""",
+            params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)])
+            
+        if not imgids:
+            return [], 0
+            
+        image_ids = [row[0] for row in imgids]
+        imgmax = len(image_ids)
+        
+        # we've reset the rand gen, so skip past those images from earlier pages
+        skips = []
+        skip = (page - 1 ) * per_page
+        if (page != 1):        
+            while len(skips) < skip:
+                who = random.randint(0, imgmax-1)
+                if (image_ids[who] not in skips):
+                    skips.append( image_ids[who] )
+        
+        thispagelen = imgmax - skip
+        targetlen = thispagelen if thispagelen < per_page else per_page
+        targets = []
+        # random may get a duplicate id, or be out of range
+        while len(targets) < targetlen:    
+            try:
+                who = random.randint(0, imgmax-1)
+                if (image_ids[who] not in targets and image_ids[who] not in skips):
+                    targets.append( image_ids[who] )
+            except:
+                print(f"except: {who} {imgmax}")
+
+        results = self._fetch_results(targets)
+        return results,imgmax,randstateOut
         

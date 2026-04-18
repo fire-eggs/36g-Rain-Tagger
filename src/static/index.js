@@ -17,6 +17,7 @@ const pagination2_div = document.getElementById('pagination2');
 const info_div = document.getElementById('info');
 const addtag_input = document.getElementById('addtag_input');
 const addtag_suggestions = document.getElementById('addtag_suggestions');
+const info_div2 = document.getElementById('detail_panel2');
 
 // 'Filters'
 const f_tag = document.getElementById('f_tag');
@@ -52,7 +53,7 @@ page_input.addEventListener('input', () => {
     current_page = parseInt(page_input.value) ?? 1;
 });
 document.getElementById('go_input').addEventListener('click', () => {
-    performSearch(true);
+    if (inRandom) performRandom(true); else performSearch(true);
 });
 
 /* Warning icon, visible when changes not sent to database */
@@ -65,6 +66,7 @@ const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
 results_div.addEventListener('click', (e) => {
+    // TODO add onclick event to <img> tag?
     /* User clicks on an image. Add or remove from the list of selected images. */
     const item = e.target.closest('img.result');
     if (!item) {
@@ -83,7 +85,7 @@ results_div.addEventListener('click', (e) => {
 
     const selection = [...selectedIds];
 
-    sendSelection(selection); // display a list of common tags for these images
+    setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
   });
 
@@ -106,16 +108,41 @@ function deselectAll() {
     clearAllSelection(); // NOTE: includes updateSelCount
 }
 
+function selectAll() {
+    results_div.querySelectorAll('img').forEach( img => {
+        let iid = img.dataset.id;
+        if (!selectedIds.has(iid)) {
+            img.classList.toggle('selected');
+            selectedIds.add(iid);
+        }
+    });
+    // TODO copy-pasta
+    const selection = [...selectedIds];
+    setInfoPaneImages(selection); // display a list of common tags for these images
+    updateSelCount();
+}
+
+function generateTagPill(text, tag_id, tagtype, letter="x") {
+    tagclass = "general";
+    // TODO consider having the db return the tagclass string, not the number
+    if (tagtype == 4) tagclass = "character";
+    if (tagtype == 12) tagclass = "artist";
+    if (tagtype == 14) tagclass = "franchise";
+    if (tagtype ==99) tagclass = "newtext";   // special: user has typed new tag not in database
+    return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}>${letter}</button></span>`;
+}
+
 function renderInfoTags(container, selectedArray, className) {
-    container.innerHTML = selectedArray.map(tag =>
-        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
+    /*        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>` */
+    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id)
     ).join('');
 
-    container.innerHTML += active_text_tags.map(tag =>
-        `<span class="pill ${className}">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>`
+    /*    `<span class="pill newtext">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>` */
+    container.innerHTML += active_text_tags.map(tag => generateTagPill(tag, 0, 99)
     ).join('');
 
     container.querySelectorAll('button[data-id]').forEach(btn => {
+        // TODO add onclick event to button creation
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
 
@@ -145,7 +172,8 @@ async function applyTagChanges() {
 
     hideWarn();
     const params = new URLSearchParams();
-    selectedIds.forEach(id => params.append('image_ids', id));
+    //selectedIds.forEach(id => params.append('image_ids', id));
+    infoPaneImages.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
     active_text_tags.forEach(blah => params.append('text_tags', blah));
     try {
@@ -155,7 +183,16 @@ async function applyTagChanges() {
     updateMRAtags();
 }
 
-function updateInfoPane() {
+const metaToFilter = ["APP14Flags0", "APP14Flags1", "CurrentIPTCDigest", "DocumentID", "IPTCDigest",
+                      "InstanceID","ImageSize","FileName","Directory","PhotoshopThumbnail",
+                      "NativeDigest","ThumbnailImage","ExifToolVersion","HistoryInstanceID",
+                      "DerivedFromDocumentID","DerivedFromInstanceID","DerivedFromOriginalDocumentID",
+                      "LegacyIPTCDigest","OriginalDocumentID","ProfileID","SourceFile"];
+function filterMetadata(element) {
+    return !metaToFilter.includes(element[0]);
+}
+
+async function updateInfoPane() {
 
     // updateInfoPane is invoked specifically because selection has changed; clear warning
     hideWarn();
@@ -164,11 +201,60 @@ function updateInfoPane() {
     
     let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
-        if (anySelected()) {
+        //if (anySelected()) {
+        if (infoPaneImages.length != 0) {
             applyTagChanges();
         }
-        // QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
+        // TODO QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
+    
+    const p2 = document.getElementById("detail_panel2");
+    afile = null;
+    metadata = null;
+    if (infoPaneImages.length == 1) {
+        try {
+            const resp = await fetch(`/api/get_meta?p=${infoPaneImages[0]}`);
+            if (!resp.ok) throw new Error(`get_meta fail: ${resp.status}`);
+            metadata = await resp.json();
+            afile = metadata[0];
+            //console.log(afile);
+        } catch (err) { console.error(err); p2.innerHTML = `<h4>${err}</h4>`; return; }
+        
+        if (afile == undefined) {
+            html = `<h4>Image metadata unavailable</h4>`;
+        }
+        else {
+            const filename = afile["FileName"];
+            const direct = afile["Directory"];
+            html = `<h4>${direct}<br>${filename}</h4>`;
+            html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
+            
+            str = `<dl>`;
+            str += Object.entries(afile || {})
+                .filter(filterMetadata)
+                .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+            str += `</dl>`;
+            
+            html += str;
+        }
+    } else {
+        html = `<h4>Details only available when one image selected!</h4>`;
+    }        
+    p2.innerHTML = html;
+    if (infoPaneImages.length == 1 && afile != undefined) {
+        document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
+        document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0]));
+    }    
+}
+
+function openImage(image_id) {
+    const resp = fetch(`/api/open_image?p=${image_id}`);
+}
+
+function deleteImage(image_id) {
+    // TODO delete confirmation
+    const resp = fetch(`/api/del_image?p=${image_id}`);
+    // TODO delete fail
 }
 
 async function updateMRAtags() {
@@ -184,17 +270,17 @@ async function updateMRAtags() {
 
     let MRU_div = document.getElementById('MRUTags');
 
-    MRU_div.innerHTML = curr.map(tag =>
-        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
-    ).join('');
+    //`<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
+    MRU_div.innerHTML = curr.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id, "+")).join('');
 
     MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (infoPaneImages.length == 0) return;
             const id = parseInt(btn.dataset.id);
-            const txt= btn.dataset.text;
+            const txt= btn.dataset.tagname; //text;
 
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
-                active_info_tags.push({ tag_id: id, tag_name: txt.trim() });
+                active_info_tags.push({ tag_id: id, tag_name: txt.trim(), tag_type_id: parseInt(btn.dataset.typeid) });
                 showWarn();
                 renderInfoTags(info_div, active_info_tags, 'general');
             }
@@ -207,21 +293,18 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
-// ignoring tag class
-//    const filtered = Array.from(all_tags.values())
-//        .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
 
     const filtered = Array.from(all_tags.values())
         .filter(tag => tag[1].toLowerCase().includes(query));
     suggestionDiv.innerHTML = filtered.map(tag =>
-        `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+        `<div class="tag_suggestion" data-id="${tag[0]}" data-tag_type_id="${tag[2]}">${tag[1]}</div>`
     ).join('');
 
     document.getElementById('addtag_suggestions').querySelectorAll('.tag_suggestion').forEach(el => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!active_info_tags.some(tag => tag.tag_id === id)) {
-                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim() });
+                active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim(), tag_type_id: parseInt(el.dataset.tag_type_id) });
 
                 showWarn();
 
@@ -234,10 +317,14 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
     });
 }
 
-async function sendSelection(selection) {
+let infoPaneImages = []; // the image(s) currently handled by the info pane
+
+async function setInfoPaneImages(selection) {
     active_text_tags = [];
     const params = new URLSearchParams();
+    infoPaneImages = [];
     selection.forEach(id => params.append('selected_ids', id));
+    selection.forEach(id => infoPaneImages.push(id));
     let results = [];
     try {
         const resp = await fetch(`/api/selection?${params.toString()}`);
@@ -251,7 +338,8 @@ async function sendSelection(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    if (!anySelected()) return;
+    //if (!anySelected()) return;
+    if (infoPaneImages.length == 0) return;
     let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_"); // no spaces
     if (newtag.length < 1) return;
@@ -296,14 +384,14 @@ function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
         const filtered = Array.from(all_tags.values())
             .filter(tag => tag[1].toLowerCase().includes(query));
         suggestionDiv.innerHTML = filtered.map(tag =>
-            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+            `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
     else {
         const filtered = Array.from(all_tags.values())
             .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
         suggestionDiv.innerHTML = filtered.map(tag =>
-            `<div class="tag_suggestion" data-id="${tag[0]}">${tag[1]}</div>`
+            `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
     attachSuggestionEvents(suggestionDiv, typeId === CharacterTagTypeId ? selected_character_tags : selected_general_tags,
@@ -315,7 +403,7 @@ function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldI
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!selectedArray.some(tag => tag.tag_id === id)) {
-                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim() });
+                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id });
                 renderFn();
             }
             el.remove();
@@ -325,9 +413,8 @@ function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldI
 }
 
 function renderTags(container, selectedArray, className) {
-    container.innerHTML = selectedArray.map(tag =>
-        `<span class="pill ${className}">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>`
-    ).join('');
+    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.type_id)).join('');
+        
     container.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
@@ -351,10 +438,12 @@ function renderCharacterTags() {
 function clearAllSelection() {
     selectedIds.clear();
     info_div.innerHTML = '';
+    info_div2.innerHTML = '';
     active_info_tags = [];
     active_text_tags = [];
     updateSelCount();
     hideWarn();
+    infoPaneImages = [];
 }
 
 function clearAll() {
@@ -379,6 +468,7 @@ let current_display_mode = "List";
 const display_button = document.getElementById('display_button');
 
 display_button.addEventListener('click', () => {
+    // TODO can this be a style toggle?
     if (current_display_mode === "List") {
         current_display_mode = "Gallery";
         display_button.textContent = "Display: List";
@@ -404,12 +494,30 @@ function render_top_tags(tags) {
     keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
-        .filter(([k, v]) => v >= 0.7)
+        .filter(([k, v]) => v >= 0.6)
         .map(([k, v]) => `${k}`)
         .join(',');
 }
 
+function prevPage() {
+    if (current_page > 1) {
+        current_page--;
+        if (inRandom) performRandom(true); else performSearch(true);
+    }
+}
+
+function nextPage() {
+    current_page++;
+    if (inRandom) performRandom(true); else performSearch(true);
+}
+
+function targetPage(target) {
+    current_page = target;
+    if (inRandom) performRandom(true); else performSearch(true);
+}
+
 function renderResults(data) {
+    /* update the gallery to show the current page's images */
     per_page = isNaN(per_page) ? DefaultPerPage : per_page;
     per_page = per_page < 1 ? DefaultPerPage : per_page;
     per_page_input.value = per_page;
@@ -424,28 +532,36 @@ function renderResults(data) {
         if (current_display_mode === 'Gallery') {
             html += data.results.map(result => `
                 <div class="m row">
-                    <img class="result" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
+                    <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
                     <div class="outer_pills">
                         <p class="fn">${result.image_path}</p>
                         <div class="pills">
                             ${render_tags_text(result.rating, 'rating')}
                             ${render_tags_text(result.general, 'general')}
                             ${render_tags_text(result.character, 'character')}
+                            ${render_tags_text(result.future, 'general')}
+                            ${render_tags_text(result.franchise, 'franchise')}
+                            ${render_tags_text(result.artist, 'artist')}
                         </div>
                     </div>
                 </div>
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)}"/>
+                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)}"/>
             `).join('');
             html += `<div class="m">${r}</div>`;
         }
     }
     results_div.innerHTML = html;
 
+    results_div.querySelectorAll('img[data-id]').forEach(img => {
+        img.addEventListener('dblclick', () => openLightbox(img));
+    });
+
+    const prevDisable = current_page === 1 || tot_pages < 1;
     html = `
-        <button id="prev_page" class="flat" ${current_page === 1 ? 'disabled' : ''}>Previous</button>
+        <button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>Previous</button>
         Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
         <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
     `;
@@ -472,39 +588,20 @@ function renderResults(data) {
     pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
-            current_page = target;
-            performSearch(true);
+            targetPage(target);
         }); });
     pagination2_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
-            current_page = target;
-            performSearch(true);
+            targetPage(target);
         }); });
         
-    document.getElementById('prev_page').addEventListener('click', () => {
-        if (current_page > 1) {
-            current_page--;
-            performSearch(true);
-        }
-    });
-
-    document.getElementById('next_page').addEventListener('click', () => {
-        current_page++;
-        performSearch(true);
-    });
+    document.getElementById('prev_page').addEventListener('click', () => prevPage());
+    document.getElementById('next_page').addEventListener('click', () => nextPage());
 
     // Issue 25: bottom next/prev buttons not working
-    document.getElementById('prev_page2').addEventListener('click', () => {
-        if (current_page > 1) {
-            current_page--;
-            performSearch(true);
-        }
-    });
-    document.getElementById('next_page2').addEventListener('click', () => {
-        current_page++;
-        performSearch(true);
-    });
+    document.getElementById('prev_page2').addEventListener('click', () => prevPage());
+    document.getElementById('next_page2').addEventListener('click', () => nextPage());
 }
 
 async function performTagSearchGuts(isPagination) {
@@ -539,6 +636,46 @@ async function performTagSearchGuts(isPagination) {
     
 }
 
+let randstate = "";
+let inRandom = false;
+
+async function performRandom(isPagination=false) {
+    const filters = {
+        tag: f_tag.value,
+        general: f_general.value,
+        sensitive: f_sensitive.value,
+        explicit: f_explicit.value,
+        questionable: f_questionable.value
+    };
+
+    inRandom = true;    
+    if (!isPagination) {
+        current_page = 1;
+        randstate = "";
+    }
+    
+    const generalIds = selected_general_tags.map(t => t.tag_id);
+    const characterIds = selected_character_tags.map(t => t.tag_id);
+
+    const params = new URLSearchParams();
+    generalIds.forEach(id => params.append('general_tag_ids', id));
+    characterIds.forEach(id => params.append('character_tag_ids', id));
+    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
+    params.append('page', current_page);
+    params.append('per_page', per_page);
+    params.append('state', randstate);
+    
+    try {
+        const resp = await fetch(`/random_search_w_tags?${params.toString()}`);
+        if (!resp.ok) throw new Error(`Random search failed: ${resp.status}`);
+        let results = await resp.json();
+        randstate = results.randstate;
+        renderResults(results);
+    } catch (err) { console.error(err); }
+    
+    clearAllSelection();
+}
+
 async function performSearch(isPagination = false) {
     const filters = {
         tag: f_tag.value,
@@ -548,6 +685,7 @@ async function performSearch(isPagination = false) {
         questionable: f_questionable.value
     };
 
+    inRandom = false;
     if (!isPagination) current_page = 1;
 
     const file_input = document.getElementById('img');
@@ -580,6 +718,57 @@ function updateSelCount() {
     selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
 }
 
+function swap_divs() {
+    const p1 = document.getElementById("panel");
+    const p2 = document.getElementById("detail_panel2");
+    if (p1.style.display == "none") { p2.style.display="none"; p1.style.display="block"; }
+    else { p1.style.display="none"; p2.style.display="block"; }
+}
+
+/* ---------- Panel state ---------- */
+const COLLAPSED_WIDTH = 40;
+let expandedWidth = 320;
+let isCollapsed = false;
+
+/* ---------- Helpers ---------- */
+function setPanelWidth(px) {
+  document.documentElement.style.setProperty('--panel-width', px + 'px');
+}
+
+/* ---------- Collapse / Expand ---------- */
+togglePanel.onclick = () => {
+  if (!isCollapsed) {
+    expandedWidth = panel.offsetWidth;
+    setPanelWidth(COLLAPSED_WIDTH);
+    togglePanel.textContent = '⮜';
+  } else {
+    setPanelWidth(expandedWidth);
+    togglePanel.textContent = '⮞';
+  }
+  isCollapsed = !isCollapsed;
+};
+
+/* ---------- Resize ---------- */
+let resizing = false;
+
+// TODO addEventListener
+resizeHandle.onmousedown = () => {
+  if (!isCollapsed) resizing = true;
+};
+// TODO addEventListener
+resizeHandle2.onmousedown = () => {
+  if (!isCollapsed) resizing = true;
+};
+
+window.addEventListener('mousemove', e => {
+  if (!resizing) return;
+  expandedWidth = Math.max(200, window.innerWidth - e.clientX);
+  setPanelWidth(expandedWidth);}
+);
+
+window.addEventListener('mouseup', () => resizing = false);
+
+
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 character_tag_input.addEventListener('input', () => handleTagInput(character_tag_input, character_tag_suggestions, CharacterTagTypeId));
@@ -588,15 +777,20 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 document.getElementById('clear_button').addEventListener('click', clearAll);
 document.getElementById('search_button').addEventListener('click', () => performSearch(false));
 document.getElementById('dash_button').addEventListener('click', () => performExplore("G"));
-document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes(false));
-document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupes(true));
+document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
+document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
+document.getElementById('cloud_btn').addEventListener('click', () => performCloud());
+document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 document.getElementById('addTextTag').addEventListener('click', () => addTagClick());
 
-document.getElementById('clearSelect').addEventListener('click', () => deselectAll());
+document.getElementById('clear_sel').addEventListener('click', () => deselectAll());
+document.getElementById('sel_all').addEventListener('click', () => selectAll());
+
+document.getElementById('swap_details').addEventListener('click', () => swap_divs());
 
 fetchAllTags();
 updateMRAtags();
