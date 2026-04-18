@@ -356,7 +356,7 @@ function addTagClick() {
 async function fetchAllTags() {
     const response = await fetch('/tags');
     const tags = await response.json();
-    all_tags = new Map(tags.map(tag => [tag[0], { 0: tag[0], 1: tag[1], 2: tag[2] }]));
+    all_tags = new Map(tags.map(tag => [tag[0], { 0: tag[0], 1: tag[1], 2: tag[2], 3: tag[3] }]));
     initializeTags();
 }
 
@@ -403,16 +403,18 @@ function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldI
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
             if (!selectedArray.some(tag => tag.tag_id === id)) {
-                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id });
+                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id, class_name: el.dataset.className });
                 renderFn();
             }
             el.remove();
-            document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
+            const hideFld = document.getElementById(hiddenFieldId);
+            hideFld.value = selectedArray.map(t => t.tag_id).join(',');
+            hideFld.dispatchEvent(new Event('change'));
         });
     });
 }
 
-function renderTags(container, selectedArray, className) {
+function renderTags(container, selectedArray, className, hiddenFieldId) {
     container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.type_id)).join('');
         
     container.querySelectorAll('button[data-id]').forEach(btn => {
@@ -420,19 +422,20 @@ function renderTags(container, selectedArray, className) {
             const id = parseInt(btn.dataset.id);
             const idx = selectedArray.findIndex(t => t.tag_id === id);
             if (idx !== -1) selectedArray.splice(idx, 1);
-            const hiddenFieldId = className === 'general' ? 'file_tags_general' : 'file_tags_character';
-            document.getElementById(hiddenFieldId).value = selectedArray.map(t => t.tag_id).join(',');
-            renderTags(container, selectedArray, className);
+            const hideFld = document.getElementById(hiddenFieldId);
+            hideFld.value = selectedArray.map(t => t.tag_id).join(',');
+            hideFld.dispatchEvent(new Event('change'));
+            renderTags(container, selectedArray, className, hiddenFieldId);
         });
     });
 }
 
 function renderGeneralTags() {
-    renderTags(selected_general_tags_div, selected_general_tags, 'general');
+    renderTags(selected_general_tags_div, selected_general_tags, 'general', 'file_tags_general');
 }
 
 function renderCharacterTags() {
-    renderTags(selected_character_tags_div, selected_character_tags, 'character');
+    renderTags(selected_character_tags_div, selected_character_tags, 'character', 'file_tags_character');
 }
 
 function clearAllSelection() {
@@ -539,7 +542,7 @@ function renderResults(data) {
                             ${render_tags_text(result.rating, 'rating')}
                             ${render_tags_text(result.general, 'general')}
                             ${render_tags_text(result.character, 'character')}
-                            ${render_tags_text(result.future, 'general')}
+                            ${render_tags_text(result.future, 'newtext')}
                             ${render_tags_text(result.franchise, 'franchise')}
                             ${render_tags_text(result.artist, 'artist')}
                         </div>
@@ -782,6 +785,7 @@ document.getElementById('dupl_button2').addEventListener('click', () => performR
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
 document.getElementById('cloud_btn').addEventListener('click', () => performCloud());
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
+document.getElementById('tagEdit_btn').addEventListener('click', () => performEditTag());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));

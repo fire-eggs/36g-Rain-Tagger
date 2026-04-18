@@ -298,7 +298,7 @@ class ImageDb(SqliteDb):
 
     @lru_cache()
     def get_tags(self) -> list[tuple]:
-        rows = self.run_query_tuple('select tag_id, lower(tag_name), tag_type_id from tag join tag_type using(tag_type_id) where tag_count > 0 order by lower(tag_name)')
+        rows = self.run_query_tuple('select tag_id, lower(tag_name), tag_type_id, tag_type_name from tag join tag_type using(tag_type_id) where tag_count > 0 order by lower(tag_name)')
         if not rows:
             return []
         return rows
