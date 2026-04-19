@@ -3,6 +3,7 @@ const edit_tag_input = document.getElementById('edit_tag_input');
 const edit_tag_suggestions = document.getElementById('edit_tag_suggestions');
 const selected_edit_tags_div = document.getElementById('selected_edit_tags');
 const edit_tag_magic = document.getElementById('edit_tags_magic');
+const editTable = document.getElementById('editTable');
 
 edit_tag_input.addEventListener('input', () => searchTagInput());
 edit_tag_input.addEventListener('focus', () => searchTagInput());
@@ -51,6 +52,7 @@ function updateTable() {
     const tbody = document.getElementById("editTableBody");
     tbody.innerHTML = "";
     
+    var rowdex = 1;
     edit_tag_array.forEach( tag => {
         const newrow = tbody.insertRow(-1);
         
@@ -62,35 +64,100 @@ function updateTable() {
         cell1.textContent = tag.tag_name;
         cell2.textContent = tag.class_name;
 
-        var btnEdit = makeButton("Edit", "44CCEB", `onTagEdit(${tag.tag_id})`);
-        newrow.appendChild(btnEdit);
+        var td = document.createElement("td");
+        var btnEdit = makeButton(rowdex, "Edit", "44CCEB", `onTagEdit(${tag.tag_id},`, hide=false);
+        td.appendChild(btnEdit);
         
-        var btnSave = makeButton("Save", "2DBF64", `onTagSave(${tag.tag_id})`);
-        newrow.appendChild(btnSave);
+        var btnSave = makeButton(rowdex, "Save", "2DBF64", `onTagSave(${tag.tag_id},`, hide=true);
+        td.appendChild(btnSave);
+        newrow.appendChild(td);
 
-        var btnDel = makeButton("Delete", "ED5650", `onTagDelete(${tag.tag_id})`);
-        newrow.appendChild(btnDel);
+        var td = document.createElement("td");
+        var btnCancel = makeButton(rowdex, "Cancel", "ED5650", `onTagCancel(${tag.tag_id},`, hide=true);
+        td.appendChild(btnCancel);
+
+        var btnDel = makeButton(rowdex, "Delete", "ED5650", `onTagDelete(${tag.tag_id},`);
+        td.appendChild(btnDel);
         
+        newrow.appendChild(td);
+        rowdex +=  1;
     });
 }
 
-function makeButton(text, color, click) {
-    var td = document.createElement("td");
+function makeButton(rowdex, text, color, click, hide=false) {
     var btn = document.createElement("input");
+    btn.setAttribute('id', `${text}` + rowdex);
     btn.setAttribute('type', 'button');
     btn.setAttribute('value', text);
-    btn.setAttribute('style', `background-color:#${color};`);
-    btn.setAttribute('onclick', click);
-    td.appendChild(btn);
-    return td;
+    btn.setAttribute('style', `background-color:#${color};` + (hide ? 'display:none;' : ''));
+    btn.setAttribute('onclick', click + `${rowdex})`);
+    return btn;
 }
 
-function onTagEdit(tag_id) {
-    alert(`Edit: ${tag_id}`);
+function onTagEdit(tag_id, row) {
+    var trow = editTable.rows[row];
+    var tcol = trow.getElementsByTagName("td");
+    
+    var nametd = tcol[1];
+    var nameed = makeNameEdit(nametd.innerText);
+    nametd.innerText = '';
+    nametd.appendChild(nameed);
+    
+    var cattd  = tcol[2];
+    var catsel = makeCategoryCombo(cattd.innerText);
+    cattd.innerText = '';
+    cattd.appendChild(catsel);
+
+    editState(row, isOn=true); // Turn edit state ON
 }
-function onTagSave(tag_id) {
+
+function makeNameEdit(text) {
+    // TODO is an id needed?
+    var ele = document.createElement('input');      // TEXTBOX.
+    ele.setAttribute('type', 'text');
+    ele.setAttribute('value', text);
+    return ele;
+}
+
+function makeCategoryCombo(text) {
+    const cats = ["general","character","franchise","artist","future"]; // TODO pull from server
+    var ele = document.createElement('select');      // DROPDOWN LIST.
+    ele.innerHTML = `<option value="${text}">${text}</option>`;
+    cats.forEach( cat => {
+        ele.innerHTML = ele.innerHTML + `<option value="${cat}">${cat}</option>`;
+    });
+    return ele;
+}
+
+function onTagSave(tag_id, row) {
     alert(`Save: ${tag_id}`);
 }
-function onTagDelete(tag_id) {
+function onTagDelete(tag_id, row) {
     alert(`Del: ${tag_id}`);
 }
+function onTagCancel(tag_id, row) {
+    
+    editState(row, isOn=false);  // Turn edit state OFF
+    
+    const tag = edit_tag_array.find(u => u.tag_id === tag_id);
+    var trow = editTable.rows[row];
+    var tcol = trow.getElementsByTagName("td");
+    
+    var nametd = tcol[1];
+    nametd.innerText = tag.tag_name;
+    
+    var cattd  = tcol[2];
+    cattd.innerText = tag.class_name;
+}
+
+function editState(row, isOn) {
+    var btnCancel = document.getElementById('Cancel' + row);
+    btnCancel.style.display = isOn ? "block" : "none";
+    var btnSave = document.getElementById("Save"+ row);
+    btnSave.style.display = isOn ? "block" : "none";
+    var btnEdit = document.getElementById("Edit"+row);
+    btnEdit.style.display = isOn ? "none" : "block";
+    var btnDel = document.getElementById("Delete"+row); 
+    btnDel.style.display = isOn ? "none" : "block";
+}
+    
