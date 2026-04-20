@@ -105,9 +105,11 @@ function onTagEdit(tag_id, row) {
     nametd.appendChild(nameed);
     
     var cattd  = tcol[2];
-    var catsel = makeCategoryCombo(cattd.innerText);
+    const curval = cattd.innerText;
+    var catsel = makeCategoryCombo();
     cattd.innerText = '';
     cattd.appendChild(catsel);
+    cattd.childNodes[0].value = curval; // select the current value
 
     editState(row, isOn=true); // Turn edit state ON
 }
@@ -120,10 +122,9 @@ function makeNameEdit(text) {
     return ele;
 }
 
-function makeCategoryCombo(text) {
+function makeCategoryCombo() {
     const cats = ["general","character","franchise","artist","future"]; // TODO pull from server
     var ele = document.createElement('select');      // DROPDOWN LIST.
-    ele.innerHTML = `<option value="${text}">${text}</option>`;
     cats.forEach( cat => {
         ele.innerHTML = ele.innerHTML + `<option value="${cat}">${cat}</option>`;
     });
