@@ -706,3 +706,15 @@ class ImageDb(SqliteDb):
         results = self._fetch_results(targets)
         return results,imgmax,randstateOut
         
+    def edit_tag(self, tag_id, tag_name, tag_class):
+        if len(tag_name.strip()) == 0 or len(tag_class.strip()) == 0:
+            raise ValueError("Empty name or category")
+        # TODO deal with special chars: single-quotes, what else?
+        res = self._run_query(f"select tag_type_id from tag_type where tag_type_name='{tag_class}'")
+        if not res:
+            raise ValueError("Unknown category")
+        ttid = res[0]["tag_type_id"]
+        self._run_query(f"update tag set tag_name='{tag_name}', tag_type_id={ttid} where tag_id={tag_id}")
+        self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
+        self.save()
+        return []

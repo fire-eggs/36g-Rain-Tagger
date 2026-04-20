@@ -129,8 +129,33 @@ function makeCategoryCombo(text) {
     return ele;
 }
 
-function onTagSave(tag_id, row) {
-    alert(`Save: ${tag_id}`);
+async function onTagSave(tag_id, row) {
+    
+    var trow = editTable.rows[row];
+    var tcol = trow.getElementsByTagName("td");
+    
+    var nametd = tcol[1];
+    var savename = nametd.childNodes[0].value;
+    
+    var cattd  = tcol[2];
+    var savecat = cattd.childNodes[0].value;
+    
+    const params = new URLSearchParams();
+    params.append('tag_id', tag_id);
+    params.append('name', savename);
+    params.append('class', savecat);
+    try {
+        const resp = await fetch(`/api/editTag?${params.toString()}`);
+        if (!resp.ok) throw new Error(`onTagSave editTag failed: ${resp.status}`);
+    } catch (err) { console.error(err); return; }
+    
+    const tag = edit_tag_array.find(u => u.tag_id === tag_id);
+    tag.tag_name = savename;
+    tag.class_name = savecat;
+    onTagCancel(tag_id, row);
+    
+    // Update the master tag list
+    fetchAllTags();
 }
 function onTagDelete(tag_id, row) {
     alert(`Del: ${tag_id}`);

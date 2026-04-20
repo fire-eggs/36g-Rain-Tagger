@@ -128,7 +128,7 @@ function generateTagPill(text, tag_id, tagtype, letter="x") {
     if (tagtype == 4) tagclass = "character";
     if (tagtype == 12) tagclass = "artist";
     if (tagtype == 14) tagclass = "franchise";
-    if (tagtype ==99) tagclass = "newtext";   // special: user has typed new tag not in database
+    if (tagtype == 99 || tagtype == 32) tagclass = "newtext";   // special: user has typed new tag not in database
     return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}>${letter}</button></span>`;
 }
 
