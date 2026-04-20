@@ -7,6 +7,7 @@ const editTable = document.getElementById('editTable');
 
 edit_tag_input.addEventListener('input', () => searchTagInput());
 edit_tag_input.addEventListener('focus', () => searchTagInput());
+edit_tag_magic.addEventListener('change', () => updateTable());
 
 edit_tag_array = [];
 
@@ -45,7 +46,7 @@ function searchTagInput() {
 
 function renderEditTags() {
     renderTags(selected_edit_tags_div, edit_tag_array, 'general', 'edit_tags_magic');
-    updateTable();
+    //updateTable();
 }
 
 function updateTable() {
