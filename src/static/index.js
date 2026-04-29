@@ -47,10 +47,12 @@ let current_page = 1;
 let per_page = DefaultPerPage;
 
 per_page_input.addEventListener('input', () => {
-    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
+    let ppi = parseInt(per_page_input.value);
+    per_page = (isNaN(ppi) ? DefaultPerPage : ppi);
 });
 page_input.addEventListener('input', () => {
-    current_page = parseInt(page_input.value) ?? 1;
+    let cp = parseInt(page_input.value);
+    current_page = (isNaN(cp) ? 1 : cp);
 });
 document.getElementById('go_input').addEventListener('click', () => {
     if (inRandom) performRandom(true); else performSearch(true);
@@ -248,6 +250,7 @@ async function updateInfoPane() {
 }
 
 function openImage(image_id) {
+    // TODO doesn't work with remote client!
     const resp = fetch(`/api/open_image?p=${image_id}`);
 }
 
@@ -528,6 +531,7 @@ function renderResults(data) {
     let tot_pages = Math.ceil( data.tot_found / per_page );
     if (current_page > tot_pages)
         current_page = tot_pages;
+    page_input.value = current_page;
 
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
