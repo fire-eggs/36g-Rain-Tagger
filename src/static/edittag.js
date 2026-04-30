@@ -9,11 +9,11 @@ edit_tag_input.addEventListener('input', () => searchTagInput());
 edit_tag_input.addEventListener('focus', () => searchTagInput());
 edit_tag_magic.addEventListener('change', () => updateTable());
 
+tagE_clear.addEventListener('click', () => clearAllTagEdit());
+
 edit_tag_array = [];
 
-function performEditTag() {
-    
-    mgr.classList.add('active');
+function clearAllTagEdit() {
     edit_tag_input.value = '';
     edit_tag_suggestions.innerHTML = '';
     edit_tag_array.length = 0;
@@ -21,7 +21,12 @@ function performEditTag() {
 
     const tbody = document.getElementById("editTableBody");
     tbody.innerHTML = "";
+}
 
+function performEditTag() {
+    
+    mgr.classList.add('active');
+    clearAllTagEdit();
 }
 
 document.getElementById('TEcloseBtn').onclick = () => {
@@ -187,4 +192,3 @@ function editState(row, isOn) {
     var btnDel = document.getElementById("Delete"+row); 
     btnDel.style.display = isOn ? "none" : "block";
 }
-    
