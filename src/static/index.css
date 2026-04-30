@@ -428,6 +428,8 @@ dl {
   background-color: black;
   cursor: pointer;
   z-index: 2500;
+  padding-left:10px;
+  padding-right:10px;
 }
 
 .fit-btn {
