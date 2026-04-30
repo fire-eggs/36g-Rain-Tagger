@@ -492,7 +492,7 @@ class ImageDb(SqliteDb):
         # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
         
         for tagText in tags_to_add:
-            sql = f"select tag_id from tag where tag_name = '{tagText}'"
+            sql = f"select tag_id from tag where tag_name like '{tagText}'" # like == case insensitive
             results = self._run_query(sql)
             if len(results) == 0:
                 sql = f"select max(tag_id) as new_id from tag"
@@ -501,7 +501,7 @@ class ImageDb(SqliteDb):
                 sql = f"insert or ignore into tag (tag_id, tag_name, tag_type_id, tag_count) values ({new_id}, '{tagText}', {tagTypeId}, 1)"
                 self._run_query(sql, commit=True)
             else:
-                new_id = int(results[0]["tag_id"])
+                new_id = int(results[0]["tag_id"]) # TODO check for multiple results?
                 
             # add to images with new_id
             for image_id in image_ids:
