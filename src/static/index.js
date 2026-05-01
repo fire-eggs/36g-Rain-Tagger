@@ -278,6 +278,7 @@ async function updateMRAtags() {
 
     MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
         btn.addEventListener('click', () => {
+            // TODO refactor common w/ handleAddTagInput, AddTagClick
             if (infoPaneImages.length == 0) return;
             const id = parseInt(btn.dataset.id);
             const txt= btn.dataset.tagname; //text;
@@ -286,6 +287,7 @@ async function updateMRAtags() {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim(), tag_type_id: parseInt(btn.dataset.typeid) });
                 showWarn();
                 renderInfoTags(info_div, active_info_tags, 'general');
+                info_div.scrollTop = info_div.scrollHeight;  // scroll to bottom to see new tag
             }
         });
     });
@@ -312,6 +314,7 @@ function handleAddTagInput(inputEl, suggestionDiv, typeId) {
                 showWarn();
 
                 renderInfoTags(info_div, active_info_tags, 'general');  // TODO typeId
+                info_div.scrollTop = info_div.scrollHeight; // scroll to bottom to see new tag
             }
             // issue 27: don't remove the selected tag from the suggestion list
             // el.remove();
@@ -355,6 +358,7 @@ function addTagClick() {
     }
     
     renderInfoTags(info_div, active_info_tags, 'general');
+    info_div.scrollTop = info_div.scrollHeight;  // scroll to bottom to see new tag
 }
 
 async function fetchAllTags() {
