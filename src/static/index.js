@@ -506,6 +506,10 @@ function render_top_tags(tags) {
         .join(',');
 }
 
+function render_all_top_tags(result) {
+    return `${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)},${render_top_tags(result.artist)}`;
+}
+
 function prevPage() {
     if (current_page > 1) {
         current_page--;
@@ -556,8 +560,8 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `
-                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy" title="${result.image_path}&#013;&#013;${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)}"/>
-            `).join('');
+                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" 
+                loading="lazy" title="${result.image_path}&#013;&#013;${render_all_top_tags(result)}"/>`).join('');
             html += `<div class="m">${r}</div>`;
         }
     }
