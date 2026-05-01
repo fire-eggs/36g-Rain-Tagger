@@ -26,11 +26,6 @@ const f_sensitive = document.getElementById('f_sensitive');
 const f_explicit = document.getElementById('f_explicit');
 const f_questionable = document.getElementById('f_questionable');
 
-const f_general_value = document.getElementById('f_general_value');
-const f_sensitive_value = document.getElementById('f_sensitive_value');
-const f_explicit_value = document.getElementById('f_explicit_value');
-const f_questionable_value = document.getElementById('f_questionable_value');
-
 const per_page_input = document.getElementById('per_page_input');
 const page_input = document.getElementById('page_input');
 
@@ -125,7 +120,7 @@ function selectAll() {
 }
 
 function generateTagPill(text, tag_id, tagtype, letter="x") {
-    tagclass = "general";
+    let tagclass = "general";
     // TODO consider having the db return the tagclass string, not the number
     if (tagtype == 4) tagclass = "character";
     if (tagtype == 12) tagclass = "artist";
@@ -211,8 +206,9 @@ async function updateInfoPane() {
     });
     
     const p2 = document.getElementById("detail_panel2");
-    afile = null;
-    metadata = null;
+    let afile = null;
+    let metadata = null;
+    let html = "";
     if (infoPaneImages.length == 1) {
         try {
             const resp = await fetch(`/api/get_meta?p=${infoPaneImages[0]}`);
@@ -226,12 +222,12 @@ async function updateInfoPane() {
             html = `<h4>Image metadata unavailable</h4>`;
         }
         else {
-            const filename = afile["FileName"];
-            const direct = afile["Directory"];
+            const filename = afile.FileName;
+            const direct = afile.Directory;
             html = `<h4>${direct}<br>${filename}</h4>`;
             html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
             
-            str = `<dl>`;
+            let str = `<dl>`;
             str += Object.entries(afile || {})
                 .filter(filterMetadata)
                 .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
@@ -262,7 +258,7 @@ function deleteImage(image_id) {
 
 async function updateMRAtags() {
     // Update the most-recently-added tags list
-    
+    let curr = null;
     try {
         const resp = await fetch(`/api/getMRAtags`);
         if (!resp.ok) throw new Error(`getMRAtags call failed: ${resp.status}`);
@@ -293,8 +289,8 @@ async function updateMRAtags() {
     });
 }
 
-function handleAddTagInput(inputEl, suggestionDiv, typeId) {
-    // TODO typeId from tag class dropdown
+function handleAddTagInput(inputEl, suggestionDiv) {
+    
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
     if (!query) return;
@@ -796,8 +792,8 @@ document.getElementById('cloud_btn').addEventListener('click', () => performClou
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 document.getElementById('tagEdit_btn').addEventListener('click', () => performEditTag());
 
-addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
-addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions, 0));
+addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions));
+addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions));
 document.getElementById('addTextTag').addEventListener('click', () => addTagClick());
 
 document.getElementById('clear_sel').addEventListener('click', () => deselectAll());
