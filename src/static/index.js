@@ -344,11 +344,12 @@ function addTagClick() {
     //if (!anySelected()) return;
     if (infoPaneImages.length == 0) return;
     let newtag0 = addtag_input.value;
-    let newtag = newtag0.replaceAll(" ", "_"); // no spaces
+    let newtag = newtag0.replaceAll(" ", "_").toLowerCase(); // no spaces
     if (newtag.length < 1) return;
     
+    const idx2 = active_info_tags.findIndex((t) => t.tag_name === newtag);
     const idx = active_text_tags.findIndex(t => t === newtag);
-    if (idx === -1) {
+    if (idx === -1 && idx2 === -1) {
         active_text_tags.push(newtag);
         showWarn();
     }
