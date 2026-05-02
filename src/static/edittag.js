@@ -21,6 +21,7 @@ function clearAllTagEdit() {
 
     const tbody = document.getElementById("editTableBody");
     tbody.innerHTML = "";
+    addCreateRow(1);
 }
 
 function performEditTag() {
@@ -54,6 +55,31 @@ function renderEditTags() {
     //updateTable();
 }
 
+function addCreateRow(rowdex) {
+    const tbody = document.getElementById("editTableBody");
+    
+    const crow = tbody.insertRow(-1);
+    const ccell0 = crow.insertCell(0);
+    ccell0.textContent = "";
+    const ccell1 = crow.insertCell(1);
+    ccell1.textContent = "";
+    const ccell2 = crow.insertCell(2);
+    ccell2.textContent = "";
+
+    var ctd = document.createElement("td");
+    var btnEdit = makeButton(rowdex, "Create", "44CCEB", `onTagEdit(-1,`, hide=false);
+    ctd.appendChild(btnEdit);
+    
+    var btnSave = makeButton(rowdex, "Save", "2DBF64", `onTagSave(-1,`, hide=true);
+    ctd.appendChild(btnSave);
+    crow.appendChild(ctd);
+
+    ctd = document.createElement("td");
+    var btnCancel = makeButton(rowdex, "Cancel", "ED5650", `onTagCancel(-1,`, hide=true);
+    ctd.appendChild(btnCancel);
+    crow.appendChild(ctd);
+}
+
 function updateTable() {
     const tbody = document.getElementById("editTableBody");
     tbody.innerHTML = "";
@@ -78,7 +104,7 @@ function updateTable() {
         td.appendChild(btnSave);
         newrow.appendChild(td);
 
-        var td = document.createElement("td");
+        td = document.createElement("td");
         var btnCancel = makeButton(rowdex, "Cancel", "ED5650", `onTagCancel(${tag.tag_id},`, hide=true);
         td.appendChild(btnCancel);
 
@@ -88,6 +114,8 @@ function updateTable() {
         newrow.appendChild(td);
         rowdex +=  1;
     });
+    
+    addCreateRow(rowdex);
 }
 
 function makeButton(rowdex, text, color, click, hide=false) {
@@ -138,6 +166,9 @@ function makeCategoryCombo() {
 
 async function onTagSave(tag_id, row) {
     
+    // TODO verify tagname not empty
+    // TODO verify category not empty
+    
     var trow = editTable.rows[row];
     var tcol = trow.getElementsByTagName("td");
     
@@ -156,9 +187,11 @@ async function onTagSave(tag_id, row) {
         if (!resp.ok) throw new Error(`onTagSave editTag failed: ${resp.status}`);
     } catch (err) { console.error(err); return; }
     
-    const tag = edit_tag_array.find(u => u.tag_id === tag_id);
-    tag.tag_name = savename;
-    tag.class_name = savecat;
+    if (tag_id !== -1) {
+        const tag = edit_tag_array.find(u => u.tag_id === tag_id);
+        tag.tag_name = savename;
+        tag.class_name = savecat;
+    }
     onTagCancel(tag_id, row);
     
     // Update the master tag list
@@ -171,15 +204,19 @@ function onTagCancel(tag_id, row) {
     
     editState(row, isOn=false);  // Turn edit state OFF
     
-    const tag = edit_tag_array.find(u => u.tag_id === tag_id);
     var trow = editTable.rows[row];
     var tcol = trow.getElementsByTagName("td");
-    
     var nametd = tcol[1];
-    nametd.innerText = tag.tag_name;
-    
     var cattd  = tcol[2];
-    cattd.innerText = tag.class_name;
+    
+    if (tag_id === -1) { // True for create
+        nametd.innerText = "";
+        cattd.innerText = "";
+    } else {
+        const tag = edit_tag_array.find(u => u.tag_id === tag_id);
+        nametd.innerText = tag.tag_name;
+        cattd.innerText = tag.class_name;
+    }
 }
 
 function editState(row, isOn) {
@@ -188,7 +225,12 @@ function editState(row, isOn) {
     var btnSave = document.getElementById("Save"+ row);
     btnSave.style.display = isOn ? "block" : "none";
     var btnEdit = document.getElementById("Edit"+row);
-    btnEdit.style.display = isOn ? "none" : "block";
+    // null for create row
+    if (btnEdit !== null) { btnEdit.style.display = isOn ? "none" : "block"; }
     var btnDel = document.getElementById("Delete"+row); 
-    btnDel.style.display = isOn ? "none" : "block";
+    // null for create row
+    if (btnDel !== null) { btnDel.style.display = isOn ? "none" : "block"; }
+    var btnCreate = document.getElementById("Create"+row);
+    // null for edit row
+    if (btnCreate !== null) { btnCreate.style.display = isOn ? "none" : "block"; }
 }

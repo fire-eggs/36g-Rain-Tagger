@@ -490,7 +490,7 @@ class ImageDb(SqliteDb):
         
     def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
         # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
-        
+        # TODO refactor with edit_tag
         for tagText in tags_to_add:
             sql = f"select tag_id from tag where tag_name like '{tagText}'" # like == case insensitive
             results = self._run_query(sql)
@@ -701,7 +701,7 @@ class ImageDb(SqliteDb):
                 if (image_ids[who] not in targets and image_ids[who] not in skips):
                     targets.append( image_ids[who] )
             except:
-                print(f"except: {who} {imgmax}")
+                print(f"GRIBT except: {who} {imgmax}")
 
         results = self._fetch_results(targets)
         return results,imgmax,randstateOut
@@ -710,10 +710,25 @@ class ImageDb(SqliteDb):
         if len(tag_name.strip()) == 0 or len(tag_class.strip()) == 0:
             raise ValueError("Empty name or category")
         # TODO deal with special chars: single-quotes, what else?
-        res = self._run_query(f"select tag_type_id from tag_type where tag_type_name='{tag_class}'")
-        if not res:
+        res = self._run_query(f"select tag_type_id from tag_type where tag_type_name = '{tag_class}'")
+        if not res or len(res) == 0:
             raise ValueError("Unknown category")
         ttid = res[0]["tag_type_id"]
+        
+        if int(tag_id) == -1: # creating new tag
+            # TODO refactor with add_possibly_new_tags
+            sql = f"select tag_id from tag where tag_name like '{tag_name}'" # like == case insensitive
+            results = self._run_query(sql)
+            if len(results) != 0:
+                raise ValueError("Attempt to create existing tag")
+                
+            sql = 'select max(tag_id) from tag'
+            results = self._run_query(sql)
+            tagid = list(results[0].values())[0] + 1
+            # TODO setting tag_count to 1 because otherwise tag doesn't appear in GUI [see get_tags]. Need to reconsider?
+            sql = f'insert into tag (tag_id, tag_name, tag_type_id, tag_count) values ({tagid}, "{tag_name}", {ttid}, 1)'
+            self._run_query(sql)
+        else:
         self._run_query(f"update tag set tag_name='{tag_name}', tag_type_id={ttid} where tag_id={tag_id}")
         self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
         self.save()
