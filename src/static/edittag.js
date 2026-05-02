@@ -59,12 +59,9 @@ function addCreateRow(rowdex) {
     const tbody = document.getElementById("editTableBody");
     
     const crow = tbody.insertRow(-1);
-    const ccell0 = crow.insertCell(0);
-    ccell0.textContent = "";
-    const ccell1 = crow.insertCell(1);
-    ccell1.textContent = "";
-    const ccell2 = crow.insertCell(2);
-    ccell2.textContent = "";
+    crow.insertCell(0).textContent = "";
+    crow.insertCell(1).textContent = "";
+    crow.insertCell(2).textContent = "";
 
     var ctd = document.createElement("td");
     var btnEdit = makeButton(rowdex, "Create", "44CCEB", `onTagEdit(-1,`, hide=false);
@@ -88,14 +85,10 @@ function updateTable() {
     edit_tag_array.forEach( tag => {
         const newrow = tbody.insertRow(-1);
         
-        const cell0 = newrow.insertCell(0);
-        const cell1 = newrow.insertCell(1);
-        const cell2 = newrow.insertCell(2);
+        newrow.insertCell(0).textContent = tag.tag_id;
+        newrow.insertCell(1).textContent = tag.tag_name;
+        newrow.insertCell(2).textContent = tag.class_name;
         
-        cell0.textContent = tag.tag_id;
-        cell1.textContent = tag.tag_name;
-        cell2.textContent = tag.class_name;
-
         var td = document.createElement("td");
         var btnEdit = makeButton(rowdex, "Edit", "44CCEB", `onTagEdit(${tag.tag_id},`, hide=false);
         td.appendChild(btnEdit);
