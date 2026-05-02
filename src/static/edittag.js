@@ -165,18 +165,23 @@ function makeCategoryCombo() {
 }
 
 async function onTagSave(tag_id, row) {
-    
-    // TODO verify tagname not empty
-    // TODO verify category not empty
-    
+        
     var trow = editTable.rows[row];
     var tcol = trow.getElementsByTagName("td");
     
     var nametd = tcol[1];
     var savename = nametd.childNodes[0].value;
-    
+    if (savename.trim().length < 1) {
+        alert("Tag name cannot be empty");
+        return;
+    }
+
     var cattd  = tcol[2];
     var savecat = cattd.childNodes[0].value;
+    if (savecat.trim().length < 1) {
+        alert("Category cannot be empty");
+        return;
+    }
     
     const params = new URLSearchParams();
     params.append('tag_id', tag_id);
