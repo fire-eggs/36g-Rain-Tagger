@@ -436,6 +436,14 @@ def edit_tag():
     tag_name = request.args.get('name')
     tag_class = request.args.get('class')
     current_app.db.edit_tag(tag_id, tag_name, tag_class)
+
+@bp.route('/api/removeTag')
+def remove_tag():
+    tag_id = request.args.get('tag_id')
+    try:
+      current_app.db.remove_tag(tag_id)
+    except sqlite3.OperationalError as e:
+        print(f"edit_tag: opError |{str(e)}| for {tag_id},{tag_name}, {tag_class}")
     return jsonify("")
     
 @bp.route('/api/get_meta')

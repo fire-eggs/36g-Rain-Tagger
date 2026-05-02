@@ -733,3 +733,13 @@ class ImageDb(SqliteDb):
         self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
         self.save()
         return []
+
+    def remove_tag(self, tag_id):
+        sql = f"delete from image_tag where tag_id={tag_id}"
+        self._run_query(sql)
+        sql = f"delete from mra_tags where tag_id={tag_id}"
+        self._run_query(sql)
+        sql = f"delete from tag where tag_id={tag_id}"
+        self._run_query(sql)
+        self.save()
+        return []

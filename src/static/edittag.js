@@ -197,9 +197,34 @@ async function onTagSave(tag_id, row) {
     // Update the master tag list
     fetchAllTags();
 }
-function onTagDelete(tag_id, row) {
-    alert(`Del: ${tag_id}`);
+
+async function onTagDelete(tag_id, row) {
+    
+    var trow = editTable.rows[row];
+    var tcol = trow.getElementsByTagName("td");
+    
+    var nametd = tcol[1];
+    var delname = nametd.innerText;
+    
+    if ( !confirm(`Are you sure you want to delete the tag '${delname}'?`) ) {
+        return;
+    }
+    
+    const params = new URLSearchParams();
+    params.append('tag_id', tag_id);
+    try {
+        const resp = await fetch(`/api/removeTag?${params.toString()}`);
+        if (!resp.ok) throw new Error(`onTagDelete editTag failed: ${resp.status}`);
+    } catch (err) { console.error(err); return; }
+    
+    edit_tag_array = edit_tag_array.filter((t) => t.tag_id !== tag_id);
+    renderEditTags();
+    updateTable();
+    
+    // Update the master tag list
+    fetchAllTags();
 }
+
 function onTagCancel(tag_id, row) {
     
     editState(row, isOn=false);  // Turn edit state OFF
