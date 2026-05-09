@@ -69,6 +69,8 @@ function handleCloudRadioChange() {
 }
 
 function tagClick(tagname, tagId) {
+    inRandom = false;
+    
     //const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
     //const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
     performExploreLink(tagId, tagname); //, selectedOption1, selectedOption2);

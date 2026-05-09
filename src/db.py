@@ -298,7 +298,7 @@ class ImageDb(SqliteDb):
 
     @lru_cache()
     def get_tags(self) -> list[tuple]:
-        rows = self.run_query_tuple('select tag_id, lower(tag_name), tag_type_id from tag join tag_type using(tag_type_id) where tag_count > 0 order by lower(tag_name)')
+        rows = self.run_query_tuple('select tag_id, lower(tag_name), tag_type_id, tag_type_name from tag join tag_type using(tag_type_id) where tag_count > 0 order by lower(tag_name)')
         if not rows:
             return []
         return rows
@@ -490,9 +490,9 @@ class ImageDb(SqliteDb):
         
     def add_possibly_new_tags(self, image_ids, tags_to_add, tagTypeId):
         # This is a list of tags as strings, which may or may not exist. They are to be added to the specified images.
-        
+        # TODO refactor with edit_tag
         for tagText in tags_to_add:
-            sql = f"select tag_id from tag where tag_name = '{tagText}'"
+            sql = f"select tag_id from tag where tag_name like '{tagText}'" # like == case insensitive
             results = self._run_query(sql)
             if len(results) == 0:
                 sql = f"select max(tag_id) as new_id from tag"
@@ -501,7 +501,7 @@ class ImageDb(SqliteDb):
                 sql = f"insert or ignore into tag (tag_id, tag_name, tag_type_id, tag_count) values ({new_id}, '{tagText}', {tagTypeId}, 1)"
                 self._run_query(sql, commit=True)
             else:
-                new_id = int(results[0]["tag_id"])
+                new_id = int(results[0]["tag_id"]) # TODO check for multiple results?
                 
             # add to images with new_id
             for image_id in image_ids:
@@ -701,8 +701,45 @@ class ImageDb(SqliteDb):
                 if (image_ids[who] not in targets and image_ids[who] not in skips):
                     targets.append( image_ids[who] )
             except:
-                print(f"except: {who} {imgmax}")
+                print(f"GRIBT except: {who} {imgmax}")
 
         results = self._fetch_results(targets)
         return results,imgmax,randstateOut
         
+    def edit_tag(self, tag_id, tag_name, tag_class):
+        if len(tag_name.strip()) == 0 or len(tag_class.strip()) == 0:
+            raise ValueError("Empty name or category")
+        # TODO deal with special chars: single-quotes, what else?
+        res = self._run_query(f"select tag_type_id from tag_type where tag_type_name = '{tag_class}'")
+        if not res or len(res) == 0:
+            raise ValueError("Unknown category")
+        ttid = res[0]["tag_type_id"]
+        
+        if int(tag_id) == -1: # creating new tag
+            # TODO refactor with add_possibly_new_tags
+            sql = f"select tag_id from tag where tag_name like '{tag_name}'" # like == case insensitive
+            results = self._run_query(sql)
+            if len(results) != 0:
+                raise ValueError("Attempt to create existing tag")
+                
+            sql = 'select max(tag_id) from tag'
+            results = self._run_query(sql)
+            tagid = list(results[0].values())[0] + 1
+            # TODO setting tag_count to 1 because otherwise tag doesn't appear in GUI [see get_tags]. Need to reconsider?
+            sql = f'insert into tag (tag_id, tag_name, tag_type_id, tag_count) values ({tagid}, "{tag_name}", {ttid}, 1)'
+            self._run_query(sql)
+        else:
+        self._run_query(f"update tag set tag_name='{tag_name}', tag_type_id={ttid} where tag_id={tag_id}")
+        self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
+        self.save()
+        return []
+
+    def remove_tag(self, tag_id):
+        sql = f"delete from image_tag where tag_id={tag_id}"
+        self._run_query(sql)
+        sql = f"delete from mra_tags where tag_id={tag_id}"
+        self._run_query(sql)
+        sql = f"delete from tag where tag_id={tag_id}"
+        self._run_query(sql)
+        self.save()
+        return []

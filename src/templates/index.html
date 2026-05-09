@@ -49,6 +49,7 @@
             <button id="remove_del_btn">Remove Missing Images</button>
             <button id="cloud_btn">Cloud</button>
             <button id="rand_btn">Random</button>
+            <button id="tagEdit_btn">Edit Tags</button>
 
         </div>
         <div class="gallery">
@@ -65,7 +66,11 @@
             </div>
             <div id="pagination"></div>
             <div id="results"></div>
-            <div id="pagination2"></div>
+            <div>
+                <div id="pagination2"></div>
+                <button class="flat" style="margin-left:20px;" onclick="deselectAll()">Clear Sel</button>
+                <button class="flat" onclick="selectAll()">Select All</button>
+            </div>
         </div>
     </div><!-- row -->
     
@@ -76,7 +81,6 @@
             <div class="toggle-btn" id="togglePanel">⮞</div>
             <p id="selectMsg" style="margin:0; margin-left:20px;">0 Images Selected</p>
         </div>
-        <!--         <button id="clearSelect" style="margin-bottom:0;">Clear Selection</button> -->
         <p style="margin:0; line-height:24px;"><b>Common Tags for Selected Images</b></p>
         <div id="info" class="info-tags" style="border:1px solid blue;"></div>
         <div class="info-rest">
@@ -108,10 +112,31 @@
       </div>
     </div>
 
+    <!-- Tag manager -->
+    <div class="tagEdit" id="tagManager">
+        <div class="close-btn" id="TEcloseBtn" title="Close Tag Editor">&times;</div>
+        <input id="edit_tags_magic" maxlength="200" minlength="0" style="display: none;" type="text" value="">
+        <div style="display:flex; flex-direction: column;  position: fixed; top:100px; left:25px;">
+            <button id="tagE_clear">Clear</button>
+            <div class="search">
+                <input id="edit_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
+                <div id="edit_tag_suggestions"></div>
+                <div id="selected_edit_tags"></div>
+            </div>
+            <div id="tag_ops" class="tagOps">
+                <table id="editTable">
+                    <thead><tr><th>Id</th><th>Tag Name</th><th>Category</th></tr></thead>
+                    <tbody id="editTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/index.js"></script>
     <script src="/static/dupes.js"></script>
     <script src="/static/explore.js"></script>
     <script src="/static/lightbox.js"></script> 
-    <script src="/static/cloud.js"></script>   
+    <script src="/static/cloud.js"></script>
+    <script src="/static/edittag.js"></script>   
 </body>
 </html>
