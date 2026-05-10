@@ -5,16 +5,15 @@ let currImg = null;
 let state = "fit";
 
 function openLightbox(img) {
-    // TODO tags for current image
-    
+
     const firsttime = (currImg == null);
-    
+
     currImg = img;
     lightboxImg.src = img.src;
     zoom = 1; panX = panY = 0;
     updateTransform();
     lightbox.classList.add('active');
-    
+
     // make sure we start in 'fit' mode    
     if (firsttime) setState('fit');
 
