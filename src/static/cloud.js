@@ -70,7 +70,7 @@ function handleCloudRadioChange() {
 
 function tagClick(tagname, tagId) {
     inRandom = false;
-    
+        
     //const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
     //const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
     performExploreLink(tagId, tagname); //, selectedOption1, selectedOption2);
@@ -136,6 +136,8 @@ function renderCloud(words, selExpOption, selTypeOption){
 
     document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
     document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
+    
+    container.style.removeProperty('height'); // no longer needed; if not removed, messes up gallery layout
 }
 
 async function performCloud(selExpOption="G",selTypeOption="G") {
