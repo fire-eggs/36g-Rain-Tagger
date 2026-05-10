@@ -780,6 +780,30 @@ window.addEventListener('mousemove', e => {
 
 window.addEventListener('mouseup', () => resizing = false);
 
+/* --------- Theme --------------- */
+function setTheme(themeName) {
+    document.documentElement.setAttribute('data-theme', themeName);
+    
+    // Update icon
+    const themeIcon = document.getElementById('themeIcon');
+    themeIcon.src = themeName === 'dark' ? '/static/sun.svg' : '/static/moon.svg';
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    localStorage.setItem('theme', newTheme);
+    setTheme(newTheme);
+}
+
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+});
+
+/* -------------- End Theme --------- */
 
 general_tag_input.addEventListener('input', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));
 general_tag_input.addEventListener('focus', () => handleTagInput(general_tag_input, general_tag_suggestions, 0, true));

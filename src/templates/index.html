@@ -54,6 +54,8 @@
         </div>
         <div class="gallery">
             <div style="padding: 2px; display:flex; flex-direction: row; gap: 3px; align-items:center;">
+
+                <input id="themeIcon" class="theme-toggle" type="image" src="/static/moon.svg" onclick="toggleTheme()" />
                 <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input' value='25'>
                 <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
                 <button id="go_input" class="flat">Go</button>
