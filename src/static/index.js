@@ -89,6 +89,22 @@ function toggleSelect(img) {
     
 }
 
+function updateSelect() {
+    /* on mode change (gallery <-> list) enable selection; update selection markers */
+    results_div.querySelectorAll('.img-card').forEach((imgc) => {
+        imgc.addEventListener('click', () => toggleSelectC(imgc));
+    });
+
+    results_div.querySelectorAll('img').forEach( img => {
+        // TODO copy-pasta
+        let iid = img.dataset.id;
+        if (selectedIds.has(iid)) {
+            const dad = img.parentElement;
+            dad.classList.toggle('selected');
+        }
+    });
+}
+
 function deselectAll() {
     /* Clear selection state for all images */
 
@@ -574,15 +590,9 @@ function renderResults(data) {
         }
     }
     results_div.innerHTML = html;
-/*
-    results_div.querySelectorAll('img[data-id]').forEach(img => {
-        img.addEventListener('click', () => toggleSelect(img));
-    });
-*/
-    results_div.querySelectorAll('.img-card').forEach((imgc) => {
-        imgc.addEventListener('click', () => toggleSelectC(imgc));
-    });
-
+    
+    updateSelect(); /* on mode change, need to update selected image markers */
+    
     const prevDisable = current_page === 1 || tot_pages < 1;
     html = `
         <button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>Previous</button>
