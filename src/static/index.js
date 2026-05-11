@@ -551,7 +551,8 @@ function renderResults(data) {
         if (current_display_mode === 'Gallery') {
             html += data.results.map(result => `
                 <div class="m row">
-                    <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/>
+                    <div class="img-card">
+                    <img data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/></div>
                     <div class="outer_pills">
                         <p class="fn">${result.image_path}</p>
                         <div class="pills">
@@ -573,11 +574,11 @@ function renderResults(data) {
         }
     }
     results_div.innerHTML = html;
-
-    // TODO repeat for img-card
+/*
     results_div.querySelectorAll('img[data-id]').forEach(img => {
         img.addEventListener('click', () => toggleSelect(img));
     });
+*/
     results_div.querySelectorAll('.img-card').forEach((imgc) => {
         imgc.addEventListener('click', () => toggleSelectC(imgc));
     });
