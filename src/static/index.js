@@ -65,6 +65,11 @@ let active_text_tags = []; // User has added a tag via text, which may or may no
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
+function toggleSelectC(imgc) {
+    const img = imgc.querySelector('img');
+    toggleSelect(img);
+}
+
 function toggleSelect(img) {
     const id = img.dataset.id;
 
@@ -572,6 +577,9 @@ function renderResults(data) {
     // TODO repeat for img-card
     results_div.querySelectorAll('img[data-id]').forEach(img => {
         img.addEventListener('click', () => toggleSelect(img));
+    });
+    results_div.querySelectorAll('.img-card').forEach((imgc) => {
+        imgc.addEventListener('click', () => toggleSelectC(imgc));
     });
 
     const prevDisable = current_page === 1 || tot_pages < 1;
