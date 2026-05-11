@@ -189,25 +189,52 @@ input[type=number]{
     overflow-wrap: break-all;
 }
 
-/* individual images */
-img.result {
-    max-width: var(--thumb-size);
-    max-height: var(--thumb-size);
-    object-fit: contain;
-    vertical-align: top;
-    border: 4px solid transparent; /* CG change */
+/* gallery as grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size), 1fr));
+    gap: 2px;
+    padding: 2px;
+}
+
+/* container for image, 'view' button */
+.img-card {
+    position: relative;
+    border: 4px solid transparent;
     border-radius: 8px;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-img.result.selected {
-    border-color: dodgerblue;
+/* image is selected */
+.img-card.selected {
+    border-color: #3b82f6
 }
 
-img.result:hover {
+/* the actual image */
+.img-card img {
+    max-width: var(--thumb-size);
+    max-height: var(--thumb-size);
+    object-fit: contain;
+    vertical-align: top;
+}
+
+.img-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
+
+/* The 'view' button */
+.imgchk {
+    position: absolute;
+    top: 6px;
+    right: 26px;
+    background: #ffffff;
+    padding: 2px;
+    border-radius: 4px;
+    height:20px;
+    width:20px;    
+}
+
 
 /* pill colors for types */
 .rating {

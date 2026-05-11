@@ -58,21 +58,18 @@ const warning = document.getElementById('warn'); // TODO function
 const hideWarn = () => warning.style.display = "none";
 const showWarn = () => warning.style.display = "block";
 
-/* CG change */
+let active_info_tags = []; // tag_name and tag_id
+let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
+
+/* ------------ Selection --------------- */
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
 
-results_div.addEventListener('click', (e) => {
-    // TODO add onclick event to <img> tag?
-    /* User clicks on an image. Add or remove from the list of selected images. */
-    const item = e.target.closest('img.result');
-    if (!item) {
-        //console.log("click fail");
-        return;
-    }
-    const id = item.dataset.id;
+function toggleSelect(img) {
+    const id = img.dataset.id;
 
-    item.classList.toggle('selected');
+    const dad = img.parentElement;
+    dad.classList.toggle('selected');
 
     if (selectedIds.has(id)) {
       selectedIds.delete(id);
@@ -84,10 +81,8 @@ results_div.addEventListener('click', (e) => {
 
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
-  });
-
-let active_info_tags = []; // tag_name and tag_id
-let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
+    
+}
 
 function deselectAll() {
     /* Clear selection state for all images */
@@ -97,9 +92,12 @@ function deselectAll() {
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
     results_div.querySelectorAll('img').forEach( img => {
+        // TODO copy-pasta
         let iid = img.dataset.id;
-        if (selectedIds.has(iid))
-            img.classList.toggle('selected');
+        if (selectedIds.has(iid)) {
+            const dad = img.parentElement;
+            dad.classList.toggle('selected');
+        }
     });
 
     clearAllSelection(); // NOTE: includes updateSelCount
@@ -107,9 +105,11 @@ function deselectAll() {
 
 function selectAll() {
     results_div.querySelectorAll('img').forEach( img => {
+        // TODO copy-pasta
         let iid = img.dataset.id;
         if (!selectedIds.has(iid)) {
-            img.classList.toggle('selected');
+            const dad = img.parentElement;
+            dad.classList.toggle('selected');
             selectedIds.add(iid);
         }
     });
@@ -118,6 +118,8 @@ function selectAll() {
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
 }
+
+/* ------------ End Selection --------------- */
 
 function generateTagPill(text, tag_id, tagtype, letter="x") {
     let tagclass = "general";
@@ -559,16 +561,17 @@ function renderResults(data) {
                 </div>
             `).join('');
         } else {
-            const r = data.results.map(result => `
-                <img class="result" data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" 
-                loading="lazy" title="${result.image_path}&#013;&#013;${render_all_top_tags(result)}"/>`).join('');
-            html += `<div class="m">${r}</div>`;
+            const r = data.results.map(result => `<div class="img-card"><div class="imgchk"><input type="image" src="/static/eye.svg" onclick="openLightboxId(${result.image_id})"></div>
+                <img data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" 
+                loading="lazy" title="${result.image_path}&#013;&#013;${render_all_top_tags(result)}"/></div>`).join('');
+            html += `<div class="grid">${r}</div>`;
         }
     }
     results_div.innerHTML = html;
 
+    // TODO repeat for img-card
     results_div.querySelectorAll('img[data-id]').forEach(img => {
-        img.addEventListener('dblclick', () => openLightbox(img));
+        img.addEventListener('click', () => toggleSelect(img));
     });
 
     const prevDisable = current_page === 1 || tot_pages < 1;

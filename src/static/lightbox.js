@@ -4,6 +4,16 @@ let dragging = false, startX, startY;
 let currImg = null;
 let state = "fit";
 
+function openLightboxId(imgid) {
+    /* Open the lightbox using the image id */
+    results_div.querySelectorAll('img[data-id]').forEach((img) => {
+        if ( img.dataset["id"] === String(imgid)) {
+            openLightbox(img);
+            return;
+        }
+    });
+}
+
 function openLightbox(img) {
 
     const firsttime = (currImg == null);
