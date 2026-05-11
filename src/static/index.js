@@ -550,6 +550,33 @@ function targetPage(target) {
     if (inRandom) performRandom(true); else performSearch(true);
 }
 
+function createPagination(tot_pages) {
+    // pagination buttons. show a "go to first"; "go to last"; "prev" and "next"; and five page buttons. current page button is disabled.
+    const prevDisable = current_page === 1 || tot_pages < 1;
+    const nextDisable = tot_pages <= current_page;
+    let html = "";
+    
+    let start = current_page < 4 ? 1 : current_page - 2;
+    let fin = tot_pages < start+4 ? tot_pages : start+4;
+    start = start < 5 ? start : (fin - start < 4 ? fin-4 : start);
+
+    // first and prev disabled if no pages or on first page    
+    html += `<button class="flat" data-id="1" type="button"${prevDisable ? 'disabled' : ''}>‹‹ First </button>`;
+    html += `<button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>‹ Prev</button>`;
+        
+    for (let blah= start; blah <= fin; blah++) {
+        html += `<button class="flat" data-id="${blah}" type="button" ${blah === current_page ? 'disabled' : ''}> ${blah} </button>`;
+    }
+    
+    // next and last disabled if on last page or no pages   
+    html += `<button id="next_page" class="flat" ${nextDisable ? 'disabled' : ''}>Next ›</button>`;
+    html += `<button class="flat" data-id="${tot_pages}" type="button" ${nextDisable ? 'disabled' : ''}> Last ›› </button>`;
+
+    html += ` Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}`;
+
+    return html;
+}    
+
 function renderResults(data) {
     /* update the gallery to show the current page's images */
     per_page = isNaN(per_page) ? DefaultPerPage : per_page;
@@ -592,30 +619,12 @@ function renderResults(data) {
     results_div.innerHTML = html;
     
     updateSelect(); /* on mode change, need to update selected image markers */
-    
-    const prevDisable = current_page === 1 || tot_pages < 1;
-    html = `
-        <button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>Previous</button>
-        Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}
-        <button id="next_page" class="flat" ${tot_pages <= current_page ? 'disabled' : ''}>Next</button>
-    `;
-    
-    // pagination buttons. show a "go to first"; "go to last"; and five page buttons. current page button is disabled.
-    let start = current_page < 4 ? 1 : current_page - 2;
-    let fin = tot_pages < start+4 ? tot_pages : start+4;
-    start = start < 5 ? start : (fin - start < 4 ? fin-4 : start);
-    if (start !== 1)
-        html += `<button class="pgbtn" data-id="1" type="button"> &lt;&lt; </button>`;
-    for (let blah= start; blah <= fin; blah++) {
-        html += `<button class="pgbtn" data-id="${blah}" type="button" ${blah === current_page ? 'disabled' : ''}> ${blah} </button>`;
-    }
-    if (fin !== tot_pages)
-        html += `<button class="pgbtn" data-id="${tot_pages}" type="button"> &gt;&gt; </button>`;
-    
-    pagination_div.innerHTML = html;
+
+    let pageHtml = createPagination(tot_pages);    
+    pagination_div.innerHTML = pageHtml;
     
     // Issue 25: bottom next/prev buttons not working
-    let html2 = html.replace("prev_page", "prev_page2");
+    let html2 = pageHtml.replace("prev_page", "prev_page2");
     let html3 = html2.replace("next_page", "next_page2");
     pagination2_div.innerHTML = html3;
 
