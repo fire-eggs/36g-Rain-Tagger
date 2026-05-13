@@ -406,23 +406,17 @@ def getPathForImageId(image_id):
 @bp.route('/api/open_image')
 def openImage():
     image_id = request.args.get('p')
-    results = current_app.db.get_image_path(image_id)
-    if len(results) != 1:
+    file_path = getPathForImageId(image_id)
+    if file_path is None or not os.path.isfile(file_path):
         return jsonify("")
-    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
-    #print(file_path)
-    #subprocess.Popen([f"xdg-open {file_path}"]);
     subprocess.call(["xdg-open", file_path])
     return jsonify("")
 
 @bp.route('/api/del_image')
 def delImage():
     image_id = request.args.get('p')
-    results = current_app.db.get_image_path(image_id)
-    if len(results) != 1:
-        return jsonify("")
-    file_path = os.path.join(results[0]["directory"], results[0]["filename"])
-    if (not os.path.isfile(file_path)):
+    file_path = getPathForImageId(image_id)
+    if file_path is None or not os.path.isfile(file_path):
         abort(410);
     rmres = subprocess.run(["rm", "-f", file_path])
     if (rmres.returncode != 0):
