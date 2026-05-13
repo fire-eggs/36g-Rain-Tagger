@@ -26,6 +26,7 @@ function clearAllTagEdit() {
 
 function performEditTag() {
     
+    clearAll();
     mgr.classList.add('active');
     clearAllTagEdit();
 }
@@ -52,7 +53,6 @@ function searchTagInput() {
 
 function renderEditTags() {
     renderTags(selected_edit_tags_div, edit_tag_array, 'general', 'edit_tags_magic');
-    //updateTable();
 }
 
 function addCreateRow(rowdex) {
