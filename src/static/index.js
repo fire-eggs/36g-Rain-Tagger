@@ -235,6 +235,8 @@ async function updateInfoPane() {
     let afile = null;
     let metadata = null;
     let html = "";
+    let filename = "";
+    let direct = "";
     if (infoPaneImages.length === 1) {
         try {
             const resp = await fetch(`/api/get_meta?p=${infoPaneImages[0]}`);
@@ -247,8 +249,8 @@ async function updateInfoPane() {
             html = `<h4>Image metadata unavailable</h4>`;
         }
         else {
-            const filename = afile.FileName;
-            const direct = afile.Directory;
+            filename = afile.FileName;
+            direct = afile.Directory;
             html = `<h4>${direct}<br>${filename}</h4>`;
             html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
             
@@ -266,7 +268,7 @@ async function updateInfoPane() {
     p2.innerHTML = html;
     if (infoPaneImages.length === 1 && afile !== undefined) {
         document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
-        document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0]));
+        document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0], direct+"/"+filename));
     }
 }
 
@@ -275,8 +277,12 @@ function openImage(image_id) {
     const resp = fetch(`/api/open_image?p=${image_id}`);
 }
 
-function deleteImage(image_id) {
-    // TODO delete confirmation
+function deleteImage(image_id, path) {
+    
+    if ( !confirm(`Are you sure you want to delete the file '${path}'?`) ) {
+        return;
+    }
+
     const resp = fetch(`/api/del_image?p=${image_id}`);
     // TODO delete fail
 }
