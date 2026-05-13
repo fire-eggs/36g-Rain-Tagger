@@ -29,7 +29,7 @@ const f_questionable = document.getElementById('f_questionable');
 const per_page_input = document.getElementById('per_page_input');
 const page_input = document.getElementById('page_input');
 
-[f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach(input => {
+[f_tag, f_general, f_sensitive, f_explicit, f_questionable].forEach((input) => {
     input.addEventListener('input', () => {
         document.getElementById(input.id + "_value").textContent = input.value;
     });
@@ -42,21 +42,19 @@ let current_page = 1;
 let per_page = DefaultPerPage;
 
 per_page_input.addEventListener('input', () => {
-    let ppi = parseInt(per_page_input.value);
-    per_page = (isNaN(ppi) ? DefaultPerPage : ppi);
+    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
 });
 page_input.addEventListener('input', () => {
-    let cp = parseInt(page_input.value);
-    current_page = (isNaN(cp) ? 1 : cp);
+    current_page = parseInt(page_input.value) ?? 1;
 });
 document.getElementById('go_input').addEventListener('click', () => {
-    if (inRandom) performRandom(true); else performSearch(true);
+    if (inRandom) { performRandom(true); } else { performSearch(true); }
 });
 
 /* Warning icon, visible when changes not sent to database */
 const warning = document.getElementById('warn'); // TODO function
-const hideWarn = () => warning.style.display = "none";
-const showWarn = () => warning.style.display = "block";
+const hideWarn = () => { warning.style.display = "none"; };
+const showWarn = () => { warning.style.display = "block"; };
 
 let active_info_tags = []; // tag_name and tag_id
 let active_text_tags = []; // User has added a tag via text, which may or may not have a tag id
@@ -117,8 +115,7 @@ function updateSelect() {
 function deselectAll() {
     /* Clear selection state for all images */
 
-    if (!anySelected())
-        return;
+    if (!anySelected()) { return; }
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
     results_div.querySelectorAll('img').forEach( img => {
@@ -154,30 +151,30 @@ function selectAll() {
 function generateTagPill(text, tag_id, tagtype, letter="x") {
     let tagclass = "general";
     // TODO consider having the db return the tagclass string, not the number
-    if (tagtype == 4) tagclass = "character";
-    if (tagtype == 12) tagclass = "artist";
-    if (tagtype == 14) tagclass = "franchise";
-    if (tagtype == 99 || tagtype == 32) tagclass = "newtext";   // special: user has typed new tag not in database
+    if (tagtype === 4) { tagclass = "character"; }
+    if (tagtype === 12) { tagclass = "artist"; }
+    if (tagtype === 14) { tagclass = "franchise"; }
+    if (tagtype === 99 || tagtype === 32) { tagclass = "newtext"; }  // special: user has typed new tag not in database
     return `<span class="pill ${tagclass}">${text} <button data-id=${tag_id} data-tagname="${text}" data-typeid=${tagtype}>${letter}</button></span>`;
 }
 
 function renderInfoTags(container, selectedArray, className) {
     /*        `<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" type="button">x</button></span>` */
-    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id)
+    container.innerHTML = selectedArray.map((tag) => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id)
     ).join('');
 
     /*    `<span class="pill newtext">${tag} <button data-id="0" data-tagname="${tag}" type="button">x</button></span>` */
-    container.innerHTML += active_text_tags.map(tag => generateTagPill(tag, 0, 99)
+    container.innerHTML += active_text_tags.map((tag) => generateTagPill(tag, 0, 99)
     ).join('');
 
-    container.querySelectorAll('button[data-id]').forEach(btn => {
+    container.querySelectorAll('button[data-id]').forEach((btn) => {
         // TODO add onclick event to button creation
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
 
             if (id === 0) {
                 // User-defined text tag [no database tag id]
-                const idx = active_text_tags.findIndex(t => t === btn.dataset.tagname);
+                const idx = active_text_tags.findIndex((t) => t === btn.dataset.tagname);
                 if (idx !== -1) {
                     active_text_tags.splice(idx, 1);
                     showWarn();
@@ -185,9 +182,9 @@ function renderInfoTags(container, selectedArray, className) {
             }
             else {
                 // tag id from database
-                const idx = selectedArray.findIndex(t => t.tag_id === id);
-                if (idx !== -1) {
-                    selectedArray.splice(idx, 1);
+                const idx2 = selectedArray.findIndex((t) => t.tag_id === id);
+                if (idx2 !== -1) {
+                    selectedArray.splice(idx2, 1);
                     showWarn();
                 }
             }
@@ -201,13 +198,12 @@ async function applyTagChanges() {
 
     hideWarn();
     const params = new URLSearchParams();
-    //selectedIds.forEach(id => params.append('image_ids', id));
     infoPaneImages.forEach(id => params.append('image_ids', id));
     active_info_tags.forEach(blah => params.append('tag_ids', blah.tag_id));
     active_text_tags.forEach(blah => params.append('text_tags', blah));
     try {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
-        if (!resp.ok) throw new Error(`Apply tag changes failed: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`Apply tag changes failed: ${resp.status}`); }
     } catch (err) { console.error(err); }
     updateMRAtags();
 }
@@ -230,27 +226,24 @@ async function updateInfoPane() {
     
     let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
-        //if (anySelected()) {
         if (infoPaneImages.length != 0) {
             applyTagChanges();
         }
-        // TODO QUESTION: invoke updateInfoPane here? invoke renderInfoTags? sendSelection?
     });
     
     const p2 = document.getElementById("detail_panel2");
     let afile = null;
     let metadata = null;
     let html = "";
-    if (infoPaneImages.length == 1) {
+    if (infoPaneImages.length === 1) {
         try {
             const resp = await fetch(`/api/get_meta?p=${infoPaneImages[0]}`);
-            if (!resp.ok) throw new Error(`get_meta fail: ${resp.status}`);
+            if (!resp.ok) { throw new Error(`get_meta fail: ${resp.status}`); }
             metadata = await resp.json();
             afile = metadata[0];
-            //console.log(afile);
         } catch (err) { console.error(err); p2.innerHTML = `<h4>${err}</h4>`; return; }
         
-        if (afile == undefined) {
+        if (afile === undefined) {
             html = `<h4>Image metadata unavailable</h4>`;
         }
         else {
@@ -269,12 +262,12 @@ async function updateInfoPane() {
         }
     } else {
         html = `<h4>Details only available when one image selected!</h4>`;
-    }        
+    }
     p2.innerHTML = html;
-    if (infoPaneImages.length == 1 && afile != undefined) {
+    if (infoPaneImages.length === 1 && afile !== undefined) {
         document.getElementById("open_me").addEventListener('click', () => openImage(infoPaneImages[0]));
         document.getElementById("rm_me").addEventListener('click', () => deleteImage(infoPaneImages[0]));
-    }    
+    }
 }
 
 function openImage(image_id) {
@@ -290,10 +283,11 @@ function deleteImage(image_id) {
 
 async function updateMRAtags() {
     // Update the most-recently-added tags list
+
     let curr = null;
     try {
         const resp = await fetch(`/api/getMRAtags`);
-        if (!resp.ok) throw new Error(`getMRAtags call failed: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`getMRAtags call failed: ${resp.status}`); }
         curr = await resp.json(); // database returns the list of most-recently-added tags
     } catch (err) { console.error(err); return; }
 
@@ -302,16 +296,16 @@ async function updateMRAtags() {
     let MRU_div = document.getElementById('MRUTags');
 
     //`<span class="pill general">${tag.tag_name} <button data-id="${tag.tag_id}" data-text="${tag.tag_name}" type="button">+</button></span>`
-    MRU_div.innerHTML = curr.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id, "+")).join('');
+    MRU_div.innerHTML = curr.map((tag) => generateTagPill(tag.tag_name, tag.tag_id, tag.tag_type_id, "+")).join('');
 
-    MRU_div.querySelectorAll('button[data-id]').forEach(btn => {
+    MRU_div.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
             // TODO refactor common w/ handleAddTagInput, AddTagClick
             if (infoPaneImages.length == 0) return;
             const id = parseInt(btn.dataset.id);
             const txt= btn.dataset.tagname; //text;
 
-            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+            if (!active_info_tags.some((tag) => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: txt.trim(), tag_type_id: parseInt(btn.dataset.typeid) });
                 showWarn();
                 renderInfoTags(info_div, active_info_tags, 'general');
@@ -325,18 +319,18 @@ function handleAddTagInput(inputEl, suggestionDiv) {
     
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
-    if (!query) return;
+    if (!query) { return; }
 
     const filtered = Array.from(all_tags.values())
-        .filter(tag => tag[1].toLowerCase().includes(query));
-    suggestionDiv.innerHTML = filtered.map(tag =>
+        .filter((tag) => tag[1].toLowerCase().includes(query));
+    suggestionDiv.innerHTML = filtered.map((tag) =>
         `<div class="tag_suggestion" data-id="${tag[0]}" data-tag_type_id="${tag[2]}">${tag[1]}</div>`
     ).join('');
 
-    document.getElementById('addtag_suggestions').querySelectorAll('.tag_suggestion').forEach(el => {
+    document.getElementById('addtag_suggestions').querySelectorAll('.tag_suggestion').forEach((el) => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
-            if (!active_info_tags.some(tag => tag.tag_id === id)) {
+            if (!active_info_tags.some((tag) => tag.tag_id === id)) {
                 active_info_tags.push({ tag_id: id, tag_name: el.textContent.trim(), tag_type_id: parseInt(el.dataset.tag_type_id) });
 
                 showWarn();
@@ -372,7 +366,6 @@ async function setInfoPaneImages(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    //if (!anySelected()) return;
     if (infoPaneImages.length == 0) return;
     let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_").toLowerCase(); // no spaces
