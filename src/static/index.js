@@ -357,12 +357,12 @@ async function setInfoPaneImages(selection) {
     active_text_tags = [];
     const params = new URLSearchParams();
     infoPaneImages = [];
-    selection.forEach(id => params.append('selected_ids', id));
-    selection.forEach(id => infoPaneImages.push(id));
+    selection.forEach((id) => params.append('selected_ids', id));
+    selection.forEach((id) => infoPaneImages.push(id));
     let results = [];
     try {
         const resp = await fetch(`/api/selection?${params.toString()}`);
-        if (!resp.ok) throw new Error(`API selection fail: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`API selection fail: ${resp.status}`); }
         active_info_tags = await resp.json();
         updateInfoPane();
     } catch (err) { console.error(err); }
@@ -404,61 +404,61 @@ function initializeTags() {
 
 function parseTagField(fieldId, typeId) {
     const val = document.getElementById(fieldId).value;
-    const ids = val ? val.split(',').map(Number) : [];
-    return ids.map(id => {
+    const ids = (val ? val.split(',').map(Number) : []);
+    return ids.map((id) => {
         const t = all_tags.get(id);
-        return t ? { tag_id: t[0], tag_name: t[1] } : null;
+        return (t ? { tag_id: t[0], tag_name: t[1] } : null);
     }).filter(Boolean);
 }
 
 function handleTagInput(inputEl, suggestionDiv, typeId, ignoreTypeId=false) {
     const query = inputEl.value.trim().toLowerCase();
     suggestionDiv.innerHTML = '';
-    if (!query) return;
+    if (!query) {return;}
     if (ignoreTypeId) {
         const filtered = Array.from(all_tags.values())
-            .filter(tag => tag[1].toLowerCase().includes(query));
-        suggestionDiv.innerHTML = filtered.map(tag =>
+            .filter((tag) => tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered.map((tag) =>
             `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
     else {
-        const filtered = Array.from(all_tags.values())
-            .filter(tag => tag[2] === typeId && tag[1].toLowerCase().includes(query));
-        suggestionDiv.innerHTML = filtered.map(tag =>
+        const filtered2 = Array.from(all_tags.values())
+            .filter((tag) => tag[2] === typeId && tag[1].toLowerCase().includes(query));
+        suggestionDiv.innerHTML = filtered2.map((tag) =>
             `<div class="tag_suggestion" data-id="${tag[0]}" data-type_id="${tag[2]}">${tag[1]}</div>`
         ).join('');
     }
-    attachSuggestionEvents(suggestionDiv, typeId === CharacterTagTypeId ? selected_character_tags : selected_general_tags,
-        typeId === CharacterTagTypeId ? renderCharacterTags : renderGeneralTags, typeId === CharacterTagTypeId ? 'file_tags_character' : 'file_tags_general');
+    attachSuggestionEvents(suggestionDiv, (typeId === CharacterTagTypeId ? selected_character_tags : selected_general_tags),
+        (typeId === CharacterTagTypeId ? renderCharacterTags : renderGeneralTags), (typeId === CharacterTagTypeId ? 'file_tags_character' : 'file_tags_general'));
 }
 
 function attachSuggestionEvents(container, selectedArray, renderFn, hiddenFieldId) {
-    container.querySelectorAll('.tag_suggestion').forEach(el => {
+    container.querySelectorAll('.tag_suggestion').forEach((el) => {
         el.addEventListener('click', () => {
             const id = parseInt(el.dataset.id);
-            if (!selectedArray.some(tag => tag.tag_id === id)) {
-                selectedArray.push({ tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id, class_name: el.dataset.className });
+            if (!selectedArray.some((tag) => tag.tag_id === id)) {
+                selectedArray.push({ class_name: el.dataset.className, tag_id: id, tag_name: el.textContent.trim(), type_id: el.dataset.type_id });
                 renderFn();
             }
             el.remove();
             const hideFld = document.getElementById(hiddenFieldId);
-            hideFld.value = selectedArray.map(t => t.tag_id).join(',');
+            hideFld.value = selectedArray.map((t) => t.tag_id).join(',');
             hideFld.dispatchEvent(new Event('change'));
         });
     });
 }
 
 function renderTags(container, selectedArray, className, hiddenFieldId) {
-    container.innerHTML = selectedArray.map(tag => generateTagPill(tag.tag_name, tag.tag_id, tag.type_id)).join('');
+    container.innerHTML = selectedArray.map((tag) => generateTagPill(tag.tag_name, tag.tag_id, tag.type_id)).join('');
         
-    container.querySelectorAll('button[data-id]').forEach(btn => {
+    container.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
-            const idx = selectedArray.findIndex(t => t.tag_id === id);
-            if (idx !== -1) selectedArray.splice(idx, 1);
+            const idx = selectedArray.findIndex((t) => t.tag_id === id);
+            if (idx !== -1) { selectedArray.splice(idx, 1); }
             const hideFld = document.getElementById(hiddenFieldId);
-            hideFld.value = selectedArray.map(t => t.tag_id).join(',');
+            hideFld.value = selectedArray.map((t) => t.tag_id).join(',');
             hideFld.dispatchEvent(new Event('change'));
             renderTags(container, selectedArray, className, hiddenFieldId);
         });
@@ -543,19 +543,19 @@ function render_all_top_tags(result) {
 
 function prevPage() {
     if (current_page > 1) {
-        current_page--;
-        if (inRandom) performRandom(true); else performSearch(true);
+        current_page -= 1;
+        if (inRandom) { performRandom(true); } else { performSearch(true); }
     }
 }
 
 function nextPage() {
-    current_page++;
-    if (inRandom) performRandom(true); else performSearch(true);
+    current_page += 1;
+    if (inRandom) {performRandom(true); }else {performSearch(true);}
 }
 
 function targetPage(target) {
     current_page = target;
-    if (inRandom) performRandom(true); else performSearch(true);
+    if (inRandom) {performRandom(true); }else {performSearch(true);}
 }
 
 function createPagination(tot_pages) {
@@ -587,8 +587,8 @@ function createPagination(tot_pages) {
 
 function renderResults(data) {
     /* update the gallery to show the current page's images */
-    per_page = isNaN(per_page) ? DefaultPerPage : per_page;
-    per_page = per_page < 1 ? DefaultPerPage : per_page;
+    per_page = (Number.isNaN(per_page) ? DefaultPerPage : per_page);
+    per_page = (per_page < 1 ? DefaultPerPage : per_page);
     per_page_input.value = per_page;
     
     let tot_pages = Math.ceil( data.tot_found / per_page );
@@ -600,7 +600,7 @@ function renderResults(data) {
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
     if (data.results && data.results.length) {
         if (current_display_mode === 'Gallery') {
-            html += data.results.map(result => `
+            html += data.results.map((result) => `
                 <div class="m row">
                     <div class="img-card">
                     <img data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/></div>
@@ -636,12 +636,12 @@ function renderResults(data) {
     let html3 = html2.replace("next_page", "next_page2");
     pagination2_div.innerHTML = html3;
 
-    pagination_div.querySelectorAll('button[data-id]').forEach(btn => {
+    pagination_div.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
             targetPage(target);
         }); });
-    pagination2_div.querySelectorAll('button[data-id]').forEach(btn => {
+    pagination2_div.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const target = parseInt(btn.dataset.id);
             targetPage(target);
@@ -666,22 +666,22 @@ async function performTagSearchGuts(isPagination) {
         questionable: f_questionable.value
     };
     
-    if (!isPagination) current_page = 1;
+    if (!isPagination) { current_page = 1; }
 
-    const generalIds = selected_general_tags.map(t => t.tag_id);
+    const generalIds = selected_general_tags.map((t) => t.tag_id);
     //console.log(generalIds);
-    const characterIds = selected_character_tags.map(t => t.tag_id);
-    if (!generalIds.length && !characterIds.length) return;
+    const characterIds = selected_character_tags.map((t) => t.tag_id);
+    if (!generalIds.length && !characterIds.length) { return; }
 
     const params = new URLSearchParams();
-    generalIds.forEach(id => params.append('general_tag_ids', id));
-    characterIds.forEach(id => params.append('character_tag_ids', id));
+    generalIds.forEach((id) => params.append('general_tag_ids', id));
+    characterIds.forEach((id) => params.append('character_tag_ids', id));
     Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
     params.append('page', current_page);
     params.append('per_page', per_page);
     try {
         const resp = await fetch(`/search_w_tags?${params.toString()}`);
-        if (!resp.ok) throw new Error(`Tag search failed: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`Tag search failed: ${resp.status}`); }
         renderResults(await resp.json());
     } catch (err) { console.error(err); }
     
@@ -699,18 +699,18 @@ async function performRandom(isPagination=false) {
         questionable: f_questionable.value
     };
 
-    inRandom = true;    
+    inRandom = true;
     if (!isPagination) {
         current_page = 1;
         randstate = "";
     }
     
-    const generalIds = selected_general_tags.map(t => t.tag_id);
-    const characterIds = selected_character_tags.map(t => t.tag_id);
+    const generalIds = selected_general_tags.map((t) => t.tag_id);
+    const characterIds = selected_character_tags.map((t) => t.tag_id);
 
     const params = new URLSearchParams();
-    generalIds.forEach(id => params.append('general_tag_ids', id));
-    characterIds.forEach(id => params.append('character_tag_ids', id));
+    generalIds.forEach((id) => params.append('general_tag_ids', id));
+    characterIds.forEach((id) => params.append('character_tag_ids', id));
     Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
     params.append('page', current_page);
     params.append('per_page', per_page);
@@ -718,7 +718,7 @@ async function performRandom(isPagination=false) {
     
     try {
         const resp = await fetch(`/random_search_w_tags?${params.toString()}`);
-        if (!resp.ok) throw new Error(`Random search failed: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`Random search failed: ${resp.status}`); }
         let results = await resp.json();
         randstate = results.randstate;
         renderResults(results);
@@ -737,7 +737,7 @@ async function performSearch(isPagination = false) {
     };
 
     inRandom = false;
-    if (!isPagination) current_page = 1;
+    if (!isPagination) { current_page = 1; }
 
     const file_input = document.getElementById('img');
 
@@ -766,13 +766,13 @@ async function performSearch(isPagination = false) {
 function updateSelCount() {
     let count = selectedIds.size;
     let selmsg = document.getElementById("selectMsg");
-    selmsg.textContent = `${count} image${count !== 1 ? 's' : ''} selected`;
+    selmsg.textContent = `${count} image${(count !== 1 ? 's' : '')} selected`;
 }
 
 function swap_divs() {
     const p1 = document.getElementById("panel");
     const p2 = document.getElementById("detail_panel2");
-    if (p1.style.display == "none") { p2.style.display="none"; p1.style.display="block"; }
+    if (p1.style.display === "none") { p2.style.display="none"; p1.style.display="block"; }
     else { p1.style.display="none"; p2.style.display="block"; }
 }
 
@@ -804,20 +804,20 @@ let resizing = false;
 
 // TODO addEventListener
 resizeHandle.onmousedown = () => {
-  if (!isCollapsed) resizing = true;
+  if (!isCollapsed) { resizing = true; }
 };
 // TODO addEventListener
 resizeHandle2.onmousedown = () => {
-  if (!isCollapsed) resizing = true;
+  if (!isCollapsed) { resizing = true; }
 };
 
-window.addEventListener('mousemove', e => {
-  if (!resizing) return;
+window.addEventListener('mousemove', (e) => {
+  if (!resizing) { return; }
   expandedWidth = Math.max(200, window.innerWidth - e.clientX);
   setPanelWidth(expandedWidth);}
 );
 
-window.addEventListener('mouseup', () => resizing = false);
+window.addEventListener('mouseup', () => {resizing = false;} );
 
 /* --------- Theme --------------- */
 function setTheme(themeName) {
@@ -870,3 +870,4 @@ document.getElementById('swap_details').addEventListener('click', () => swap_div
 
 fetchAllTags();
 updateMRAtags();
+
