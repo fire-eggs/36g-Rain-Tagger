@@ -7,7 +7,7 @@ let state = "fit";
 function openLightboxId(imgid) {
     /* Open the lightbox using the image id */
     results_div.querySelectorAll('img[data-id]').forEach((img) => {
-        if ( img.dataset["id"] === String(imgid)) {
+        if ( img.dataset.id === String(imgid)) {
             openLightbox(img);
             return;
         }
@@ -16,7 +16,7 @@ function openLightboxId(imgid) {
 
 function openLightbox(img) {
 
-    const firsttime = (currImg == null);
+    const firsttime = (currImg === null);
 
     currImg = img;
     lightboxImg.src = img.src;
@@ -24,51 +24,49 @@ function openLightbox(img) {
     updateTransform();
     lightbox.classList.add('active');
 
-    // make sure we start in 'fit' mode    
-    if (firsttime) setState('fit');
+    // make sure we start in 'fit' mode
+    if (firsttime) { setState('fit'); }
 
-    setInfoPaneImages([img.dataset["id"]]);
+    setInfoPaneImages([img.dataset.id]);
 }
 
 function setState(target) {
     lightboxImg.classList.remove("fit");
     lightboxImg.classList.remove("fill");
     state = target;
-    if (state != null) {
+    if (state !== null) {
         lightboxImg.classList.add(target);
     }
 }
 
 function nextImage() {
-    const target = currImg.dataset["id"];
+    const target = currImg.dataset.id;
     let getnext = false;
     let nextImg = null;
-  
-    results_div.querySelectorAll('img[data-id]').forEach(img => {
+
+    results_div.querySelectorAll('img[data-id]').forEach((img) => {
         if (getnext) { nextImg = img; getnext = false; }
-        if (img.dataset["id"] == target) getnext = true;
+        if (img.dataset.id === target) { getnext = true; }
     });
-    if (nextImg != null)
-        openLightbox(nextImg);
+    if (nextImg !== null) { openLightbox(nextImg); }
 }
 
 function prevImage() {
-    const target = currImg.dataset["id"];
+    const target = currImg.dataset.id;
     let stoplook = false;
     let prevImg = null;
-    results_div.querySelectorAll('img[data-id]').forEach(img => {
-        if (img.dataset["id"] == target) stoplook = true;
-        if (!stoplook) prevImg = img;
+    results_div.querySelectorAll('img[data-id]').forEach((img) => {
+        if (img.dataset.id === target) { stoplook = true; }
+        if (!stoplook) { prevImg = img; }
     });
-    if (prevImg != null)
-        openLightbox(prevImg);
+    if (prevImg !== null) { openLightbox(prevImg); }
 }
 
 document.getElementById('fitBtn').onclick = () => {
-    if (state == "fill") return setState(null);
-    if (state == "fit")  return setState("fill");
-    if (state == null )  return setState("fit");
-}
+    if (state === "fill") { return setState(null); }
+    if (state === "fit")  { return setState("fill"); }
+    if (state === null )  { return setState("fit"); }
+};
 
 document.getElementById('closeBtn').onclick = () => {
     currImg = null; // TODO reset back to 'fit' for the next lightbox open, is this "correct"?
@@ -82,35 +80,35 @@ document.getElementById('prevBtn').onclick = prevImage;
 document.querySelector('.zone.left').onclick = prevImage;
 document.querySelector('.zone.right').onclick = nextImage;
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') lightbox.classList.remove('active');
-  let lightboxOn = lightbox.classList.contains('active');  
-  if (e.key === 'ArrowRight' && lightboxOn) return nextImage();
-  if (e.key === 'ArrowLeft' && lightboxOn) return prevImage();
-  let dupesActive = document.getElementById("prevDupe") != null;
-  if (e.key === 'ArrowRight' && dupesActive) return nextDupe();
-  if (e.key === 'ArrowLeft' && dupesActive) return prevDupe();
-  if (e.key == 'ArrowRight') nextPage();
-  if (e.key == 'ArrowLeft') prevPage();
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { lightbox.classList.remove('active'); }
+  let lightboxOn = lightbox.classList.contains('active');
+  if (e.key === 'ArrowRight' && lightboxOn) { return nextImage(); }
+  if (e.key === 'ArrowLeft' && lightboxOn)  { return prevImage(); }
+  let dupesActive = document.getElementById("prevDupe") !== null;
+  if (e.key === 'ArrowRight' && dupesActive) { return nextDupe(); }
+  if (e.key === 'ArrowLeft' && dupesActive)  { return prevDupe(); }
+  if (e.key === 'ArrowRight') { nextPage(); }
+  if (e.key === 'ArrowLeft')  { prevPage(); }
 });
 
 /* ---------- Zoom & Pan ---------- */
-lightboxImg.addEventListener('wheel', e => {
+lightboxImg.addEventListener('wheel', (e) => {
   e.preventDefault();
   zoom += e.deltaY * -0.001;
   zoom = Math.min(Math.max(1, zoom), 4);
   updateTransform();
 });
 
-lightboxImg.addEventListener('mousedown', e => {
+lightboxImg.addEventListener('mousedown', (e) => {
   dragging = true;
   startX = e.clientX - panX;
   startY = e.clientY - panY;
   lightboxImg.style.cursor = 'grabbing';
 });
 
-window.addEventListener('mousemove', e => {
-  if (!dragging) return;
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) { return; }
   panX = e.clientX - startX;
   panY = e.clientY - startY;
   updateTransform();
