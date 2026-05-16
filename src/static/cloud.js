@@ -15,9 +15,9 @@ function colorForWeight(weight) {
   //const theme = document.documentElement.dataset.theme;
   const t = weight;
 
-  if (theme === "light") return `hsl(${210 - t*160}, 70%, 40%)`;
-  if (theme === "solarized") return `hsl(${195 - t*60}, 55%, 35%)`;
-  if (theme === "neon") return `hsl(${280 - t*240}, 100%, 65%)`;
+  if (theme === "light") { return `hsl(${210 - t*160}, 70%, 40%)`; }
+  if (theme === "solarized") { return `hsl(${195 - t*60}, 55%, 35%)`; }
+  if (theme === "neon") { return `hsl(${280 - t*240}, 100%, 65%)`; }
   return `hsl(${210 - t*185}, 85%, ${55 - t*10}%)`; // dark
 }
 
@@ -53,8 +53,8 @@ function placeWord(el) {
     bounds.left += padding; bounds.top += padding;
     bounds.right -= padding; bounds.bottom -= padding;
 
-    if(bounds.left<0 || bounds.top<0 || bounds.right>container.clientWidth || bounds.bottom>container.clientHeight) continue;
-    if(!placedRects.some(r => overlaps(bounds,r))){
+    if(bounds.left<0 || bounds.top<0 || bounds.right>container.clientWidth || bounds.bottom>container.clientHeight) { continue; }
+    if(!placedRects.some((r) => overlaps(bounds,r))){
       placedRects.push(bounds);
       return true;
     }
@@ -111,7 +111,7 @@ function renderCloud(words, selExpOption, selTypeOption){
 //  progressBar.style.width = "0%";
 //  progressBar.textContent = "0%";
   
-  words.results.map( result => {
+  words.results.map( (result) => {
       const eased = Math.pow(result[2], 1.4);
       const el = document.createElement("div");
       el.className="word";
@@ -151,7 +151,7 @@ async function performCloud(selExpOption="G",selTypeOption="G") {
     
     try {
         const resp = await fetch(`/cloud_tags?${params.toString()}`);
-        if (!resp.ok) throw new Error(`cloud_tags failed: ${resp.status}`);
+        if (!resp.ok) { throw new Error(`cloud_tags failed: ${resp.status}`); }
         renderCloud(await resp.json(), selExpOption, selTypeOption);
     } catch (err) { console.error(err); }
 }
