@@ -538,7 +538,7 @@ function render_top_tags(tags) {
 }
 
 function render_all_top_tags(result) {
-    return `${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)},${render_top_tags(result.artist)}`;
+    return `${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)},${render_top_tags(result.artist)},${render_top_tags(result.future)}`;
 }
 
 function prevPage() {
