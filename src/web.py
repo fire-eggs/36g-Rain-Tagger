@@ -429,7 +429,11 @@ def edit_tag():
     tag_id = request.args.get('tag_id')
     tag_name = request.args.get('name')
     tag_class = request.args.get('class')
-    current_app.db.edit_tag(tag_id, tag_name, tag_class)
+    try:
+      current_app.db.edit_tag(tag_id, tag_name, tag_class)
+    except ValueError as eve:
+      return jsonify({"message":str(eve)}), 400
+    return jsonify("")
 
 @bp.route('/api/removeTag')
 def remove_tag():

@@ -182,7 +182,11 @@ async function onTagSave(tag_id, row) {
     params.append('class', savecat);
     try {
         const resp = await fetch(`/api/editTag?${params.toString()}`);
-        if (!resp.ok) { throw new Error(`onTagSave editTag failed: ${resp.status}`); }
+        if (!resp.ok) { 
+            let res = await resp.json(); 
+            alert("Error!: "+ res.message); 
+            return; 
+        }
     } catch (err) { console.error(err); return; }
 
     if (tag_id !== -1) {
