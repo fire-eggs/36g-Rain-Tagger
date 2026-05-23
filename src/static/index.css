@@ -46,14 +46,19 @@ html {
 
 .flat {
     padding: 5px;
-    border-radius: 10px;
     color: #344a86;
     cursor: pointer;
     position: relative;
     border-radius: 6px;
     border: 0;
     transition: 0.3s all;
-    margin-left: 5px;
+    margin-left: 3px;
+    font-size: 15px;
+}
+
+.flat:hover {
+    font-size: 16px;
+    border: 1;
 }
 
 button:disabled {
