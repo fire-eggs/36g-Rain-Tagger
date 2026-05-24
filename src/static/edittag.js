@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 const mgr = document.getElementById("tagManager");
 const edit_tag_input = document.getElementById('edit_tag_input');
 const edit_tag_suggestions = document.getElementById('edit_tag_suggestions');
@@ -182,10 +183,10 @@ async function onTagSave(tag_id, row) {
     params.append('class', savecat);
     try {
         const resp = await fetch(`/api/editTag?${params.toString()}`);
-        if (!resp.ok) { 
-            let res = await resp.json(); 
-            alert("Error!: "+ res.message); 
-            return; 
+        if (!resp.ok) {
+            let res = await resp.json();
+            alert("Error!: "+ res.message);
+            return;
         }
     } catch (err) { console.error(err); return; }
 
@@ -254,7 +255,7 @@ function editState(row, isOn) {
     let btnEdit = document.getElementById("Edit"+row);
     // null for create row
     if (btnEdit !== null) { btnEdit.style.display = (isOn ? "none" : "block"); }
-    let btnDel = document.getElementById("Delete"+row); 
+    let btnDel = document.getElementById("Delete"+row);
     // null for create row
     if (btnDel !== null) { btnDel.style.display = (isOn ? "none" : "block"); }
     let btnCreate = document.getElementById("Create"+row);

@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 /* ------------ Selection --------------- */
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
@@ -23,7 +24,6 @@ function toggleSelect(img) {
 
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
-    
 }
 
 function updateSelect() {
@@ -32,7 +32,7 @@ function updateSelect() {
         imgc.addEventListener('click', () => toggleSelectC(imgc));
     });
 
-    results_div.querySelectorAll('img').forEach( img => {
+    results_div.querySelectorAll('img').forEach( (img) => {
         // TODO copy-pasta
         let iid = img.dataset.id;
         if (selectedIds.has(iid)) {
@@ -40,13 +40,13 @@ function updateSelect() {
             dad.classList.toggle('selected');
         }
     });
-    
+
     results_div.querySelectorAll('input').forEach( (eye) => {
         eye.addEventListener('click', (event) => {
             let iid = eye.dataset.id;
             openLightboxId(iid);
-            // prevent click from prop to img-card and toggling selection            
-            event.stopPropagation(); 
+            // prevent click from prop to img-card and toggling selection
+            event.stopPropagation();
         });
     });
 }
@@ -57,7 +57,7 @@ function deselectAll() {
     if (!anySelected()) { return; }
 
     // queryBySelector not working because ids are numbers; scan images and find data-id values in selected list
-    results_div.querySelectorAll('img').forEach( img => {
+    results_div.querySelectorAll('img').forEach( (img) => {
         // TODO copy-pasta
         let iid = img.dataset.id;
         if (selectedIds.has(iid)) {
@@ -70,7 +70,7 @@ function deselectAll() {
 }
 
 function selectAll() {
-    results_div.querySelectorAll('img').forEach( img => {
+    results_div.querySelectorAll('img').forEach( (img) => {
         // TODO copy-pasta
         let iid = img.dataset.id;
         if (!selectedIds.has(iid)) {
