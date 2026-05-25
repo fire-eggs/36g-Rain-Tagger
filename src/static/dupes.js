@@ -46,7 +46,7 @@ function highlightStringDiff(str1, str2) {
                 // Issue 57: tags at current pos are different from each other, was being thrown away
                 // TODO will fail if the next tag is different
                 if (tags1[index1+1] === tags2[index2+1]) {
-                  outtags.push('<span style="background-color: #000080"; color:var(--invert-text);>' + tags1[index1] + "</span> ");
+                  outtags.push('<span style="background-color: #000080; color:var(--invert-text);">' + tags1[index1] + "</span> ");
                 }
                 index1 += 1;
                 index2 += 1;
@@ -83,9 +83,9 @@ function reconcileOneDupe() {
     let outp2 = img2.image_path;
 
     html += `<div class="dupes_grid"><div class="dupes_cell">`;
-    html += `<div class="img-card"><img data-id="${img1.image_id}" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/></div>`;
+    html += `<div class="img-card"><img data-id="${img1.image_id}" alt="" src="/serve?p=${encodeURIComponent(img1.image_path)}" loading="lazy" title="${img1.image_path}"/></div>`;
     html += `</div><div class="dupes_cell">`;
-    html += `<div class="img-card"><img data-id="${img2.image_id}" src="/serve?p=${encodeURIComponent(img2.image_path)}" loading="lazy" title="${img2.image_path}"/></div></div>`;
+    html += `<div class="img-card"><img data-id="${img2.image_id}" alt="" src="/serve?p=${encodeURIComponent(img2.image_path)}" loading="lazy" title="${img2.image_path}"/></div></div>`;
 
     // display path 1, path 2
     html += `<div class="dupes_cell">${outp1}</div><div class="dupes_cell">${outp2}</div>`;
