@@ -82,14 +82,14 @@ function renderControls() {
 
     html += "<br>Tag Category: ";
     // tag "type" selector: general/character, future "artist"
-    html += `<input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleCloudRadioChange()"}>General</input>
-    <input type="radio" id="TTchar" name="TTOptions" value="C" onChange="handleCloudRadioChange()"}>Character</input>
+    html += `<input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleCloudRadioChange()">General</input>
+    <input type="radio" id="TTchar" name="TTOptions" value="C" onChange="handleCloudRadioChange()">Character</input>
     `;
     
     html += "<br>";
     
     html += "Sexiness Level:";
-    html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleCloudRadioChange()"}>General</input>
+    html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleCloudRadioChange()">General</input>
     <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleCloudRadioChange()">Sensitive</input>
     <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleCloudRadioChange()">Questionable</input>
     <input type="radio" id="Rexpl" name="expOptions" value="X" onChange="handleCloudRadioChange()">Explicit</input>
