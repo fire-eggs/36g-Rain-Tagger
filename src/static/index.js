@@ -44,9 +44,8 @@ let per_page = DefaultPerPage;
 per_page_input.addEventListener('input', () => {
     per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
 });
-page_input.addEventListener('input', () => {
-    current_page = parseInt(page_input.value) ?? 1;
-});
+page_input.addEventListener('input', () => current_page = parseInt(page_input.value) ?? 1);
+
 document.getElementById('go_input').addEventListener('click', () => {
     if (inRandom) { performRandom(true); } else { performSearch(true); }
 });
@@ -137,7 +136,7 @@ async function updateInfoPane() {
     
     let doit_button = document.getElementById('doit');
     doit_button.addEventListener('click', () => {
-        if (infoPaneImages.length != 0) {
+        if (infoPaneImages.length !== 0) {
             applyTagChanges();
         }
     });
@@ -218,7 +217,7 @@ async function updateMRAtags() {
     MRU_div.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
             // TODO refactor common w/ handleAddTagInput, AddTagClick
-            if (infoPaneImages.length == 0) return;
+            if (infoPaneImages.length === 0) return;
             const id = parseInt(btn.dataset.id);
             const txt= btn.dataset.tagname; //text;
 
@@ -283,7 +282,7 @@ async function setInfoPaneImages(selection) {
 function addTagClick() {
     // User has clicked on the 'Add' button to add a text tag
     
-    if (infoPaneImages.length == 0) return;
+    if (infoPaneImages.length === 0) return;
     let newtag0 = addtag_input.value;
     let newtag = newtag0.replaceAll(" ", "_").toLowerCase(); // no spaces
     if (newtag.length < 1) return;
@@ -307,13 +306,13 @@ async function fetchAllTags() {
 }
 
 function initializeTags() {
-    selected_character_tags = parseTagField('file_tags_character', CharacterTagTypeId);
-    selected_general_tags = parseTagField('file_tags_general', 0);
+    selected_character_tags = parseTagField('file_tags_character');
+    selected_general_tags = parseTagField('file_tags_general');
     renderTags(selected_general_tags_div, selected_general_tags, 'general');
     renderTags(selected_character_tags_div, selected_character_tags, 'character');
 }
 
-function parseTagField(fieldId, typeId) {
+function parseTagField(fieldId) {
     const val = document.getElementById(fieldId).value;
     const ids = (val ? val.split(',').map(Number) : []);
     return ids.map((id) => {
