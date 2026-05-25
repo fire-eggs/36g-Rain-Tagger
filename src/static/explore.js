@@ -10,11 +10,11 @@ function performExploreLink(tagId, tagname) {
     // Set the filters appropriately [currently hard-coded values, as per the database views]
     const f_tag_value = document.getElementById('f_tag_value');
     f_tag.value = 0.6;
-    f_tag_value.textContent = 0.6;
+    f_tag_value.textContent = "0.6";
 
     // TODO: clearAll() should have a 'clear the filters' option
     f_general.value = (selectedOption1 === "G" ? 0.5 : 0.0);
-    f_general_value.textContent = (selectedOption1 == "G" ? 0.5 : 0.0);
+    f_general_value.textContent = (selectedOption1 === "G" ? 0.5 : 0.0);
     f_sensitive.value = (selectedOption1 === "S" ? 0.5 : 0.0);
     f_sensitive_value.textContent = (selectedOption1 === "S" ? 0.5 : 0.0);
     f_questionable.value = (selectedOption1 === "Q" ? 0.5 : 0.0);
@@ -31,7 +31,7 @@ function performExploreLink(tagId, tagname) {
         renderGeneralTags();
     }
 
-    performTagSearchGuts(false);
+    void performTagSearchGuts(false);
 }
 
 function renderTopGrid(data) {
@@ -48,7 +48,7 @@ function renderTopGrid(data) {
 function handleExploreRadioChange() {
     const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
     const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;
-    performExplore(selectedOption1,selectedOption2);
+    void performExplore(selectedOption1,selectedOption2);
 }
 
 async function performExplore(selExpOption="G",selTypeOption="G") {
@@ -59,14 +59,14 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
 
     html += "<br>Tag Category: ";
     // tag "type" selector: general/character, future "artist"
-    html += `<input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleExploreRadioChange()"}>General</input>
-    <input type="radio" id="TTchar" name="TTOptions" value="C" onChange="handleExploreRadioChange()"}>Character</input>
+    html += `<input type="radio" id="TTgeneral" name="TTOptions" value="G" onChange="handleExploreRadioChange()">General</input>
+    <input type="radio" id="TTchar" name="TTOptions" value="C" onChange="handleExploreRadioChange()">Character</input>
     `;
     
     html += "<br>";
     
     html += "Sexiness Level:";
-    html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()"}>General</input>
+    html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()">General</input>
     <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleExploreRadioChange()">Sensitive</input>
     <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleExploreRadioChange()">Questionable</input>
     <input type="radio" id="Rexpl" name="expOptions" value="X" onChange="handleExploreRadioChange()">Explicit</input>

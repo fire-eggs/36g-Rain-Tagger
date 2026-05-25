@@ -9,7 +9,6 @@ function openLightboxId(imgid) {
     results_div.querySelectorAll('img[data-id]').forEach((img) => {
         if ( img.dataset.id === String(imgid)) {
             openLightbox(img);
-            return;
         }
     });
 }
@@ -27,7 +26,7 @@ function openLightbox(img) {
     // make sure we start in 'fit' mode
     if (firsttime) { setState('fit'); }
 
-    setInfoPaneImages([img.dataset.id]);
+    void setInfoPaneImages([img.dataset.id]);
 }
 
 function setState(target) {
@@ -71,7 +70,7 @@ document.getElementById('fitBtn').onclick = () => {
 document.getElementById('closeBtn').onclick = () => {
     currImg = null; // TODO reset back to 'fit' for the next lightbox open, is this "correct"?
     lightbox.classList.remove('active');
-    setInfoPaneImages([...selectedIds]);
+    void setInfoPaneImages([...selectedIds]);
 };
 
 document.getElementById('nextBtn').onclick = nextImage;

@@ -276,7 +276,7 @@ async function setInfoPaneImages(selection) {
         active_info_tags = await resp.json();
         updateInfoPane();
     } catch (err) { console.error(err); }
-    return results;
+    //return results;
 }
 
 function addTagClick() {
@@ -513,7 +513,7 @@ function renderResults(data) {
             html += data.results.map((result) => `
                 <div class="m row">
                     <div class="img-card">
-                    <img data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/></div>
+                    <img data-id="${result.image_id}" alt="" src="/serve?p=${encodeURIComponent(result.image_path)}" loading="lazy"/></div>
                     <div class="outer_pills">
                         <p class="fn">${result.image_path}</p>
                         <div class="pills">
@@ -528,8 +528,8 @@ function renderResults(data) {
                 </div>
             `).join('');
         } else {
-            const r = data.results.map(result => `<div class="img-card"><div class="imgchk"><input type="image" src="/static/eye.svg" data-id="${result.image_id}"></div>
-                <img data-id="${result.image_id}" src="/serve?p=${encodeURIComponent(result.image_path)}" 
+            const r = data.results.map(result => `<div class="img-card"><div class="imgchk"><input type="image" src="/static/eye.svg" data-id="${result.image_id}" alt=""></div>
+                <img data-id="${result.image_id}" alt="" src="/serve?p=${encodeURIComponent(result.image_path)}" 
                 loading="lazy" title="${result.image_path}&#013;&#013;${render_all_top_tags(result)}"/></div>`).join('');
             html += `<div class="grid">${r}</div>`;
         }
