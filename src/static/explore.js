@@ -66,6 +66,7 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
     html += "<br>";
     
     html += "Sexiness Level:";
+    html += `<input type="radio" id=Rignore" name="expOptions" value="N" onChange="handleExploreRadioChange()">Ignore</input>`;
     html += `<input type="radio" id="Rgeneral" name="expOptions" value="G" onChange="handleExploreRadioChange()">General</input>
     <input type="radio" id="Rsuggest" name="expOptions" value="S" onChange="handleExploreRadioChange()">Sensitive</input>
     <input type="radio" id="Rquest" name="expOptions" value="Q" onChange="handleExploreRadioChange()">Questionable</input>

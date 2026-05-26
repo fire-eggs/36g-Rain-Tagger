@@ -414,23 +414,15 @@ class ImageDb(SqliteDb):
 
     def get_top_tags(self, choice, tagtype):
         
-        target = "general";
-        match choice:
-            case "S":
-                target = "sensitive";
-            case "X":
-                target = "explicit";
-            case "Q":
-                target = "questionable"
+        target = self.makeTarget(choice)        
                 
         view = "tags_for_images_prob60_v2"
         match tagtype:  # future support for other tagtype values, e.g. "artist"
             case "C":
                 view = "char_tags_for_images_prob60_v2"
         
-        sql_string = f"select tag_name, count(image_id) as imgcount, tag_id from {view} where {target}"
-        sql_string += ''' >= 0.5
-                        group by 1
+        sql_string = f"select tag_name, count(image_id) as imgcount, tag_id from {view} {target}"
+        sql_string += ''' group by 1
                         order by imgcount desc
                         limit 25'''
         #        '''select tag_name, count(image_id) as imgcount from ''' 
@@ -439,6 +431,20 @@ class ImageDb(SqliteDb):
         results = self._run_query(sql_string)
         #print(f'gtt: {results}')
         return results
+    
+    def makeTarget(self, choice):
+        # sensitivity sql logic, including none
+        target = "general";
+        match choice:
+            case "S":
+                target = "sensitive";
+            case "X":
+                target = "explicit";
+            case "Q":
+                target = "questionable"
+        res = "" if choice == "N" else f"where {target} >= 0.5 "
+        return res
+    
          
     def get_common_tags(self, image_ids, tagtype, prob):
         # get all the tags in common amongst a set of images.
