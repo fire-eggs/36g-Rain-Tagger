@@ -292,7 +292,7 @@ input[type=number]{
 
 .grid-contain {
     display:grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     width:65%;
     margin-left:15px;
 }

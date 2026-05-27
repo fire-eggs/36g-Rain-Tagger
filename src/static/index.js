@@ -761,7 +761,7 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 
 document.getElementById('clear_button').addEventListener('click', clearAll);
 document.getElementById('search_button').addEventListener('click', () => performSearch(false));
-document.getElementById('dash_button').addEventListener('click', () => performExplore("G"));
+document.getElementById('dash_button').addEventListener('click', () => performExplore());
 document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
 document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());

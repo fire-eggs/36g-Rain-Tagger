@@ -1,3 +1,9 @@
+
+let explorePrimary = true;
+let primaryName = "";
+let primaryType = "";
+let primaryTagId = -1;
+
 function performExploreLink(tagId, tagname) {
     inRandom = false;
     
@@ -22,25 +28,36 @@ function performExploreLink(tagId, tagname) {
     f_explicit.value = (selectedOption1 === "X" ? 0.5 : 0.0);
     f_explicit_value.textContent = (selectedOption1 === "X" ? 0.5 : 0.0);
 
+    // if secondary, tagId/tagname is for 2d tag. 
     if (selectedOption2 === "C") {
         selected_character_tags.push({ tag_id: tagId, tag_name: tagname });
-        renderCharacterTags();
     }
     else {
         selected_general_tags.push({ tag_id: tagId, tag_name: tagname });
-        renderGeneralTags();
     }
+    if (!explorePrimary) {
+        if (primaryType === "C") {
+            selected_character_tags.push({ tag_id: primaryTagId, tag_name: primaryName });
+        }
+        else {
+            selected_general_tags.push({ tag_id: primaryTagId, tag_name: primaryName });
+        }
+    }
+    
+    renderGeneralTags();
+    renderCharacterTags();
 
     void performTagSearchGuts(false);
 }
 
-function renderTopGrid(data) {
+function renderTopGrid(data,selTypeOption) {
     /* Render the 'Explore' grid
      */
     let res = "";
-    res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div>`;
+    res += `<div><h4>Tag Name</h4></div><div><h4>Image Count</h4></div><div></div>`;
     if (data.results && data.results.length) {
-        res += data.results.map( result => `<div><button class="expbtn" data-id="${result.tag_id}">${result.tag_name}</div><div>${result.imgcount}</div>` ).join(``);
+        res += data.results.map( result => `<div><button class="expbtn" data-id="${result.tag_id}">${result.tag_name}</div><div>${result.imgcount}</div>` +
+        (explorePrimary ? `<div><button class="expbtn" onclick='goSecondary(${result.tag_id},"${result.tag_name}","${selTypeOption}")'>Secondary</div>` : `<div></div>`) ).join(``);
     }
     return res;
 }
@@ -51,8 +68,17 @@ function handleExploreRadioChange() {
     void performExplore(selectedOption1,selectedOption2);
 }
 
-async function performExplore(selExpOption="G",selTypeOption="G") {
+async function performExplore(selExpOption="0",selTypeOption="G") {
 
+    // enter from the main page - reset
+    if (selExpOption === "0") { 
+        selExpOption = "G";
+        explorePrimary = true;
+        primaryName = "";
+        primaryTagId = -1;
+        primaryType = "";
+    }
+    
     clearAll();
     
     let html = `<form name="blah">`; // necessary for the radio buttons to actually 'check'
@@ -85,20 +111,38 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
             break;
         }
 
-    html += `<p>Top 25 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
+    if (!explorePrimary) {
+        html += `<p>Top 25 [50%+] Secondary ` + tagtype + ` tags for "` + primaryName + `" where probability is >= 60% [` + selExpOption + ` images]</p>`;
+    }
+    else {
+        html += `<p>Top 25 [50%+] ` + tagtype + ` tags where probability is >= 60% [` + selExpOption + ` images]</p>`;
+    }
+
     html += `<div class="grid-contain">`;
     const params = new URLSearchParams();
     params.append('expOption', selExpOption);
     params.append('tagType', selTypeOption);
-    
-    try {
-        const resp = await fetch(`/top_tags?${params.toString()}`);
-        if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
-        let foo = renderTopGrid(await resp.json());
-        //console.log(foo);
-        html += foo;
-    } catch (err) { console.error(err); }
-    
+
+    if (explorePrimary) {
+        try {
+            const resp = await fetch(`/top_tags?${params.toString()}`);
+            if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
+            let foo = renderTopGrid(await resp.json(), selTypeOption);
+            //console.log(foo);
+            html += foo;
+        } catch (err) { console.error(err); }
+    } else {
+        params.append('primary', primaryName);
+        params.append('primaryType', primaryType);
+        try {
+            const resp = await fetch(`/second_top_tags?${params.toString()}`);
+            if (!resp.ok) throw new Error(`second_top_tags failed: ${resp.status}`);
+            let foo = renderTopGrid(await resp.json(), "");
+            //console.log(foo);
+            html += foo;
+        } catch (err) { console.error(err); }
+    }
+
     html += `</div>`;
     results_div.innerHTML = html;
 
@@ -112,4 +156,12 @@ async function performExplore(selExpOption="G",selTypeOption="G") {
 
     document.blah.expOptions.value = selExpOption; // necessary for the radio buttons to actually 'check'
     document.blah.TTOptions.value = selTypeOption; // necessary for the radio buttons to actually 'check'
+}
+
+function goSecondary(tagId, tagName, tagtype) {
+    explorePrimary = false;
+    primaryName = tagName;
+    primaryType = tagtype;
+    primaryTagId= tagId;
+    handleExploreRadioChange(); // force refresh
 }
