@@ -429,7 +429,7 @@ input[type=number]{
 }
 
 .details-panel2 {
-    overflow-y: scroll:
+    overflow-y: scroll;
 }
 
 dl {
