@@ -4,8 +4,9 @@ Utility scripts for CLI tag work.
 
 Usage:
 1. from the project root: `source venv/bin/activate`
-2. cd src
-3. `python utility/<utility> <parameters>`
+2. `cd src`
+3. `export PYTHONPATH=.`
+4. `python utility/<utility> <parameters>`
 
 list_dir_tags.py
 
