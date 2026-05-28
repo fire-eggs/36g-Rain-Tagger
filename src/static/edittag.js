@@ -1,4 +1,6 @@
 /*jshint esversion: 8 */
+/* global fetchAllTags, renderTags, attachSuggestionEvents, all_tags, clearAll, tagE_clear */
+
 const mgr = document.getElementById("tagManager");
 const edit_tag_input = document.getElementById('edit_tag_input');
 const edit_tag_suggestions = document.getElementById('edit_tag_suggestions');

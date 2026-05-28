@@ -1,5 +1,7 @@
-/* global results_div, clearAll, performTagSearchGuts, renderGeneralTags, selected_general_tags, selected_character_tags, renderCharacterTags, inRandom */
+/* global results_div, clearAll, performTagSearchGuts, renderGeneralTags, selected_general_tags, selected_character_tags, renderCharacterTags, inRandom:writable */
 /* global f_tag, f_general, f_sensitive, f_questionable, f_explicit */
+/* global f_tag_value, f_general_value, f_sensitive_value, f_questionable_value, f_explicit_value */
+
 let explorePrimary = true;
 let primaryName = "";
 let primaryType = "";
@@ -124,10 +126,9 @@ async function performExplore(selExpOption="0",selTypeOption="G") {
     params.append('expOption', selExpOption);
     params.append('tagType', selTypeOption);
 
-    const resp = null;
     if (explorePrimary) {
         try {
-            resp = await fetch(`/top_tags?${params.toString()}`);
+            const resp = await fetch(`/top_tags?${params.toString()}`);
             if (!resp.ok) throw new Error(`top_tags failed: ${resp.status}`);
             let foo = renderTopGrid(await resp.json(), selTypeOption);
             //console.log(foo);
@@ -137,7 +138,7 @@ async function performExplore(selExpOption="0",selTypeOption="G") {
         params.append('primary', primaryName);
         params.append('primaryType', primaryType);
         try {
-            resp = await fetch(`/second_top_tags?${params.toString()}`);
+            const resp = await fetch(`/second_top_tags?${params.toString()}`);
             if (!resp.ok) throw new Error(`second_top_tags failed: ${resp.status}`);
             let foo = renderTopGrid(await resp.json(), "");
             //console.log(foo);
