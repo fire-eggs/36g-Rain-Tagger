@@ -478,7 +478,7 @@ function createPagination(tot_pages) {
     let fin = tot_pages < start+4 ? tot_pages : start+4;
     start = start < 5 ? start : (fin - start < 4 ? fin-4 : start);
 
-    // first and prev disabled if no pages or on first page    
+    // first and prev disabled if no pages or on first page
     html += `<button class="flat" data-id="1" type="button"${prevDisable ? 'disabled' : ''}>‹‹ First </button>`;
     html += `<button id="prev_page" class="flat" ${prevDisable ? 'disabled' : ''}>‹ Prev</button>`;
         
@@ -486,14 +486,14 @@ function createPagination(tot_pages) {
         html += `<button class="flat" data-id="${blah}" type="button" ${blah === current_page ? 'disabled' : ''}> ${blah} </button>`;
     }
     
-    // next and last disabled if on last page or no pages   
+    // next and last disabled if on last page or no pages
     html += `<button id="next_page" class="flat" ${nextDisable ? 'disabled' : ''}>Next ›</button>`;
     html += `<button class="flat" data-id="${tot_pages}" type="button" ${nextDisable ? 'disabled' : ''}> Last ›› </button>`;
 
     html += ` Page: ${current_page} of ${tot_pages}, Per Page: ${per_page}`;
 
     return html;
-}    
+}
 
 function renderResults(data) {
     /* update the gallery to show the current page's images */
@@ -529,7 +529,7 @@ function renderResults(data) {
             `).join('');
         } else {
             const r = data.results.map(result => `<div class="img-card"><div class="imgchk"><input type="image" src="/static/eye.svg" data-id="${result.image_id}" alt=""></div>
-                <img data-id="${result.image_id}" alt="" src="/serve?p=${encodeURIComponent(result.image_path)}" 
+                <img data-id="${result.image_id}" alt="" src="/serve?p=${encodeURIComponent(result.image_path)}"
                 loading="lazy" title="${result.image_path}&#013;&#013;${render_all_top_tags(result)}"/></div>`).join('');
             html += `<div class="grid">${r}</div>`;
         }
@@ -538,7 +538,7 @@ function renderResults(data) {
     
     updateSelect(); /* on mode change, need to update selected image markers */
 
-    let pageHtml = createPagination(tot_pages);    
+    let pageHtml = createPagination(tot_pages);
     pagination_div.innerHTML = pageHtml;
     
     // Issue 25: bottom next/prev buttons not working
