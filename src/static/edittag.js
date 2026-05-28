@@ -56,7 +56,7 @@ function renderEditTags() {
     renderTags(selected_edit_tags_div, edit_tag_array, 'general', 'edit_tags_magic');
 }
 
-function makeButton(rowdex, text, color, click, hide=false) {
+function makeButton(rowdex, text, color, click, hide) {
     let btn = document.createElement("input");
     btn.setAttribute('id', `${text}` + rowdex);
     btn.setAttribute('type', 'button');
@@ -112,7 +112,7 @@ function updateTable() {
         let btnCancel = makeButton(rowdex, "Cancel", "ED5650", `onTagCancel(${tag.tag_id},`, true); /* hide */
         td.appendChild(btnCancel);
 
-        let btnDel = makeButton(rowdex, "Delete", "ED5650", `onTagDelete(${tag.tag_id},`);
+        let btnDel = makeButton(rowdex, "Delete", "ED5650", `onTagDelete(${tag.tag_id},`, false);
         td.appendChild(btnDel);
 
         newrow.appendChild(td);
