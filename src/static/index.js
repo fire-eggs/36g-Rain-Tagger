@@ -568,27 +568,14 @@ function renderResults(data) {
 async function performTagSearchGuts(isPagination) {
     /* Common functionality for "Search by Tags" and tag-links in the Explore grid
      */
-    const filters = {
-        tag: f_tag.value,
-        general: f_general.value,
-        sensitive: f_sensitive.value,
-        explicit: f_explicit.value,
-        questionable: f_questionable.value
-    };
-    
     if (!isPagination) { current_page = 1; }
 
     const generalIds = selected_general_tags.map((t) => t.tag_id);
-    //console.log(generalIds);
     const characterIds = selected_character_tags.map((t) => t.tag_id);
+    
     if (!generalIds.length && !characterIds.length) { return; }
 
-    const params = new URLSearchParams();
-    generalIds.forEach((id) => params.append('general_tag_ids', id));
-    characterIds.forEach((id) => params.append('character_tag_ids', id));
-    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
-    params.append('page', current_page);
-    params.append('per_page', per_page);
+    const params = makeSearchURLParams(generalIds, characterIds);
     try {
         const resp = await fetch(`/search_w_tags?${params.toString()}`);
         if (!resp.ok) { throw new Error(`Tag search failed: ${resp.status}`); }
@@ -600,14 +587,20 @@ async function performTagSearchGuts(isPagination) {
 let randstate = "";
 let inRandom = false;
 
+function makeSearchURLParams(generalIds, characterIds) {
+
+    const filters = fetchFilters();
+
+    const params = new URLSearchParams();
+    generalIds.forEach((id) => params.append('general_tag_ids', id));
+    characterIds.forEach((id) => params.append('character_tag_ids', id));
+    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
+    params.append('page', current_page);
+    params.append('per_page', per_page);
+    return params;
+}
+
 async function performRandom(isPagination=false) {
-    const filters = {
-        tag: f_tag.value,
-        general: f_general.value,
-        sensitive: f_sensitive.value,
-        explicit: f_explicit.value,
-        questionable: f_questionable.value
-    };
 
     inRandom = true;
     if (!isPagination) {
@@ -618,12 +611,7 @@ async function performRandom(isPagination=false) {
     const generalIds = selected_general_tags.map((t) => t.tag_id);
     const characterIds = selected_character_tags.map((t) => t.tag_id);
 
-    const params = new URLSearchParams();
-    generalIds.forEach((id) => params.append('general_tag_ids', id));
-    characterIds.forEach((id) => params.append('character_tag_ids', id));
-    Object.entries(filters).forEach(([k, v]) => params.append(`f_${k}`, v));
-    params.append('page', current_page);
-    params.append('per_page', per_page);
+    const params = makeSearchURLParams(generalIds, characterIds);
     params.append('state', randstate);
     
     try {
@@ -637,14 +625,18 @@ async function performRandom(isPagination=false) {
     clearAllSelection();
 }
 
-async function performSearch(isPagination = false) {
-    const filters = {
+function fetchFilters() {
+    return {
         tag: f_tag.value,
         general: f_general.value,
         sensitive: f_sensitive.value,
         explicit: f_explicit.value,
         questionable: f_questionable.value
     };
+}
+
+async function performSearch(isPagination = false) {
+    const filters = fetchFilters();
 
     inRandom = false;
     if (!isPagination) { current_page = 1; }
@@ -698,13 +690,13 @@ function setPanelWidth(px) {
 
 /* ---------- Collapse / Expand ---------- */
 togglePanel.onclick = () => {
-  if (!isCollapsed) {
+  if (isCollapsed) {
+    setPanelWidth(expandedWidth);
+    togglePanel.textContent = '⮞';
+  } else {
     expandedWidth = panel.offsetWidth;
     setPanelWidth(COLLAPSED_WIDTH);
     togglePanel.textContent = '⮜';
-  } else {
-    setPanelWidth(expandedWidth);
-    togglePanel.textContent = '⮞';
   }
   isCollapsed = !isCollapsed;
 };
