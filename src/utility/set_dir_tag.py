@@ -56,8 +56,12 @@ if __name__ == '__main__':
   results = me_db._run_query(sql)
   #print(f"count: {len(results)}")
   if (len(results) != 1):
-    print("Target folder must have already been processed by tagger.py")
-    exit()
+    target = target.rstrip("/") # handling trailing slash
+    sql = f'select directory_id from directory where directory = "{target}"'
+    results = me_db._run_query(sql)
+    if (len(results) != 1):
+      print(f'Target folder "{target}" must have already been processed by tagger.py')
+      exit()
 
   dirid = list(results[0].values())[0]
   #print(f"directory id: {dirid}")
@@ -108,5 +112,8 @@ if __name__ == '__main__':
     else:
         sql = f'insert or ignore into image_tag (image_id, tag_id, prob) values ({imageid},{tagid}, 1.0)'
     me_db._run_query(sql)
+    
+  print("Updating tag counts")
+  me_db.update_tag_counts() # update for changes, esp. for new tags
     
   me_db.save_and_close()
