@@ -1,3 +1,4 @@
+/* global lightboxImg, nextPage, prevPage, nextDupe, prevDupe, lightbox, selectedIds, setInfoPaneImages, results_div */
 /* ---------- Lightbox ---------- */
 let zoom = 1, panX = 0, panY = 0;
 let dragging = false, startX, startY;
