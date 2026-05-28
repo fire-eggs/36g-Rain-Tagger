@@ -151,6 +151,19 @@ def get_top_tags():
     'results': results,
     })
 
+@bp.route('/second_top_tags', methods=['GET'])
+def get_second_top_tags():
+
+    choice1 = request.args.get('expOption') # general/sensitive/questionable/explicit
+    choice2 = request.args.get('tagType') # general/character; future "artist"
+    primary = request.args.get('primary') # the 'primary' tag to fetch secondary tags for
+    primTyp = request.args.get('primaryType') # the tagclass for the 'primary' tag
+
+    results = current_app.db.get_second_top_tags(choice1,choice2,primary,primTyp)
+    return jsonify({
+    'results': results,
+    })
+
 @bp.route('/cloud_tags', methods=['GET'])
 def get_cloud_tags():
 

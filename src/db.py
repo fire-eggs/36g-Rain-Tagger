@@ -413,7 +413,7 @@ class ImageDb(SqliteDb):
         self.run_query_tuple(sql_string)
 
     def get_top_tags(self, choice, tagtype):
-        
+        # Get the top 25 tags for a selected tag-class and sexiness
         target = self.makeTarget(choice)        
                 
         view = "tags_for_images_prob60_v2"
@@ -425,11 +425,8 @@ class ImageDb(SqliteDb):
         sql_string += ''' group by 1
                         order by imgcount desc
                         limit 25'''
-        #        '''select tag_name, count(image_id) as imgcount from ''' 
-        #             + view + ''' where ''' + target + 
         
         results = self._run_query(sql_string)
-        #print(f'gtt: {results}')
         return results
     
     def makeTarget(self, choice):
@@ -445,6 +442,30 @@ class ImageDb(SqliteDb):
         res = "" if choice == "N" else f"where {target} >= 0.5 "
         return res
     
+    def get_second_top_tags(self, choice, tagtype, primary, primaryType):
+        # Get the top 25 *secondary* tags for a selected tag-name, tag-class and sexiness
+        
+        view = "tags_for_images_prob60_v2"
+        match tagtype:  # future support for other tagtype values, e.g. "artist"
+            case "C":
+                view = "char_tags_for_images_prob60_v2"
+        primview = "tags_for_images_prob60_v2"
+        match primaryType:  # future support for other tagtype values, e.g. "artist"
+            case "C":
+                primview = "char_tags_for_images_prob60_v2"
+        
+        sql = f"create temp view secondary_tags as select * from {view} where image_id in (select image_id from {primview} where tag_name='{primary}')"
+        self._run_query(sql, commit=True)
+        
+        target = self.makeTarget(choice)
+        
+        sql = f"select tag_name, count(image_id) as imgcount, tag_id from secondary_tags {target}"
+        sql += " where " if len(target) == 0 else " and " # if choice is 'N' we need a 'where', if not we need an 'and'
+        sql += f"tag_name != '{primary}'"  # avoid including the 'primary' tag
+        sql += " group by 1 order by imgcount desc limit 25"
+        results = self._run_query(sql)
+        self._run_query("drop view secondary_tags", commit=True)
+        return results
          
     def get_common_tags(self, image_ids, tagtype, prob):
         # get all the tags in common amongst a set of images.
@@ -735,9 +756,9 @@ class ImageDb(SqliteDb):
             sql = f'insert into tag (tag_id, tag_name, tag_type_id, tag_count) values ({tagid}, "{tag_name}", {ttid}, 1)'
             self._run_query(sql)
         else:
-        self._run_query(f"update tag set tag_name='{tag_name}', tag_type_id={ttid} where tag_id={tag_id}")
-        self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
-        self.save()
+            self._run_query(f"update tag set tag_name='{tag_name}', tag_type_id={ttid} where tag_id={tag_id}")
+            self._run_query(f"update mra_tags set tag_name='{tag_name}' where tag_id={tag_id}")
+            self.save()
         return []
 
     def remove_tag(self, tag_id):
