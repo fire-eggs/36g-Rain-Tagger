@@ -1,4 +1,6 @@
 /*jshint esversion: 8 */
+/* global updateSelCount, setInfoPaneImages, results_div, clearAllSelection, openLightboxId */
+
 /* ------------ Selection --------------- */
 const selectedIds = new Set();
 const anySelected = () => selectedIds.size > 0;
