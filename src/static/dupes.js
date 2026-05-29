@@ -1,3 +1,5 @@
+/* global results_div, clearAll */
+
 let dupes_list = [];
 let dupe_index = 0;
 
