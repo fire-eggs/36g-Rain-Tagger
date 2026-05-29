@@ -1,4 +1,4 @@
-/* global performExploreLink, clearAll, inRandom:writable */
+/* global performExploreLink, clearAll */
 
 const container = document.getElementById('results');
 const theme = "dark";
@@ -71,7 +71,7 @@ function handleCloudRadioChange() {
 }
 
 function tagClick(tagname, tagId) {
-    inRandom = false;
+    window.inRandom = false;
         
     //const selectedOption1 = document.querySelector('input[name="expOptions"]:checked').value;
     //const selectedOption2 = document.querySelector('input[name="TTOptions"]:checked').value;

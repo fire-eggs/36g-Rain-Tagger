@@ -52,7 +52,7 @@ page_input.addEventListener('input', () => {
 });
 
 document.getElementById('go_input').addEventListener('click', () => {
-    if (inRandom) { performRandom(true); } else { performSearch(true); }
+    if (window.inRandom) { performRandom(true); } else { performSearch(true); }
 });
 
 /* Warning icon, visible when changes not sent to database */
@@ -461,18 +461,18 @@ function render_all_top_tags(result) {
 function prevPage() {
     if (current_page > 1) {
         current_page -= 1;
-        if (inRandom) { performRandom(true); } else { performSearch(true); }
+        if (window.inRandom) { performRandom(true); } else { performSearch(true); }
     }
 }
 
 function nextPage() {
     current_page += 1;
-    if (inRandom) {performRandom(true); }else {performSearch(true);}
+    if (window.inRandom) { performRandom(true); } else {performSearch(true);}
 }
 
 function targetPage(target) {
     current_page = target;
-    if (inRandom) {performRandom(true); }else {performSearch(true);}
+    if (window.inRandom) { performRandom(true); } else {performSearch(true);}
 }
 
 function createPagination(tot_pages) {
@@ -592,7 +592,7 @@ async function performTagSearchGuts(isPagination) {
 }
 
 let randstate = "";
-let inRandom = false;
+//let inRandom = false;
 
 function makeSearchURLParams(generalIds, characterIds) {
 
@@ -609,7 +609,7 @@ function makeSearchURLParams(generalIds, characterIds) {
 
 async function performRandom(isPagination=false) {
 
-    inRandom = true;
+    window.inRandom = true;
     if (!isPagination) {
         current_page = 1;
         randstate = "";
@@ -645,7 +645,7 @@ function fetchFilters() {
 async function performSearch(isPagination = false) {
     const filters = fetchFilters();
 
-    inRandom = false;
+    window.inRandom = false;
     if (!isPagination) { current_page = 1; }
 
     const file_input = document.getElementById('img');
@@ -777,6 +777,7 @@ document.getElementById('sel_all').addEventListener('click', () => selectAll());
 
 document.getElementById('swap_details').addEventListener('click', () => swap_divs());
 
+window.inRandom = false;
 fetchAllTags();
 updateMRAtags();
 

@@ -1,4 +1,4 @@
-/* global results_div, clearAll, performTagSearchGuts, renderGeneralTags, selected_general_tags, selected_character_tags, renderCharacterTags, inRandom:writable */
+/* global results_div, clearAll, performTagSearchGuts, renderGeneralTags, selected_general_tags, selected_character_tags, renderCharacterTags */
 /* global f_tag, f_general, f_sensitive, f_questionable, f_explicit */
 /* global f_tag_value, f_general_value, f_sensitive_value, f_questionable_value, f_explicit_value */
 
@@ -8,7 +8,7 @@ let primaryType = "";
 let primaryTagId = -1;
 
 function performExploreLink(tagId, tagname) {
-    inRandom = false;
+    window.inRandom = false;
     
     /* User has selected a tag name in the explore grid. Set all the controls so that "search by
      * tag" will work, especially pagination.
