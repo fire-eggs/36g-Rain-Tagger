@@ -42,9 +42,14 @@ let current_page = 1;
 let per_page = DefaultPerPage;
 
 per_page_input.addEventListener('input', () => {
-    per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
+    let val = parseInt(per_page_input.value);
+    per_page = isNaN(val) ? DefaultPerPage : val;
+    //per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
 });
-page_input.addEventListener('input', () => current_page = parseInt(page_input.value) ?? 1);
+page_input.addEventListener('input', () => {
+    let val = parseInt(page_input.value);
+    current_page =  isNan(val) ? 1 : val;
+});
 
 document.getElementById('go_input').addEventListener('click', () => {
     if (inRandom) { performRandom(true); } else { performSearch(true); }
@@ -155,7 +160,7 @@ async function updateInfoPane() {
             afile = metadata[0];
         } catch (err) { console.error(err); p2.innerHTML = `<h4>${err}</h4>`; return; }
         
-        if (afile === undefined) {
+        if (afile == null) { // null or undefined
             html = `<h4>Image metadata unavailable</h4>`;
         }
         else {
@@ -165,7 +170,7 @@ async function updateInfoPane() {
             html += `<button id="open_me" data-id=${infoPaneImages[0]}>Open</button><button id="rm_me" data-id=${infoPaneImages[0]}>Delete</button>`;
             
             let str = `<dl>`;
-            str += Object.entries(afile || {})
+            str += Object.entries(afile)
                 .filter(filterMetadata)
                 .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
             str += `</dl>`;
@@ -184,7 +189,8 @@ async function updateInfoPane() {
 
 function openImage(image_id) {
     // TODO doesn't work with remote client!
-    const resp = fetch(`/api/open_image?p=${image_id}`);
+    //const resp = 
+    fetch(`/api/open_image?p=${image_id}`);
 }
 
 function deleteImage(image_id, path) {
@@ -193,7 +199,8 @@ function deleteImage(image_id, path) {
         return;
     }
 
-    const resp = fetch(`/api/del_image?p=${image_id}`);
+    //const resp = 
+    fetch(`/api/del_image?p=${image_id}`);
     // TODO delete fail
 }
 
@@ -757,7 +764,7 @@ document.getElementById('dash_button').addEventListener('click', () => performEx
 document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
 document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
 document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
-document.getElementById('cloud_btn').addEventListener('click', () => performCloud());
+document.getElementById('cloud_btn').addEventListener('click', () => performCloud("G","G"));
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 document.getElementById('tagEdit_btn').addEventListener('click', () => performEditTag());
 
