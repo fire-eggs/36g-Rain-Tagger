@@ -1,5 +1,5 @@
 /*jshint esversion: 8 */
-/* global updateSelCount, setInfoPaneImages, results_div, clearAllSelection, openLightboxId */
+/* global setInfoPaneImages, results_div, clearAllSelection, openLightboxId */
 
 /* ------------ Selection --------------- */
 const selectedIds = new Set();
@@ -85,6 +85,12 @@ function selectAll() {
     const selection = [...selectedIds];
     setInfoPaneImages(selection); // display a list of common tags for these images
     updateSelCount();
+}
+
+function updateSelCount() {
+    let count = selectedIds.size;
+    let selmsg = document.getElementById("selectMsg");
+    selmsg.textContent = `${count} image${(count !== 1 ? 's' : '')} selected`;
 }
 
 /* ------------ End Selection --------------- */

@@ -1,4 +1,6 @@
 /*jshint esversion: 8 */
+/* global selectAll, deselectAll, performEditTag, performCloud, performRemoveDeleted, performReconcileDupesAuto, performReconcileDupes */
+/* global performExplore, updateSelCount, updateSelect */
 
 const CharacterTagTypeId = 4;
 const DefaultPerPage = 25;
@@ -48,7 +50,7 @@ per_page_input.addEventListener('input', () => {
 });
 page_input.addEventListener('input', () => {
     let val = parseInt(page_input.value);
-    current_page =  isNan(val) ? 1 : val;
+    current_page =  isNaN(val) ? 1 : val;
 });
 
 document.getElementById('go_input').addEventListener('click', () => {
@@ -670,12 +672,6 @@ async function performSearch(isPagination = false) {
     }
     
     clearAllSelection();
-}
-
-function updateSelCount() {
-    let count = selectedIds.size;
-    let selmsg = document.getElementById("selectMsg");
-    selmsg.textContent = `${count} image${(count !== 1 ? 's' : '')} selected`;
 }
 
 function swap_divs() {
