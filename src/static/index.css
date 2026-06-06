@@ -29,7 +29,7 @@ html {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
-    font-size: 14px;
+    font-size: 16px;
     font-family: system-ui, 'Segoe UI', sans-serif;
 }
 
@@ -42,6 +42,10 @@ html {
     /* margin: 5px; */
     overflow-y:hidden;
     gap: 3px;
+}
+
+output {
+    font-size: 12px;
 }
 
 .flat {
@@ -303,10 +307,6 @@ input[type=number]{
 }
       
 @media (max-width: 770px) {
-    .container {
-        flex-direction: column;
-    }
-
     .container {
         display: flex;
         flex-direction: column;
@@ -598,12 +598,12 @@ table, th, td
     /*background: none; */
     border: 1px solid var(--border-color);
     color: var(--text-color);
-    padding: 5px 10px;
+    padding: 5px 5px;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
-    height:30px;
-    width:30px;
+    height:25px;
+    width:25px;
 }
 
 .theme-toggle:hover {
