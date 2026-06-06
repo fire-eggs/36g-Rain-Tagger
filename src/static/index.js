@@ -508,7 +508,8 @@ function renderResults(data) {
     /* update the gallery to show the current page's images */
 
     window.lastSearchResults = data;
-    let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
+    //let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
+    let html = "";
     if (data.results && data.results.length) {
         if (current_display_mode === 'Gallery') {
             html += data.results.map((result) => `
@@ -551,14 +552,16 @@ function updatePagination(data) {
     if (current_page > tot_pages)
         current_page = tot_pages;
     page_input.value = current_page;
+    
+    let html = `<span style="font-weight:bold;">${data.tot_found.toLocaleString()}</span> results: `
 
     let pageHtml = createPagination(tot_pages);
-    pagination_div.innerHTML = pageHtml;
+    pagination_div.innerHTML = html + pageHtml;
     
     // Issue 25: bottom next/prev buttons not working
     let html2 = pageHtml.replace("prev_page", "prev_page2");
     let html3 = html2.replace("next_page", "next_page2");
-    pagination2_div.innerHTML = html3;
+    pagination2_div.innerHTML = html + html3;
 
     pagination_div.querySelectorAll('button[data-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
