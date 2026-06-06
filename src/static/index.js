@@ -1,6 +1,6 @@
 /*jshint esversion: 8 */
 /* global selectAll, deselectAll, performEditTag, performCloud, performRemoveDeleted, performReconcileDupesAuto, performReconcileDupes */
-/* global performExplore, updateSelCount, updateSelect */
+/* global performExplore, updateSelCount, updateSelect, selectedIds, togglePanel, resizeHandle, resizeHandle2 */
 
 const CharacterTagTypeId = 4;
 const DefaultPerPage = 25;
@@ -506,14 +506,6 @@ function createPagination(tot_pages) {
 
 function renderResults(data) {
     /* update the gallery to show the current page's images */
-    per_page = (Number.isNaN(per_page) ? DefaultPerPage : per_page);
-    per_page = (per_page < 1 ? DefaultPerPage : per_page);
-    per_page_input.value = per_page;
-    
-    let tot_pages = Math.ceil( data.tot_found / per_page );
-    if (current_page > tot_pages)
-        current_page = tot_pages;
-    page_input.value = current_page;
 
     window.lastSearchResults = data;
     let html = `<p>${data.message.replace(/\n/g, '<br>')}</p>`;
@@ -546,6 +538,19 @@ function renderResults(data) {
     results_div.innerHTML = html;
     
     updateSelect(); /* on mode change, need to update selected image markers */
+    updatePagination(data);
+}
+
+function updatePagination(data) {
+
+    per_page = (Number.isNaN(per_page) ? DefaultPerPage : per_page);
+    per_page = (per_page < 1 ? DefaultPerPage : per_page);
+    per_page_input.value = per_page;
+    
+    let tot_pages = Math.ceil( data.tot_found / per_page );
+    if (current_page > tot_pages)
+        current_page = tot_pages;
+    page_input.value = current_page;
 
     let pageHtml = createPagination(tot_pages);
     pagination_div.innerHTML = pageHtml;
@@ -597,7 +602,7 @@ let randstate = "";
 //let inRandom = false;
 
 function makeSearchURLParams(generalIds, characterIds) {
-
+    // Common web params logic for search / random
     const filters = fetchFilters();
 
     const params = new URLSearchParams();
