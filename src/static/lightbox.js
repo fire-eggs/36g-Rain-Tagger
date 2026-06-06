@@ -37,6 +37,10 @@ function setState(target) {
     if (state !== null) {
         lightboxImg.classList.add(target);
     }
+    // reset panning/zoom    
+    zoom = 1; panX = panY = 0;
+    updateTransform();
+    
 }
 
 function nextImage() {
@@ -77,8 +81,9 @@ document.getElementById('closeBtn').onclick = () => {
 document.getElementById('nextBtn').onclick = nextImage;
 document.getElementById('prevBtn').onclick = prevImage;
 
-document.querySelector('.zone.left').onclick = prevImage;
-document.querySelector('.zone.right').onclick = nextImage;
+// TODO: clicking on the image to navigate interferes with panning
+//document.querySelector('.zone.left').onclick = prevImage;
+//document.querySelector('.zone.right').onclick = nextImage;
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { lightbox.classList.remove('active'); }
@@ -90,7 +95,17 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && dupesActive)  { return prevDupe(); }
   if (e.key === 'ArrowRight') { nextPage(); }
   if (e.key === 'ArrowLeft')  { prevPage(); }
+  
+  if (e.key === "ArrowUp" && lightboxOn) { dozoom(+1); }
+  if (e.key === "ArrowDown" && lightboxOn) { dozoom(-1); }
+  
 });
+
+function dozoom(delta) {
+    zoom += delta * 0.1;
+    zoom = Math.min(Math.max(0.5, zoom), 4);
+    updateTransform();
+}
 
 /* ---------- Zoom & Pan ---------- */
 lightboxImg.addEventListener('wheel', (e) => {
@@ -100,12 +115,16 @@ lightboxImg.addEventListener('wheel', (e) => {
   updateTransform();
 });
 
-lightboxImg.addEventListener('mousedown', (e) => {
-  dragging = true;
-  startX = e.clientX - panX;
-  startY = e.clientY - panY;
-  lightboxImg.style.cursor = 'grabbing';
-});
+function mdhand(e) {
+    dragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    lightboxImg.style.cursor = 'grabbing';
+}
+
+//Wrong element for panning activation
+//lightboxImg.addEventListener("mousedown", mdhand, {capture: true});
+document.querySelector('.lightbox-image-area').addEventListener("mousedown", mdhand, {capture: true});
 
 window.addEventListener('mousemove', (e) => {
   if (!dragging) { return; }
