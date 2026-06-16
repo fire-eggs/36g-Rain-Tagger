@@ -41,13 +41,14 @@ let selected_general_tags = [];
 let selected_character_tags = [];
 let all_tags = new Map();
 let current_page = 1;
-let per_page = DefaultPerPage;
+let per_page = perPageVal(); //DefaultPerPage;
 
-per_page_input.addEventListener('input', () => {
+function perPageVal() {
     let val = parseInt(per_page_input.value);
-    per_page = isNaN(val) ? DefaultPerPage : val;
-    //per_page = parseInt(per_page_input.value) ?? DefaultPerPage;
-});
+    return isNaN(val) ? DefaultPerPage : val;
+}    
+
+per_page_input.addEventListener('input', () => { per_page = perPageVal(); });
 page_input.addEventListener('input', () => {
     let val = parseInt(page_input.value);
     current_page =  isNaN(val) ? 1 : val;
