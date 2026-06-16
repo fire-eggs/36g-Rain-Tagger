@@ -4,6 +4,7 @@ let zoom = 1, panX = 0, panY = 0;
 let dragging = false, startX, startY;
 let currImg = null;
 let state = "fit";
+let observer1 = null;
 
 function openLightboxId(imgid) {
     /* Open the lightbox using the image id */
@@ -13,6 +14,13 @@ function openLightboxId(imgid) {
         }
     });
 }
+
+function clearObserver() {
+    if (observer1 !== null) {
+        observer1.disconnect();
+        observer1 = null;
+    }
+}    
 
 function openLightbox(img) {
 
@@ -25,9 +33,10 @@ function openLightbox(img) {
     lightbox.classList.add('active');
 
     // make sure we start in 'fit' mode
-    if (firsttime) { setState('fit'); }
+    if (firsttime) { setState('fit'); } // TODO should this always be the case, not just first time?
 
     void setInfoPaneImages([img.dataset.id]);
+    clearObserver();
 }
 
 function setState(target) {
@@ -43,6 +52,39 @@ function setState(target) {
     
 }
 
+function observeForPageChange(targetIndex) {
+    // The underlying page will be changed. Watch for the update; when the update
+    // happens, update the lightbox to the target (first/last) image in the update
+    
+    const callback = (mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                // The underlying page has been updated.
+                const newimgs = results_div.querySelectorAll('img[data-id]');
+                //console.log(newimgs.length);
+                //console.log(newimgs[targetIndex]);
+                if (targetIndex === -1) {
+                    openLightbox(newimgs[newimgs.length-1]);
+                } else {
+                    openLightbox(newimgs[targetIndex]);
+                }
+            } else if (mutation.type === 'characterData') {
+                console.log('Existing text content inside the element changed.');
+            }
+        }
+    };
+    
+    observer1 = new MutationObserver(callback);
+
+    const config = { 
+        childList: true,      // Detects adding/removing elements or direct text
+        characterData: true,  // Detects changes to the text inside nodes
+        subtree: true         // Detects changes within nested descendants
+    };
+
+    observer1.observe(results_div, config);
+}
+
 function nextImage() {
     const target = currImg.dataset.id;
     let getnext = false;
@@ -52,7 +94,12 @@ function nextImage() {
         if (getnext) { nextImg = img; getnext = false; }
         if (img.dataset.id === target) { getnext = true; }
     });
-    if (nextImg !== null) { openLightbox(nextImg); }
+    if (nextImg !== null) { 
+        openLightbox(nextImg); 
+    } else {
+        observeForPageChange(0);
+        nextPage(); // TODO if trying to go past end of last page, gets a little confused
+    }
 }
 
 function prevImage() {
@@ -63,7 +110,12 @@ function prevImage() {
         if (img.dataset.id === target) { stoplook = true; }
         if (!stoplook) { prevImg = img; }
     });
-    if (prevImg !== null) { openLightbox(prevImg); }
+    if (prevImg !== null) { 
+        openLightbox(prevImg); 
+    } else {
+        observeForPageChange(-1);
+        prevPage();
+    }
 }
 
 document.getElementById('fitBtn').onclick = () => {
@@ -76,6 +128,7 @@ document.getElementById('closeBtn').onclick = () => {
     currImg = null; // TODO reset back to 'fit' for the next lightbox open, is this "correct"?
     lightbox.classList.remove('active');
     void setInfoPaneImages([...selectedIds]);
+    clearObserver();
 };
 
 document.getElementById('nextBtn').onclick = nextImage;
