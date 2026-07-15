@@ -704,7 +704,7 @@ class ImageDb(SqliteDb):
             params=tag_ids + [f_tag, f_general, f_sensitive, f_questionable, f_explicit, len(tag_ids)])
             
         if not imgids:
-            return [], 0
+            return [], 0, randstateOut
             
         image_ids = [row[0] for row in imgids]
         imgmax = len(image_ids)
