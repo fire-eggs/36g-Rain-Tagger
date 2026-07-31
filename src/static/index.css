@@ -245,6 +245,11 @@ input[type=number]{
     width:20px;    
 }
 
+/* turn the 'eye' white when in dark theme */
+[data-theme="dark"] .imgchk {
+    filter: invert(100%);
+}
+
 
 /* pill colors for types */
 .rating {
