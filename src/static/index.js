@@ -766,12 +766,9 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 document.getElementById('clear_button').addEventListener('click', clearAll);
 document.getElementById('search_button').addEventListener('click', () => performSearch(false));
 document.getElementById('dash_button').addEventListener('click', () => performExplore());
-document.getElementById('dupl_button').addEventListener('click', () => performReconcileDupes());
-document.getElementById('dupl_button2').addEventListener('click', () => performReconcileDupesAuto());
-document.getElementById('remove_del_btn').addEventListener('click', () => performRemoveDeleted());
 document.getElementById('cloud_btn').addEventListener('click', () => performCloud("G","G"));
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
-document.getElementById('tagEdit_btn').addEventListener('click', () => performEditTag());
+document.getElementById('admin_btn').addEventListener('click', () => { window.location.href = '/admin'; });
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions));

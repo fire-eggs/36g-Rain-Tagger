@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel='icon' type='image/gif' href='/static/rainykitty.gif'/>
+    <link rel='stylesheet' href='/static/index.css'/>
+    <title>36g Rain Tagger - Admin</title>
+</head>
+<body style="margin:2px;">
+    <nav class="navbar">
+        <span class="navbar-brand"><a href="https://github.com/fire-eggs/36g-Rain-Tagger" style="color: inherit; text-decoration: none;">36g Rain Tagger</a></span>
+        <div class="navbar-links">
+            <input id="themeIcon" class="theme-toggle" type="image" src="/static/moon.svg" onclick="toggleTheme()" />
+            <button id="admin_back_btn" class="flat">Back to Main</button>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="container">
+            <h4>Admin Tools</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-width: 600px;">
+                <button id="tagEdit_btn" class="flat">Edit Tags</button>
+                <button id="dupl_button" class="flat">Reconcile Duplicates</button>
+                <button id="dupl_button2" class="flat">Reconcile Dupes, Auto Del</button>
+                <button id="remove_del_btn" class="flat">Remove Missing Images</button>
+            </div>
+        </div>
+        <div class="gallery">
+            <div style="padding: 2px; display:flex; flex-direction: row; gap: 3px; align-items:center;">
+                <div id="progress-container">
+                    <div id="progress-bar">0%</div>
+                </div>
+            </div>
+            <div id="results"></div>
+        </div>
+        <div class="details-panel" id="panel" style="display:block">
+            <div class="resize-handle" id="resizeHandle"></div>
+            <div style="display: flex;">
+                <div class="toggle-btn" id="togglePanel">⮞</div>
+                <p id="selectMsg" style="margin:0; margin-left:20px;">0 Images Selected</p>
+            </div>
+            <p style="margin:0; line-height:24px;"><b>Common Tags for Selected Images</b></p>
+            <div id="info" class="info-tags" style="border:1px solid blue;"></div>
+            <div class="info-rest">
+                <div style="display:flex;">
+                    <img id="warn" src="/static/small-warning-icon.png" width="32" height="32" style="display:none;">
+                    <button id="doit">Apply Changes</button>
+                </div>
+                <div>
+                    <input id="addtag_input" type="text" autocomplete="off" placeholder="Select or enter tag to add"><button id="addTextTag">Add</button>
+                    <div id="addtag_suggestions"></div>
+                </div>
+            </div>
+            <p style="margin:0; line-height:24px;"><b>Most Recently Added Tags</b></p>
+            <div id="MRUTags" class="info-MRU" style="border:1px solid green;"></div>
+        </div>
+        <div class="details-panel" id="detail_panel2" style="display:none; overflow-y:scroll;">
+        <div class="resize-handle" id="resizeHandle2"></div>
+        </div>
+    </div>
+    <div><button id="swap_details" class="swap-btn">Swap</button></div>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+      <div class="close-btn" id="closeBtn" title="Close Lightbox">&times;</div>
+      <div class="fit-btn" id="fitBtn">※</div>
+      <div class="lightbox-image-area">
+        <img id="lightboxImg" />
+        <div class="zone left"></div>
+        <div class="zone right"></div>
+        <div class="nav prev" id="prevBtn">❮</div>
+        <div class="nav next" id="nextBtn">❯</div>
+      </div>
+    </div>
+
+    <!-- Tag manager -->
+    <div class="tagEdit" id="tagManager">
+        <div class="close-btn" id="TEcloseBtn" title="Close Tag Editor">&times;</div>
+        <input id="edit_tags_magic" maxlength="200" minlength="0" style="display: none;" type="text" value="">
+        <div style="display:flex; flex-direction: column;  position: fixed; top:100px; left:25px;">
+            <button id="tagE_clear">Clear</button>
+            <div class="search">
+                <input id="edit_tag_input" type="text" autocomplete="off" placeholder="Search all tags">
+                <div id="edit_tag_suggestions"></div>
+                <div id="selected_edit_tags"></div>
+            </div>
+            <div id="tag_ops" class="tagOps">
+                <table id="editTable">
+                    <thead><tr><th>Id</th><th>Tag Name</th><th>Category</th></tr></thead>
+                    <tbody id="editTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/admin.js"></script>
+    <script src="/static/lightbox.js"></script>
+    <script src="/static/select.js"></script>
+    <script src="/static/dupes.js"></script>
+    <script src="/static/edittag.js"></script>
+</body>
+</html>

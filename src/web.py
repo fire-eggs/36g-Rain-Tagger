@@ -204,6 +204,10 @@ def all_images():
 def index():
     return render_template('index.html', allow_file_upload_search=configs.allow_file_upload_search)
 
+@bp.route('/admin')
+def admin():
+    return render_template('admin.html', allow_file_upload_search=configs.allow_file_upload_search)
+
 @bp.route('/api/selection', methods=["GET"])
 def current_selection():
     #print('current_selection')
