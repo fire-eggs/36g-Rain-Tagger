@@ -1,0 +1,3 @@
+[
+"Determine the content rating first. Rating definitions: 1) safe: no nudity or sexual activity; 2) suggestive: sexualized presentation, partial nudity, fetishwear, or emphasis on sexual features, but no visible genitalia and no sexual acts; 3) explicit: visible genitalia, visible nipples, or sexual activity. Output the rating as: rating:safe, rating:suggestive or rating:explicit. Then write a long list of Booru-like tags for this image. Ignore all text, dates, timestamps, watermarks, emojis, logos, and interface elements unless they are part of the actual artwork."
+]
