@@ -123,7 +123,7 @@ async function applyTagChanges() {
         const resp = await fetch(`/api/applyTagChanges?${params.toString()}`);
         if (!resp.ok) { throw new Error(`Apply tag changes failed: ${resp.status}`); }
     } catch (err) { console.error(err); }
-    updateMRAtags();
+    void updateMRAtags();
 }
 
 const metaToFilter = ["APP14Flags0", "APP14Flags1", "CurrentIPTCDigest", "DocumentID", "IPTCDigest",
@@ -284,7 +284,7 @@ async function setInfoPaneImages(selection) {
         const resp = await fetch(`/api/selection?${params.toString()}`);
         if (!resp.ok) { throw new Error(`API selection fail: ${resp.status}`); }
         active_info_tags = await resp.json();
-        updateInfoPane();
+        void updateInfoPane();
     } catch (err) { console.error(err); }
     //return results;
 }
@@ -441,7 +441,7 @@ display_button.addEventListener('click', () => {
 
 function render_tags_text(tags, category) {
     return Object.entries(tags || {})
-        .filter(([k, v]) => v > 0.2)
+        .filter(([, v]) => v > 0.2)
         .map(([k, v]) => `<span class="pill ${category}">${k} (${(v*100).toFixed(0)}%)</span>`)
         .join(' ');
 }
@@ -452,8 +452,8 @@ function render_top_tags(tags) {
     keys.sort((a, b) => tags[a] - tags[b]);
 
     return Object.entries(tags || {})
-        .filter(([k, v]) => v >= 0.6)
-        .map(([k, v]) => `${k}`)
+        .filter(([, v]) => v >= 0.6)
+        .map(([k]) => `${k}`)
         .join(',');
 }
 
@@ -555,7 +555,7 @@ function updatePagination(data) {
     page_input.value = current_page;
     
     let html = `<span style="font-weight:bold;">${data.tot_found.toLocaleString()}</span> results: `
-
+    
     let pageHtml = createPagination(tot_pages);
     pagination_div.innerHTML = html + pageHtml;
     
@@ -677,7 +677,7 @@ async function performSearch(isPagination = false) {
             renderResults(await resp.json());
         } catch (err) { console.error(err); }
     } else {
-        performTagSearchGuts(isPagination);
+        void performTagSearchGuts(isPagination);
     }
     
     clearAllSelection();
