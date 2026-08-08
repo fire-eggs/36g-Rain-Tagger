@@ -631,6 +631,60 @@ class ImageDb(SqliteDb):
         #self.sql_echo = False
         return results
         
+    def get_letters_with_tags(self) -> list[dict]:
+        sql = """
+            SELECT DISTINCT lower(substr(tag_name, 1, 1)) as letter
+            FROM tag
+            WHERE tag_count > 0
+            ORDER BY letter
+        """
+        return self._run_query(sql)
+
+    def get_tags_by_letter(self, letter: str) -> list[dict]:
+        if not letter:
+            return []
+        if letter == '0':
+            sql = """
+                SELECT t.tag_id, t.tag_name, t.tag_count,
+                       it.image_id, d.directory || '/' || i.filename as image_path
+                FROM tag t
+                JOIN image_tag it ON t.tag_id = it.tag_id
+                JOIN image i ON i.image_id = it.image_id
+                JOIN directory d ON d.directory_id = i.directory_id
+                WHERE substr(t.tag_name, 1, 1) BETWEEN '0' AND '9' and t.tag_count > 0
+                GROUP BY t.tag_id
+                ORDER BY t.tag_name
+            """
+            return self._run_query(sql, params=())
+        elif letter == '#':
+            sql = """
+                SELECT t.tag_id, t.tag_name, t.tag_count,
+                       it.image_id, d.directory || '/' || i.filename as image_path
+                FROM tag t
+                JOIN image_tag it ON t.tag_id = it.tag_id
+                JOIN image i ON i.image_id = it.image_id
+                JOIN directory d ON d.directory_id = i.directory_id
+                WHERE substr(t.tag_name, 1, 1) NOT BETWEEN '0' AND '9' 
+                and substr(lower(t.tag_name), 1, 1) NOT BETWEEN 'a' AND 'z' 
+                and t.tag_count > 0
+                GROUP BY t.tag_id
+                ORDER BY t.tag_name
+            """            
+            return self._run_query(sql, params=())
+        else:
+            sql = """
+                SELECT t.tag_id, t.tag_name, t.tag_count,
+                       it.image_id, d.directory || '/' || i.filename as image_path
+                FROM tag t
+                JOIN image_tag it ON t.tag_id = it.tag_id
+                JOIN image i ON i.image_id = it.image_id
+                JOIN directory d ON d.directory_id = i.directory_id
+                WHERE lower(t.tag_name) LIKE ? AND t.tag_count > 0
+                GROUP BY t.tag_id
+                ORDER BY t.tag_name
+            """
+            return self._run_query(sql, params=(letter[0].lower() + '%',))
+
     def get_cloud_tags(self, choice, tagtype):
         
         target = "general";

@@ -1,6 +1,7 @@
 /*jshint esversion: 8 */
 /* global selectAll, deselectAll, performEditTag, performCloud, performRemoveDeleted, performReconcileDupesAuto, performReconcileDupes */
 /* global performExplore, updateSelCount, updateSelect, selectedIds, togglePanel, resizeHandle, resizeHandle2 */
+/* global performAllTags */
 
 const CharacterTagTypeId = 4;
 const DefaultPerPage = 25;
@@ -766,6 +767,7 @@ character_tag_input.addEventListener('focus', () => handleTagInput(character_tag
 document.getElementById('clear_button').addEventListener('click', clearAll);
 document.getElementById('search_button').addEventListener('click', () => performSearch(false));
 document.getElementById('dash_button').addEventListener('click', () => performExplore());
+document.getElementById('alltags_btn').addEventListener('click', () => performAllTags('a'));
 document.getElementById('cloud_btn').addEventListener('click', () => performCloud("G","G"));
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 document.getElementById('admin_btn').addEventListener('click', () => { window.location.href = '/admin'; });

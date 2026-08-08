@@ -176,6 +176,24 @@ def get_cloud_tags():
     })
 
 
+@bp.route('/tags_by_letter', methods=['GET'])
+def tags_by_letter():
+    letter = request.args.get('letter', 'a')
+    if not letter or len(letter) > 1:
+        abort(400)
+    results = current_app.db.get_tags_by_letter(letter)
+    return jsonify({
+        'letter': letter,
+        'results': results,
+    })
+
+@bp.route('/letters_with_tags', methods=['GET'])
+def letters_with_tags():
+    results = current_app.db.get_letters_with_tags()
+    return jsonify({
+        'results': results,
+    })
+
 @bp.route('/all_images', methods=['GET'])
 def all_images():
     """An endpoint for testing demo.html only.
@@ -286,10 +304,10 @@ def serve():
         abort(400)
 
     if not file_path.split('.')[-1].lower().endswith(configs.valid_extensions):
-        abort(UnsupportedMediaType)
+        abort(501, description=file_path) #UnsupportedMediaType)
 
     if not file_path.startswith(configs.web_media_roots):
-        abort(Forbidden)
+        abort(403, description=file_path)
 
     if not os.path.isfile(file_path):
         #print(f"Not found {file_path}")
