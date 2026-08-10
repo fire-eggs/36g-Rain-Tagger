@@ -26,7 +26,9 @@
 # - "rating:safe\n\ntags: tag_text"
 # - "rating:safe\n\ntag_text"
 # - "rating: safe"
-
+#
+# V5: translate underscores to space ("bar_chart" -> "bar chart")
+#
 import unicodedata
 import sqlite3
 import glob
@@ -36,8 +38,14 @@ from collections import defaultdict
 def remove_accents(input_str):
     nfd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nfd_form if not unicodedata.combining(c)])
+
+def massage_tag(input_tag):
+    tag2=tag.lower().strip().rstrip(".") # all lower, no trail period
+    tag3=remove_accents(tag2)
+    tag4=tag3.replace("_", " ") # replace underscores with spaces
+    return tag4
     
-DB_PATH = "./36g_style_rate.db"
+DB_PATH = "./36g_style_rate2.db"
 IMG_BASE="/home/kevin/jc_test2"
 
 # collect tags
@@ -53,7 +61,7 @@ for root, dirs, files in os.walk(IMG_BASE):
                 tags = tagline.split(",")
                 file_set = set() # to remove dupes within a txt file
                 for tag in tags:
-                    tag2=tag.lower().strip().rstrip(".") # all lower, no trail period
+                    tag2 = massage_tag(tag)
                     if tag2.startswith("\"") or len(tag2) == 0: # no quotes or empty
                         continue
                     if tag2.startswith("@") or tag2.isnumeric(): # no numbers only, no twitter ids
@@ -61,7 +69,7 @@ for root, dirs, files in os.walk(IMG_BASE):
                     file_set.add(tag2)
                     
                 for tag in file_set:
-                    master[remove_accents(tag)] += 1  
+                    master[tag] += 1  
 
 for key in list(master.keys()):
     # consider using the inflect package
@@ -146,7 +154,7 @@ for root, dirs, files in os.walk(IMG_BASE):
                 
                 tags = tagline.split(",")
                 for tag in tags:
-                    tag2=remove_accents(tag.lower().strip().rstrip(".")) # all lower, no trail period
+                    tag2=massage_tag(tag)
                     if tag2.startswith("\"") or len(tag2) == 0: # no quotes or empty
                         continue
                     if tag2.startswith("@") or tag2.isnumeric(): # no numbers only, no twitter ids
