@@ -395,6 +395,9 @@ class ImageDb(SqliteDb):
         return results,len(total_rows)
 
     def update_tag_counts(self):
+        sql_string = 'update tag set tag_count=0'
+        self.run_query_tuple(sql_string)
+        
         sql_string = '''update tag set tag_count=
                  (select count(image_id) from image_tag where image_tag.tag_id=tag.tag_id) 
                   where exists 
