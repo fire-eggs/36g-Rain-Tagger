@@ -115,6 +115,15 @@ def search_w_file():
 
     return jsonify(app_process_images_from_path(img_path, page, per_page))
 
+@bp.route('/recent')
+def recent():
+    page = clamp(request.args.get('page', type=int), 0, 0, 100_000_000)
+    per_page = clamp(request.args.get('per_page', type=int), 25, 0, 1_000)
+    results,tot_count = current_app.db.get_recent_images(page, per_page)
+    return jsonify({
+        'results': results,
+        'tot_found': tot_count,
+    })
 
 @bp.route('/search_w_tags', methods=['GET'])
 def search_w_tags():

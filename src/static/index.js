@@ -56,7 +56,7 @@ page_input.addEventListener('input', () => {
 });
 
 document.getElementById('go_input').addEventListener('click', () => {
-    if (window.inRandom) { performRandom(true); } else { performSearch(true); }
+    doUpdate();
 });
 
 /* Warning icon, visible when changes not sent to database */
@@ -462,21 +462,31 @@ function render_all_top_tags(result) {
     return `${render_top_tags(result.general)},${render_top_tags(result.character)},${render_top_tags(result.franchise)},${render_top_tags(result.artist)},${render_top_tags(result.future)}`;
 }
 
+function doUpdate() {
+    if (window.inRandom) {
+        performRandom(true);
+    } else if (window.inRecent) {
+        performRecent(true);
+    } else {
+        performSearch(true);
+    }
+}
+
 function prevPage() {
     if (current_page > 1) {
         current_page -= 1;
-        if (window.inRandom) { performRandom(true); } else { performSearch(true); }
+        doUpdate();
     }
 }
 
 function nextPage() {
     current_page += 1;
-    if (window.inRandom) { performRandom(true); } else {performSearch(true);}
+    doUpdate();
 }
 
 function targetPage(target) {
     current_page = target;
-    if (window.inRandom) { performRandom(true); } else {performSearch(true);}
+    doUpdate();
 }
 
 function createPagination(tot_pages) {
@@ -604,7 +614,6 @@ async function performTagSearchGuts(isPagination) {
 }
 
 let randstate = "";
-//let inRandom = false;
 
 function makeSearchURLParams(generalIds, characterIds) {
     // Common web params logic for search / random
@@ -619,9 +628,28 @@ function makeSearchURLParams(generalIds, characterIds) {
     return params;
 }
 
+async function performRecent(isPagination=false) {
+    window.inRandom = false;
+    window.inRecent = true;
+
+    const params = new URLSearchParams();
+    params.append('page', current_page);
+    params.append('per_page', per_page);
+    
+    try {
+        const resp = await fetch(`/recent?${params.toString()}`);
+        if (!resp.ok) { throw new Error(`Recent failed: ${resp.status}`); }
+        let results = await resp.json();
+        renderResults(results);
+    } catch (err) { console.error(err); }
+    
+    clearAllSelection();
+}
+
 async function performRandom(isPagination=false) {
 
     window.inRandom = true;
+    window.inRecent = false;
     if (!isPagination) {
         current_page = 1;
         randstate = "";
@@ -658,6 +686,7 @@ async function performSearch(isPagination = false) {
     const filters = fetchFilters();
 
     window.inRandom = false;
+    window.inRecent = false;
     if (!isPagination) { current_page = 1; }
 
     const file_input = document.getElementById('img');
@@ -771,6 +800,7 @@ document.getElementById('alltags_btn').addEventListener('click', () => performAl
 document.getElementById('cloud_btn').addEventListener('click', () => performCloud("G","G"));
 document.getElementById('rand_btn').addEventListener('click', () => performRandom(false));
 document.getElementById('admin_btn').addEventListener('click', () => { window.location.href = '/admin'; });
+document.getElementById('recent_btn').addEventListener('click', () => performRecent());
 
 addtag_input.addEventListener('input', () => handleAddTagInput(addtag_input, addtag_suggestions));
 addtag_input.addEventListener('focus', () => handleAddTagInput(addtag_input, addtag_suggestions));
@@ -782,6 +812,7 @@ document.getElementById('sel_all').addEventListener('click', () => selectAll());
 document.getElementById('swap_details').addEventListener('click', () => swap_divs());
 
 window.inRandom = false;
+window.inRecent = false;
 fetchAllTags();
 updateMRAtags();
 

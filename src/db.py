@@ -338,7 +338,26 @@ class ImageDb(SqliteDb):
         """
         return set((row[0], row[1], row[2]) for row in (self.run_query_tuple(sql)))
 
+    def get_recent_images(self, page:int, per_page:int) -> list[dict]:
+        
+        total_rows = self.run_query_tuple(f"select image_id from image order by image_id desc")
+        if not total_rows:
+          return [], 0
+          
+        offset = max(page - 1, 0) * per_page
+        if (offset >= len(total_rows)):
+            offset = (int)(len(total_rows) / per_page) * per_page
 
+        rows = self.run_query_tuple(f"select image_id from image order by image_id desc limit ? offset ?", params=(per_page,offset))
+        if not rows:
+            return [],0
+
+        image_ids = [row[0] for row in rows]
+
+        results = self._fetch_results(image_ids)
+        
+        return results,len(total_rows)
+        
     def get_images_by_tag_ids(self, tag_ids: list[int], f_tag: float, f_general: float, f_sensitive: float, f_explicit: float, f_questionable: float, page: int, per_page: int) -> list[dict]:
       
         # TODO should this be COUNT(image_tag.image_id)?

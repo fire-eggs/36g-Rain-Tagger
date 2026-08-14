@@ -9,6 +9,7 @@ let primaryTagId = -1;
 
 function performExploreLink(tagId, tagname) {
     window.inRandom = false;
+    window.inRecent = false;
     
     /* User has selected a tag name in the explore grid. Set all the controls so that "search by
      * tag" will work, especially pagination.
