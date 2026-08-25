@@ -62,7 +62,7 @@ output {
 
 .flat:hover {
     font-size: 16px;
-    border: 1;
+    border: 1px;
 }
 
 button:disabled {
@@ -220,7 +220,7 @@ input[type=number]{
 }
 
 .fn {
-    overflow-wrap: break-all;
+    overflow-wrap: anywhere;
 }
 
 /* gallery as grid */
@@ -380,7 +380,7 @@ input[type=number]{
     align-items: center;
     justify-content: center;
     border: 1px solid #bbb;
-    word-wrap: break-all;
+    word-wrap: break-word;
     overflow-wrap: anywhere; /*break-all;*/
 }
 

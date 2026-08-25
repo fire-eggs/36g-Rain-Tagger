@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel='icon' type='image/gif' href='/static/rainykitty.gif'/>
-    <link rel='stylesheet' href='/static/index.css'/>
+    <link rel='icon' type='image/gif' href='/static/rainykitty.gif'>
+    <link rel='stylesheet' href='/static/index.css'>
     <title>36g Rain Tagger</title>
 </head>
 <body style="margin:2px;">
     <nav class="navbar">
         <span class="navbar-brand"><a href="https://github.com/fire-eggs/36g-Rain-Tagger" style="color: inherit; text-decoration: none;">36g Rain Tagger</a></span>
         <div class="navbar-links">
-            <input id="themeIcon" class="theme-toggle" type="image" src="/static/moon.svg" onclick="toggleTheme()" />
+            <input id="themeIcon" class="theme-toggle" type="image" src="/static/moon.svg" onclick="toggleTheme()" alt="Toggle light and dark theme">
             <label for='per_page_input'>Per Page: </label><input class="flat" type='number' min='0' name='per_page_input' id='per_page_input'>
             <label for='page_input'>Page: </label><input class="flat" type='number' min='0' name='page_input' id='page_input' value='1'>
-            <button id="go_input" class="flat">Go</button>
+            <button id="go_input" class="flat" type="button">Go</button>
             <button id="clear_sel" class="flat" style="margin-left:20px;">Clear Sel</button>
             <button id="sel_all" class="flat">Select All</button>
             
@@ -50,7 +50,7 @@
             </div>
             {% if allow_file_upload_search %}
             <div class="search">
-                <input type="file" id="img" name="img" accept="image/png, image/jpeg, image/gif"/>
+                <input type="file" id="img" name="img" accept="image/png, image/jpeg, image/gif">
             </div>
             <button id="search_button" class="flat">Search by Tags or File</button>
             {% else %}
@@ -78,7 +78,7 @@
             <div id="info" class="info-tags" style="border:1px solid blue;"></div>
             <div class="info-rest">
                 <div style="display:flex;">
-                    <img id="warn" src="/static/small-warning-icon.png" width="32" height="32" style="display:none;">
+                    <img id="warn" src="/static/small-warning-icon.png" width="32" height="32" style="display:none;" alt="Changes not saved">
                     <button id="doit">Apply Changes</button>
                 </div>
                 <div>
@@ -100,7 +100,7 @@
       <div class="close-btn" id="closeBtn" title="Close Lightbox">&times;</div>
       <div class="fit-btn" id="fitBtn">※</div>
       <div class="lightbox-image-area">
-        <img id="lightboxImg" />
+        <img id="lightboxImg" src='/static/rainykitty.gif' alt="Lightbox image goes here">
         <div class="zone left"></div>
         <div class="zone right"></div>
         <div class="nav prev" id="prevBtn">❮</div>
